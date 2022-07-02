@@ -4,6 +4,7 @@ const cors = require("cors");
 const { Server } = require("@colyseus/core");
 const { monitor } = require("@colyseus/monitor");
 const Game = require("./rooms/Game").default;
+const Challenge = require("./rooms/Challenge").default;
 
 const port = Number(process.env.PORT || 8080);
 const app = express();
@@ -16,11 +17,10 @@ const gameServer = new Server({
   server,
 });
 
-// register your room handlers
 gameServer.define("game", Game);
+gameServer.define("challenge", Challenge);
 
-// register colyseus monitor AFTER registering your room handlers
-app.use("/colyseus", monitor());
+// app.use("/colyseus", monitor());
 
 gameServer.listen(port);
 console.log(`Server is listening on ws://localhost:${port}`);

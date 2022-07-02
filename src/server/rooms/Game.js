@@ -1,4 +1,4 @@
-const { Client, Room } = require("colyseus");
+const { Room } = require("colyseus");
 // const { Constants, Maths, Models, Types } = require("@tosios/common");
 const { GameState } = require("../states/GameState");
 
@@ -51,7 +51,8 @@ exports.default = class GameRoom extends Room {
           this.state.playerSelectWizard(playerId, message.ts, message.wizardId);
           break;
         case "play-challenge":
-          this.state.playChallenge(playerId, message.ts, message.wizardId);
+          client.send("change-room", { roomName: "challenge" });
+          //this.state.playChallenge(playerId, message.ts, message.wizardId);
           break;
         // case "rotate":
         // case "shoot":

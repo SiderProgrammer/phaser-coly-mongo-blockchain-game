@@ -19,7 +19,9 @@ export default class Bootstrap extends Phaser.Scene {
   onPlayChallenge() {
     console.log("challenge started!");
 
-    this.scene.launch("challenge");
-    this.scene.bringToTop("challenge");
+    this.scene.stop("world");
+    this.scene.launch("challenge", {
+      server: this.server,
+    });
   }
 }

@@ -1,5 +1,5 @@
-const { Player } = require("../entities/Player");
 const schema = require("@colyseus/schema");
+const { Wizard } = require("../entities/Wizard");
 
 const worldSize = { width: 800, height: 600 };
 const obstacles = [{ x: 400, y: 200, size: 50 }];
@@ -7,41 +7,27 @@ const obstacles = [{ x: 400, y: 200, size: 50 }];
 class State extends schema.Schema {
   constructor(sendMessage) {
     super();
-    this.players = new schema.MapSchema();
+    this.wizard = null;
     this.sendMessage = sendMessage;
   }
   playerAdd(id, name) {
-    const spawner = { x: Math.random() * 400, y: 350 };
     const PLAYER_SIZE = 50;
 
-    const player = new Player(
-      id,
-      spawner.x + PLAYER_SIZE,
-      spawner.y + PLAYER_SIZE,
-      PLAYER_SIZE,
-      name
-    );
+    this.wizard = new Wizard(id, 400, 200, PLAYER_SIZE, name);
 
-    // // Add the user to the "red" team by default
-    // if (this.game.mode === 'team deathmatch') {
-    //     player.setTeam('Red');
-    // }
-
-    this.players.set(id, player);
-
-    // Broadcast message to other players
-    this.sendMessage({
-      type: "joined",
-      from: "server",
-      ts: Date.now(),
-      params: {
-        playerName: this.players.get(id).name,
-      },
-    });
+    // // Broadcast message to other players
+    // this.sendMessage({
+    //   type: "joined",
+    //   from: "server",
+    //   ts: Date.now(),
+    //   params: {
+    //     playerName: this.players.get(id).name,
+    //   },
+    // });
   }
 
   playerMove(id, ts, dir) {
-    const player = this.players.get(id);
+    const player = this.wizard;
 
     if (dir.x == 0 && dir.y == 0) dir.empty = true;
 
@@ -50,16 +36,6 @@ class State extends schema.Schema {
     }
 
     player.move(dir.x, dir.y, 5);
-  }
-
-  playerSelectWizard(id, ts, wizardId) {
-    const player = this.players.get(id);
-    player.selectWizard(wizardId);
-  }
-
-  playChallenge(id, ts, wizardId) {
-    // const player = this.players.get(id);
-    // const wizard = player.getWizardById(wizardId);
   }
 
   update() {
@@ -86,7 +62,7 @@ class State extends schema.Schema {
   }
 }
 schema.defineTypes(State, {
-  players: { map: Player },
+  player: Wizard,
 });
 
-exports.GameState = State;
+exports.ChallengeState = State;

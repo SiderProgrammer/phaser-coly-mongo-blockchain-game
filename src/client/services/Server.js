@@ -27,6 +27,18 @@ export default class Server {
       });
     };
 
+    this.room.onMessage("change-room", async ({ roomName }) => {
+      this.room.leave();
+      this.challengeRoom = await this.client.joinOrCreate(roomName);
+
+      this.events.emit("player-joined-challenge");
+
+      this.challengeRoom.state.player.onChange = (player, playerId) => {
+        this.events.emit("player-move-challenge");
+        console.log("change");
+      };
+    });
+
     // this.room.state.onChange = (changes) => {
     //   changes.forEach((change) => {
     //     // console.log(change);
@@ -48,6 +60,21 @@ export default class Server {
     }
 
     this.room.send(action.type, action);
+  }
+
+  handleActionSendInChallenge(action) {
+    if (!this.challengeRoom) {
+      return;
+    }
+    this.challengeRoom.send(action.type, action);
+  }
+
+  onPlayerMovedInChallenge(cb, context) {
+    this.events.on("player-move-challenge", cb, context);
+  }
+
+  onPlayerJoinedChallenge(cb, context) {
+    this.events.on("player-joined-challenge", cb, context);
   }
 
   onPlayerJoined(cb, context) {
