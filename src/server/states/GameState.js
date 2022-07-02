@@ -52,14 +52,24 @@ class State extends schema.Schema {
     player.move(dir.x, dir.y, 5);
   }
 
+  playerSelectWizard(id, ts, wizardId) {
+    const player = this.players.get(id);
+    player.selectWizard(wizardId);
+  }
+
+  playChallenge(id, ts, wizardId) {
+    const player = this.players.get(id);
+    const wizard = player.getWizardById(wizardId);
+  }
+
   update() {
-    this.players.forEach((player, playerId) => {
-      obstacles.forEach((obstacle) => {
-        if (this.isColliding(player, obstacle)) {
-          console.log("collision!");
-        }
-      });
-    });
+    // this.players.forEach((player, playerId) => {
+    //   obstacles.forEach((obstacle) => {
+    //     if (this.isColliding(player, obstacle)) {
+    //       console.log("collision!");
+    //     }
+    //   });
+    // });
     // this.updateGame();
     // this.updatePlayers();
     // this.updateMonsters();

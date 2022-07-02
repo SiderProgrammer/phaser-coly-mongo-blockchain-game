@@ -1,31 +1,42 @@
-const colyseus = require("colyseus");
 const schema = require("@colyseus/schema");
+const Schema = schema.Schema;
+const ArraySchema = schema.ArraySchema;
 
-class Player extends schema.Schema {
+const { Wizard } = require("./Wizard");
+
+class Player extends Schema {
   constructor(id, x, y, size, name) {
     super();
     this.id = id;
-    this.x = x;
-    this.y = y;
-    this.size = size;
-    this.name = name;
+    this.wizards = new ArraySchema(); // ! change to mapSchema // effect => this.wizards[id]
+
+    for (let i = 0; i < 4; i++) {
+      const x = 200;
+      const y = 50 + i * 50;
+      this.wizards.push(new Wizard(i.toString(), x, y, 50, "wizard_" + i));
+    }
+    this.wizards[0].isSelected = true;
   }
 
-  move(dirX, dirY, speed) {
-    const speedX = speed * dirX;
-    const speedY = speed * dirY;
+  move(vectorX, vectorY, speed) {
+    this.wizards
+      .find((wizard) => wizard.isSelected)
+      .move(vectorX, vectorY, speed);
+  }
 
-    this.x += speedX;
-    this.y += speedY;
+  selectWizard(wizardId) {
+    this.wizards.forEach((wizard) => (wizard.isSelected = false));
+    this.getWizardById(wizardId).isSelected = true;
+  }
+
+  getWizardById(id) {
+    return this.wizards.find((wizard) => wizard.id === id);
   }
 }
 
 schema.defineTypes(Player, {
   id: "string",
-  x: "number",
-  y: "number",
-  size: "number",
-  name: "string",
+  wizards: [Wizard],
 });
 
 exports.Player = Player;

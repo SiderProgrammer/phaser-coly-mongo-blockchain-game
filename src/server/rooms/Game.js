@@ -46,6 +46,13 @@ exports.default = class GameRoom extends Room {
       switch (type) {
         case "move":
           this.state.playerMove(playerId, message.ts, message.dir);
+          break;
+        case "select":
+          this.state.playerSelectWizard(playerId, message.ts, message.wizardId);
+          break;
+        case "play-challenge":
+          this.state.playChallenge(playerId, message.ts, message.wizardId);
+          break;
         // case "rotate":
         // case "shoot":
         //   this.state.playerPushAction({
