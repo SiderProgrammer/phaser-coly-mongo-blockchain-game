@@ -4,8 +4,8 @@ const { ChallengeState } = require("../states/ChallengeState");
 exports.default = class ChallengeRoom extends Room {
   onCreate(options) {
     console.log("Challenge started");
-
-    this.setState(new ChallengeState());
+    this.presence.publish("test", { yo: "DFASDA" });
+    this.setState(new ChallengeState(this.handleMessage));
 
     this.setSimulationInterval(() => this.handleTick());
 
@@ -17,13 +17,17 @@ exports.default = class ChallengeRoom extends Room {
         case "move":
           this.state.playerMove(playerId, message.ts, message.dir);
           break;
+        case "leave-challenge":
+          client.send("change-room", { roomName: "challenge" });
+          break;
       }
     });
   }
 
   onJoin(client, options) {
-    this.state.playerAdd(client.sessionId, options.playerName);
+    //this.state.playerAdd(client.sessionId, options.playerName);
     console.log("New client started a challenge");
+    this.lock();
     //console.log(`${new Date().toISOString()} [Join] id=${client.sessionId} player=${options.playerName}`);
   }
 
@@ -35,5 +39,10 @@ exports.default = class ChallengeRoom extends Room {
 
   handleTick = () => {
     this.state.update();
+  };
+
+  handleMessage = (message) => {
+    console.log("New message sent!");
+    this.broadcast(message.type, message);
   };
 };

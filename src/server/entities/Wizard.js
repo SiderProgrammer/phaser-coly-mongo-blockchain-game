@@ -9,6 +9,7 @@ class Wizard extends schema.Schema {
     this.size = size;
     this.name = name;
     this.isSelected = false;
+    this.isAlive = true;
   }
 
   move(dirX, dirY, speed) {
@@ -27,6 +28,7 @@ schema.defineTypes(Wizard, {
   size: "number",
   name: "string",
   isSelected: "boolean",
+  isAlive: "boolean",
 });
 
 exports.Wizard = Wizard;

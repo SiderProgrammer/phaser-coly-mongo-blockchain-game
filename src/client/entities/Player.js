@@ -17,7 +17,8 @@ class Player {
         this.scene,
         _wizard.x,
         _wizard.y,
-        "logo"
+        "logo",
+        _wizard.name
       );
       wizard.setScale(0.2);
 

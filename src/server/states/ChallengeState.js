@@ -2,28 +2,17 @@ const schema = require("@colyseus/schema");
 const { Wizard } = require("../entities/Wizard");
 
 const worldSize = { width: 800, height: 600 };
-const obstacles = [{ x: 400, y: 200, size: 50 }];
+const obstacles = [{ x: 400, y: 300, size: 50 }];
+const meta = { x: 400, y: 50, size: 50 };
 
 class State extends schema.Schema {
   constructor(sendMessage) {
     super();
-    this.wizard = null;
-    this.sendMessage = sendMessage;
-  }
-  playerAdd(id, name) {
     const PLAYER_SIZE = 50;
+    this.wizard = new Wizard("0", 400, 500, PLAYER_SIZE, "test");
+    this.challengeState = -1;
 
-    this.wizard = new Wizard(id, 400, 200, PLAYER_SIZE, name);
-
-    // // Broadcast message to other players
-    // this.sendMessage({
-    //   type: "joined",
-    //   from: "server",
-    //   ts: Date.now(),
-    //   params: {
-    //     playerName: this.players.get(id).name,
-    //   },
-    // });
+    this.sendMessage = sendMessage;
   }
 
   playerMove(id, ts, dir) {
@@ -39,13 +28,20 @@ class State extends schema.Schema {
   }
 
   update() {
-    // this.players.forEach((player, playerId) => {
-    //   obstacles.forEach((obstacle) => {
-    //     if (this.isColliding(player, obstacle)) {
-    //       console.log("collision!");
-    //     }
-    //   });
-    // });
+    if (!this.wizard) return;
+    if (this.challengeState !== -1) return;
+
+    obstacles.forEach((obstacle) => {
+      if (this.isColliding(this.wizard, obstacle)) {
+        this.challengeState = 0;
+        console.log("wizard dead");
+      }
+    });
+
+    if (this.isColliding(this.wizard, meta)) {
+      this.challengeState = 1;
+      console.log("wizard won");
+    }
     // this.updateGame();
     // this.updatePlayers();
     // this.updateMonsters();
@@ -62,7 +58,8 @@ class State extends schema.Schema {
   }
 }
 schema.defineTypes(State, {
-  player: Wizard,
+  wizard: Wizard,
+  challengeState: "number",
 });
 
 exports.ChallengeState = State;

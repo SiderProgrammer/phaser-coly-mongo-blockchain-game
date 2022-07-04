@@ -14,7 +14,7 @@ class World extends Phaser.Scene {
     this.load.image("logo", "./src/client/assets/logo.png");
   }
 
-  async create({ server, onPlayChallenge }) {
+  async create({ server, onPlayChallenge, joinServer }) {
     //this.add.image(400, 200, "logo").setScale(0.2); // test obstacle
     this.server = server;
     this.onPlayChallenge = onPlayChallenge;
@@ -22,7 +22,10 @@ class World extends Phaser.Scene {
     if (!this.server) {
       throw new Error("server instance missing");
     }
-    await this.server.join();
+    if (joinServer) {
+      await this.server.join();
+    }
+
     this.playerId = this.server.getPlayerId();
 
     this.players = [];
@@ -80,7 +83,8 @@ class World extends Phaser.Scene {
   }
 
   addPlayChallengeButton() {
-    const button = new Button(this, 100, 600, "logo");
+    const button = new Button(this, 100, 500, "logo");
+    button.setScale(0.5);
     button.addText("Play challenge");
     button.onClick(() => this.playChallenge());
   }
@@ -148,7 +152,7 @@ class World extends Phaser.Scene {
   addWizardsButtons(wizards) {
     for (let i = 0; i < wizards.length; i++) {
       const wizardButton = this.add
-        .image(30, 30 + i * 50, "logo")
+        .image(30, 30 + i * 70, "logo")
         .setScale(0.1);
       wizardButton.id = wizards[i].id;
 

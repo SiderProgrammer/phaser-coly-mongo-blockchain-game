@@ -10,9 +10,14 @@ export default class Bootstrap extends Phaser.Scene {
   }
 
   create() {
+    this.createNewGame(true);
+  }
+
+  createNewGame(joinServer) {
     this.scene.launch("world", {
       server: this.server,
       onPlayChallenge: this.onPlayChallenge.bind(this),
+      joinServer: joinServer,
     });
   }
 
@@ -22,6 +27,20 @@ export default class Bootstrap extends Phaser.Scene {
     this.scene.stop("world");
     this.scene.launch("challenge", {
       server: this.server,
+      onLoseChallenge: this.onLoseChallenge.bind(this),
+      onWinChallenge: this.onWinChallenge.bind(this),
     });
+  }
+
+  onLoseChallenge() {
+    console.log("Lose challenge");
+    this.scene.stop("challenge");
+    this.createNewGame(false);
+  }
+
+  onWinChallenge() {
+    console.log("Win challenge");
+    this.scene.stop("challenge");
+    this.createNewGame(false);
   }
 }

@@ -11,8 +11,8 @@ class Player extends Schema {
     this.wizards = new ArraySchema(); // ! change to mapSchema // effect => this.wizards[id]
 
     for (let i = 0; i < 4; i++) {
-      const x = 200;
-      const y = 50 + i * 50;
+      const x = 200 + 80 * i;
+      const y = 250;
       this.wizards.push(new Wizard(i.toString(), x, y, 50, "wizard_" + i));
     }
     this.wizards[0].isSelected = true;

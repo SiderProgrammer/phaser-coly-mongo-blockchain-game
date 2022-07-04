@@ -7,20 +7,24 @@ export default class Server {
   }
 
   async join() {
+    await this.handleWorldJoin();
+  }
+
+  async handleWorldJoin() {
     this.room = await this.client.joinOrCreate("game", {
       playerName: "testAccount",
     });
 
     this.playerId = this.room ? this.room.sessionId : "";
 
-    console.log("Room", this.room);
+    //console.log("Room", this.room);
     console.log("Player ID", this.playerId);
 
     this.room.state.players.onAdd = (player, playerId) => {
       this.events.emit("player-joined", player, playerId);
 
       player.wizards.forEach((wizard) => {
-        wizard.ownerId = player.id; // ? needed to find a player owning this wizard
+        wizard.ownerId = player.id; // ? it is needed to find a player owning this wizard
         wizard.onChange = () => {
           this.events.emit("wizard-changed", wizard);
         };
@@ -28,26 +32,33 @@ export default class Server {
     };
 
     this.room.onMessage("change-room", async ({ roomName }) => {
-      this.room.leave();
-      this.challengeRoom = await this.client.joinOrCreate(roomName);
-
-      this.events.emit("player-joined-challenge");
-
-      this.challengeRoom.state.player.onChange = (player, playerId) => {
-        this.events.emit("player-move-challenge");
-        console.log("change");
-      };
+      if (roomName === "challenge") {
+        this.handleChallengeJoin();
+      }
     });
+  }
 
-    // this.room.state.onChange = (changes) => {
-    //   changes.forEach((change) => {
-    //     // console.log(change);
-    //   });
-    // };
+  async handleChallengeJoin() {
+    // await this.room.leave(true);
+    // this.room.removeAllListeners();
+    this.challengeRoom = await this.client.joinOrCreate("challenge");
 
-    // this.room.onMessage("*", (type, message) =>
-    //   this.handleMessage(type, message)
-    // );
+    this.events.emit("player-joined-challenge");
+
+    this.challengeRoom.state.onChange = (state) => {
+      this.events.emit("challenge-state-changed", state); // TODO - change to state.listen("stateChanged")
+    };
+
+    this.challengeRoom.state.wizard.onChange = (changedData) => {
+      this.events.emit("player-move-challenge", changedData);
+    };
+
+    this.challengeRoom.onMessage("change-room", async ({ roomName }) => {
+      if (roomName === "world") {
+        this.challengeRoom.leave();
+        //  this.handleWorldJoin();
+      }
+    });
   }
 
   getPlayerId() {
@@ -71,6 +82,10 @@ export default class Server {
 
   onPlayerMovedInChallenge(cb, context) {
     this.events.on("player-move-challenge", cb, context);
+  }
+
+  onChallengeStateChanged(cb, context) {
+    this.events.on("challenge-state-changed", cb, context);
   }
 
   onPlayerJoinedChallenge(cb, context) {

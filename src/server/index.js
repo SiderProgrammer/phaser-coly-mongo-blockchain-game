@@ -1,7 +1,7 @@
 const http = require("http");
 const express = require("express");
 const cors = require("cors");
-const { Server } = require("@colyseus/core");
+const { Server, LocalPresence } = require("@colyseus/core");
 const { monitor } = require("@colyseus/monitor");
 const Game = require("./rooms/Game").default;
 const Challenge = require("./rooms/Challenge").default;
@@ -15,6 +15,7 @@ app.use(express.json());
 const server = http.createServer(app);
 const gameServer = new Server({
   server,
+  presence: new LocalPresence(),
 });
 
 gameServer.define("game", Game);

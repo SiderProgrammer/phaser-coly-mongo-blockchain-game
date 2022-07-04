@@ -8,6 +8,7 @@ exports.default = class GameRoom extends Room {
   //
   onCreate(options) {
     // Set max number of clients for this room
+    this.presence.subscribe("test", (c) => console.log("TEST!", c));
     console.log("Room created");
     // this.maxClients = Maths.clamp(
     //     options.roomMaxPlayers || 0,
