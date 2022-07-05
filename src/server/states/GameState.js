@@ -1,5 +1,8 @@
 const { Player } = require("../entities/Player");
 const schema = require("@colyseus/schema");
+const DatabaseManager = require("../db/databaseManager");
+
+const db = new DatabaseManager();
 
 class State extends schema.Schema {
   constructor(sendMessage) {
@@ -7,24 +10,23 @@ class State extends schema.Schema {
     this.players = new schema.MapSchema();
     this.sendMessage = sendMessage;
   }
-  playerAdd(id, name) {
-    const spawner = { x: Math.random() * 400, y: 350 };
+  playerAdd(id, address) {
     const PLAYER_SIZE = 50;
 
-    const player = new Player(
-      id,
-      spawner.x + PLAYER_SIZE,
-      spawner.y + PLAYER_SIZE,
-      PLAYER_SIZE,
-      name
-    );
+    const playerSavedState = db.getPlayerRawMethod(address);
+
+    playerSavedState.then((state) => {
+      const player = new Player(address, address);
+      player.addWizards(state.wizards);
+      this.players.set(address, player);
+    });
+
+    //const spawner = { x: Math.random() * 400, y: 350 };
 
     // // Add the user to the "red" team by default
     // if (this.game.mode === 'team deathmatch') {
     //     player.setTeam('Red');
     // }
-
-    this.players.set(id, player);
 
     // Broadcast message to other players
     // this.sendMessage({

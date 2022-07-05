@@ -8,7 +8,7 @@ exports.default = class GameRoom extends Room {
   //
   onCreate(options) {
     // Set max number of clients for this room
-    this.presence.subscribe("test", (c) => console.log("TEST!", c));
+    // this.presence.subscribe("test", (c) => console.log("TEST!", c));
     console.log("Room created");
     // this.maxClients = Maths.clamp(
     //     options.roomMaxPlayers || 0,
@@ -41,7 +41,7 @@ exports.default = class GameRoom extends Room {
 
     //  Listen to messages from clients
     this.onMessage("*", (client, type, message) => {
-      const playerId = client.sessionId;
+      const playerId = message.playerId; // client.sessionId;
       // console.log("Received message type: " + type);
       // Validate which type of message is accepted
       switch (type) {
@@ -69,7 +69,8 @@ exports.default = class GameRoom extends Room {
   }
 
   onJoin(client, options) {
-    this.state.playerAdd(client.sessionId, options.playerName);
+    // client and options are sent from front-end
+    this.state.playerAdd(client.sessionId, options.address);
     console.log("New client joined!");
     //console.log(`${new Date().toISOString()} [Join] id=${client.sessionId} player=${options.playerName}`);
   }

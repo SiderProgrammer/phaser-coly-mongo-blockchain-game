@@ -5,16 +5,16 @@ const ArraySchema = schema.ArraySchema;
 const { Wizard } = require("./Wizard");
 
 class Player extends Schema {
-  constructor(id, x, y, size, name) {
+  constructor(id, name) {
     super();
     this.id = id;
     this.wizards = new ArraySchema(); // ! change to mapSchema // effect => this.wizards[id]
+  }
 
-    for (let i = 0; i < 4; i++) {
-      const x = 200 + 80 * i;
-      const y = 250;
-      this.wizards.push(new Wizard(i.toString(), x, y, 50, "wizard_" + i));
-    }
+  addWizards(wizardsState) {
+    wizardsState.forEach((state, i) => {
+      this.wizards.push(new Wizard(i.toString(), state.x, state.y, 50, "name"));
+    });
     this.wizards[0].isSelected = true;
   }
 

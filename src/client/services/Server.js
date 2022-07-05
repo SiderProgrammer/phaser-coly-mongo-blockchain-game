@@ -1,9 +1,12 @@
 import { Client } from "colyseus.js";
+import { SERVER_PORT } from "./config";
+import { CREATE_PLAYER, GET_PLAYER } from "./requests/requests";
 
 export default class Server {
-  constructor() {
-    this.client = new Client("ws://localhost:8080");
+  constructor(playerAccount) {
+    this.client = new Client(`ws://localhost:${SERVER_PORT}`);
     this.events = new Phaser.Events.EventEmitter();
+    this.playerAccount = playerAccount;
   }
 
   async join() {
@@ -12,16 +15,17 @@ export default class Server {
 
   async handleWorldJoin() {
     this.room = await this.client.joinOrCreate("game", {
-      playerName: "testAccount",
+      address: this.playerAccount.address,
     });
 
-    this.playerId = this.room ? this.room.sessionId : "";
+    this.playerId = this.playerAccount.address; // this.room ? this.room.sessionId : "";
 
     //console.log("Room", this.room);
     console.log("Player ID", this.playerId);
 
     this.room.state.players.onAdd = (player, playerId) => {
       this.events.emit("player-joined", player, playerId);
+      this.events.emit("player-joined-ui", player, playerId);
 
       player.wizards.forEach((wizard) => {
         wizard.ownerId = player.id; // ? it is needed to find a player owning this wizard
@@ -31,17 +35,21 @@ export default class Server {
       });
     };
 
-    this.room.onMessage("change-room", async ({ roomName }) => {
-      if (roomName === "challenge") {
-        this.handleChallengeJoin();
-      }
-    });
+    // this.room.onMessage("change-room", async ({ roomName }) => {
+    //   if (roomName === "challenge") {
+    //     this.handleChallengeJoin();
+    //   }
+    // });
   }
 
-  async handleChallengeJoin() {
-    // await this.room.leave(true);
-    // this.room.removeAllListeners();
-    this.challengeRoom = await this.client.joinOrCreate("challenge");
+  async handleChallengeJoin(wizardId) {
+    await this.room.leave(true);
+    this.room.removeAllListeners();
+
+    this.challengeRoom = await this.client.joinOrCreate("challenge", {
+      address: this.playerAccount.address,
+      wizardId: wizardId,
+    });
 
     this.events.emit("player-joined-challenge");
 
@@ -56,7 +64,7 @@ export default class Server {
     this.challengeRoom.onMessage("change-room", async ({ roomName }) => {
       if (roomName === "world") {
         this.challengeRoom.leave();
-        //  this.handleWorldJoin();
+        //this.handleWorldJoin();
       }
     });
   }
@@ -98,5 +106,9 @@ export default class Server {
 
   onWizardChanged(cb, context) {
     this.events.on("wizard-changed", cb, context);
+  }
+
+  onPlayerJoinedUI(cb, context) {
+    this.events.on("player-joined-ui", cb, context);
   }
 }

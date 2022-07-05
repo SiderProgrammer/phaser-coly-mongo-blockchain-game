@@ -6,6 +6,7 @@ class Player {
     this.playerId = playerId;
     this.isMe = isMe;
     this.wizards = [];
+    this.state = "alive";
 
     this.selectedWizardId = 0;
   }
@@ -21,6 +22,8 @@ class Player {
         _wizard.name
       );
       wizard.setScale(0.2);
+
+      if (!_wizard.isAlive) wizard.kill();
 
       this.wizards.push(wizard);
     });

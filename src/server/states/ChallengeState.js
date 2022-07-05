@@ -1,9 +1,11 @@
 const schema = require("@colyseus/schema");
 const { Wizard } = require("../entities/Wizard");
-
+const DatabaseManager = require("../db/databaseManager");
 const worldSize = { width: 800, height: 600 };
 const obstacles = [{ x: 400, y: 300, size: 50 }];
 const meta = { x: 400, y: 50, size: 50 };
+
+const db = new DatabaseManager();
 
 class State extends schema.Schema {
   constructor(sendMessage) {
@@ -11,8 +13,17 @@ class State extends schema.Schema {
     const PLAYER_SIZE = 50;
     this.wizard = new Wizard("0", 400, 500, PLAYER_SIZE, "test");
     this.challengeState = -1;
-
+    this.owner = "";
+    this.wizardId = "";
     this.sendMessage = sendMessage;
+  }
+
+  setWizardId(wizardId) {
+    this.wizardId = wizardId;
+  }
+
+  setOwner(address) {
+    this.owner = address;
   }
 
   playerMove(id, ts, dir) {
@@ -34,6 +45,7 @@ class State extends schema.Schema {
     obstacles.forEach((obstacle) => {
       if (this.isColliding(this.wizard, obstacle)) {
         this.challengeState = 0;
+        db.killWizardRawMethod(this.owner, this.wizardId);
         console.log("wizard dead");
       }
     });

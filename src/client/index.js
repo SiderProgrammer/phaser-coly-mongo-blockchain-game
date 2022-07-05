@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import World from "./scenes/world";
 import Bootstrap from "./scenes/bootstrap";
 import Challenge from "./scenes/challenge";
+import Hud from "./scenes/hud";
 
 const config = {
   type: Phaser.AUTO,
@@ -11,7 +12,7 @@ const config = {
   scale: {
     mode: Phaser.Scale.FIT,
   },
-  scene: [Bootstrap, World, Challenge],
+  scene: [Bootstrap, Hud, World, Challenge],
 };
 
 new Phaser.Game(config);

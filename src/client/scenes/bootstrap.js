@@ -1,3 +1,4 @@
+import { CREATE_PLAYER, GET_PLAYER } from "../services/requests/requests";
 import Server from "../services/Server";
 
 export default class Bootstrap extends Phaser.Scene {
@@ -5,12 +6,27 @@ export default class Bootstrap extends Phaser.Scene {
     super("bootstrap");
   }
 
-  init() {
-    this.server = new Server();
+  async create() {
+    this.playerAccount = {};
+    const address = (Math.random() * 100).toString(); // wallet address
+
+    this.playerAccount = await GET_PLAYER({ address });
+
+    if (!this.playerAccount.ok) {
+      this.playerAccount = await CREATE_PLAYER({ address });
+    }
+    this.playerAccount = await this.playerAccount.json();
+
+    this.server = new Server(this.playerAccount);
+
+    this.createWizardsHUD();
+    this.createNewGame(true);
   }
 
-  create() {
-    this.createNewGame(true);
+  createWizardsHUD() {
+    this.scene.launch("hud", {
+      server: this.server,
+    });
   }
 
   createNewGame(joinServer) {
@@ -35,12 +51,12 @@ export default class Bootstrap extends Phaser.Scene {
   onLoseChallenge() {
     console.log("Lose challenge");
     this.scene.stop("challenge");
-    this.createNewGame(false);
+    this.createNewGame(true);
   }
 
   onWinChallenge() {
     console.log("Win challenge");
     this.scene.stop("challenge");
-    this.createNewGame(false);
+    this.createNewGame(true);
   }
 }

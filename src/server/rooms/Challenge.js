@@ -4,7 +4,7 @@ const { ChallengeState } = require("../states/ChallengeState");
 exports.default = class ChallengeRoom extends Room {
   onCreate(options) {
     console.log("Challenge started");
-    this.presence.publish("test", { yo: "DFASDA" });
+    //this.presence.publish("test", { yo: "DFASDA" });
     this.setState(new ChallengeState(this.handleMessage));
 
     this.setSimulationInterval(() => this.handleTick());
@@ -18,13 +18,15 @@ exports.default = class ChallengeRoom extends Room {
           this.state.playerMove(playerId, message.ts, message.dir);
           break;
         case "leave-challenge":
-          client.send("change-room", { roomName: "challenge" });
+          client.send("change-room", { roomName: "world" });
           break;
       }
     });
   }
 
   onJoin(client, options) {
+    this.state.setWizardId(options.wizardId);
+    this.state.setOwner(options.address);
     //this.state.playerAdd(client.sessionId, options.playerName);
     console.log("New client started a challenge");
     this.lock();
