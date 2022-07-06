@@ -8,6 +8,12 @@ export default class Bootstrap extends Phaser.Scene {
 
   preload() {
     this.load.image("logo", "./src/client/assets/logo.png");
+    this.load.image("green", "./src/client/assets/green.png");
+    this.load.image("wizard", "./src/client/assets/wizard.png");
+    this.load.image(
+      "challengeButton",
+      "./src/client/assets/challengeButton.png"
+    );
   }
 
   async create() {
@@ -23,8 +29,9 @@ export default class Bootstrap extends Phaser.Scene {
     this.playerAccount = await this.playerAccount.json();
 
     this.server = new Server(this.playerAccount);
-    await this.server.handleWorldJoin();
+
     this.createNewGame(true);
+
     this.createWizardsHUD();
   }
 
@@ -32,6 +39,8 @@ export default class Bootstrap extends Phaser.Scene {
     this.scene.launch("hud", {
       server: this.server,
     });
+
+    this.scene.bringToTop("hud");
   }
 
   async createNewGame(joinServer) {
@@ -52,26 +61,23 @@ export default class Bootstrap extends Phaser.Scene {
       server: this.server,
       onLoseChallenge: this.onLoseChallenge.bind(this),
       onWinChallenge: this.onWinChallenge.bind(this),
+      wizardId,
     });
-
-    await this.server.handleChallengeJoin(wizardId);
   }
 
   async onLoseChallenge() {
     console.log("Lose challenge");
 
-    await this.server.handleWorldJoin();
-
     this.scene.stop("challenge");
     this.createNewGame(false);
+    // await this.server.handleWorldJoin();
   }
 
   async onWinChallenge() {
     console.log("Win challenge");
 
-    await this.server.handleWorldJoin();
-
     this.scene.stop("challenge");
     this.createNewGame(false);
+    // await this.server.handleWorldJoin();
   }
 }

@@ -19,6 +19,8 @@ class World extends Phaser.Scene {
     this.onPlayChallenge = onPlayChallenge;
     this.playersSavedState = await (await GET_ALL_PLAYERS()).json();
 
+    this.gw = this.game.renderer.width;
+    this.gh = this.game.renderer.height;
     // if (!this.server) {
     //   throw new Error("server instance missing");
     // }
@@ -30,10 +32,13 @@ class World extends Phaser.Scene {
 
     this.retrievePlayersState();
     this.server.onPlayerJoined(this.handlePlayerAdd, this);
+    this.server.onPlayerRemoved(this.handlePlayerRemove, this);
     this.server.onWizardChanged(this.handleWizardChanged, this);
 
     this.cursors = this.input.keyboard.createCursorKeys();
     this.addPlayChallengeButton();
+
+    await this.server.handleWorldJoin();
   }
 
   update() {
@@ -81,9 +86,8 @@ class World extends Phaser.Scene {
   }
 
   addPlayChallengeButton() {
-    const button = new Button(this, 100, 500, "logo");
-    button.setScale(0.5);
-    button.addText("Play challenge");
+    const button = new Button(this, 350, this.gh - 60, "challengeButton");
+    button.setScrollFactor(0, 0).setDepth(1000);
     button.onClick(() => this.onPlayChallenge(this.me.getSelectedWizardId()));
   }
 
@@ -103,6 +107,7 @@ class World extends Phaser.Scene {
 
   retrievePlayersState() {
     this.playersSavedState.forEach((player) => {
+      // console.log(player);
       this.handlePlayerAddFromDB(player, player.address);
     });
   }
@@ -110,26 +115,54 @@ class World extends Phaser.Scene {
   handlePlayerAddFromDB(player, address) {
     if (address === this.server.walletAddress) return;
 
-    // this.playerAdd("", address, player, false);
+    this.playerAdd("", address, player, false);
   }
 
-  handlePlayerAdd(player) {
+  handlePlayerAdd(_player) {
     // ? handle add player which just joined a room
     //console.log("Player added", player, playerId);
 
-    console.log(player);
+    // console.log(player);
     // const me = this.players.some((player) => player.walletAddress === address); // check if ME exists
 
     // if (me) return;
 
-    const isMe = this.isPlayerIdMe(player.id);
-    const walletAddress = isMe ? this.server.walletAddress : "";
+    //console.log(player, this.players);
+    //console.log(this.players, player.address);
+    const playerFromPlayers = this.players.find(
+      (player) => player.walletAddress === _player.address
+    );
 
-    const addedPlayer = this.playerAdd(player.id, walletAddress, player, isMe);
+    if (playerFromPlayers) {
+      // playerFromPlayers.updateWizards(_player.wizards);
+      // playerFromPlayers.sessionId = _player.id;
+      playerFromPlayers.destroy();
+      const index = this.players.findIndex(
+        (player) => player.walletAddress === _player.address
+      );
+
+      this.players.splice(index, 1);
+      // return;
+    }
+
+    const isMe = this.isPlayerIdMe(_player.id);
+    const walletAddress = isMe ? this.server.walletAddress : _player.address;
+
+    const addedPlayer = this.playerAdd(
+      _player.id,
+      walletAddress,
+      _player,
+      isMe
+    );
 
     if (isMe) {
       this.me = addedPlayer;
+      this.me.setSelectedWizardId(this.me.getSelectedWizardId());
     }
+  }
+
+  handlePlayerRemove(_player) {
+    //this.players.find(player => player.sessionId === _player.id)
   }
 
   playerAdd(sessionId, address, _player, isMe) {

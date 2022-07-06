@@ -19,16 +19,17 @@ export default class Server {
     this.walletAddress = this.playerAccount.address;
     this.playerId = this.room ? this.room.sessionId : ""; // session id
 
-    //console.log("Room", this.room);
-    console.log("Player ID", this.playerId);
-
     this.room.state.players.onAdd = (player, playerId) => {
       this.events.emit("player-joined", player, playerId);
 
-      if (!this.isHUDadded) {
-        // TODO : make it in a better way
-        this.events.emit("player-joined-ui", player, playerId); // ? executed in HUD scene
-        this.isHUDadded = true;
+      if (playerId === this.playerId) {
+        if (!this.isHUDadded) {
+          // TODO : make it in a better way
+          this.events.emit("player-joined-ui", player, playerId); // ? executed in HUD scene
+          this.isHUDadded = true;
+        } else {
+          this.events.emit("player-update-ui", player, playerId); // ? executed in HUD scene
+        }
       }
 
       player.wizards.forEach((wizard) => {
@@ -38,11 +39,14 @@ export default class Server {
         };
       });
     };
+
+    this.room.state.players.onRemove = (player, playerId) => {
+      this.events.emit("player-removed", player, playerId);
+    };
   }
 
   async handleChallengeJoin(wizardId) {
     await this.room.leave(true);
-    //this.room.removeAllListeners();
 
     this.challengeRoom = await this.client.joinOrCreate("challenge", {
       address: this.playerAccount.address,
@@ -103,6 +107,10 @@ export default class Server {
     this.events.on("player-joined", cb, context);
   }
 
+  onPlayerRemoved(cb, context) {
+    if (this.eventExists("player-removed")) return;
+    this.events.on("player-removed", cb, context);
+  }
   onWizardChanged(cb, context) {
     if (this.eventExists("wizard-changed")) return;
     this.events.on("wizard-changed", cb, context);
@@ -111,5 +119,10 @@ export default class Server {
   onPlayerJoinedUI(cb, context) {
     //  if (this.eventExists("player-joined-ui")) return;
     this.events.on("player-joined-ui", cb, context);
+  }
+
+  onPlayerUpdateUI(cb, context) {
+    //  if (this.eventExists("player-joined-ui")) return;
+    this.events.on("player-update-ui", cb, context);
   }
 }

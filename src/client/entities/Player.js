@@ -12,6 +12,13 @@ class Player {
     this.selectedWizardId = 0;
   }
 
+  destroy() {
+    this.wizards.forEach((wizard) => {
+      wizard.destroy();
+      wizard.name.destroy();
+    });
+  }
+
   addWizards(wizards) {
     wizards.forEach((_wizard, id) => {
       const wizard = new Wizard(
@@ -19,10 +26,9 @@ class Player {
         this.scene,
         _wizard.x,
         _wizard.y,
-        "logo",
+        "wizard",
         _wizard.name
       );
-      wizard.setScale(0.2);
 
       if (!_wizard.isAlive) wizard.kill();
 
@@ -37,10 +43,17 @@ class Player {
     wizardToUpdate.update(_wizard.x, _wizard.y);
   }
 
+  // updateWizards(wizards) {
+  //   this.wizards.forEach((wizard) => wizard.destroy());
+  //   this.wizards.forEach((wizard) => wizard.name.destroy());
+  //   this.addWizards(wizards);
+  // }
+
   getSelectedWizardId() {
     return this.selectedWizardId;
   }
   setSelectedWizardId(id) {
+    this.scene.cameras.main.startFollow(this.wizards[id]);
     this.selectedWizardId = id;
   }
 }

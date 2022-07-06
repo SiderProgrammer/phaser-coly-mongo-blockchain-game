@@ -4,6 +4,7 @@ const playerSchema = new mongoose.Schema({
   address: {
     //alias:"walletAddress",
     type: String,
+    index: true,
   },
 
   wizards: [

@@ -1,13 +1,13 @@
-import { getFunction, postFunction } from "./helper";
+import { requestGet, requestPost } from "./helper";
 
 export const CREATE_PLAYER = (data) => {
-  return postFunction(data, "createPlayer");
+  return requestPost(data, "createPlayer");
 };
 
 export const GET_PLAYER = (data) => {
-  return postFunction(data, "getPlayer");
+  return requestPost(data, "getPlayer");
 };
 
 export const GET_ALL_PLAYERS = () => {
-  return getFunction("getAllPlayers");
+  return requestGet("getAllPlayers");
 };

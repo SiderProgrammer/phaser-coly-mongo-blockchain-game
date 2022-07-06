@@ -1,3 +1,8 @@
+import {
+  CHALLENGE_META,
+  CHALLENGE_OBSTACLES,
+  CHALLENGE_PLAYER,
+} from "../../shared/config";
 import Wizard from "../entities/Wizard";
 
 class Challenge extends Phaser.Scene {
@@ -7,19 +12,26 @@ class Challenge extends Phaser.Scene {
 
   preload() {}
 
-  create({ server, onLoseChallenge, onWinChallenge }) {
+  async create({ server, onLoseChallenge, onWinChallenge, wizardId }) {
     this.server = server;
     this.onLoseChallenge = onLoseChallenge;
     this.onWinChallenge = onWinChallenge;
 
-    this.add.image(400, 300, "logo").setDisplaySize(50, 50);
-    this.add.image(400, 50, "logo").setDisplaySize(50, 50);
+    this.add
+      .image(CHALLENGE_META.x, CHALLENGE_META.y, "logo")
+      .setDisplaySize(50, 50);
+
+    this.add
+      .image(CHALLENGE_OBSTACLES[0].x, CHALLENGE_OBSTACLES[0].y, "logo")
+      .setDisplaySize(50, 50);
+
     this.me = null;
 
     this.server.onPlayerJoinedChallenge(this.handlePlayerAdd, this);
     this.server.onPlayerMovedInChallenge(this.handlePlayerMove, this);
     this.server.onChallengeStateChanged(this.handleChangeState, this);
     this.cursors = this.input.keyboard.createCursorKeys();
+    await this.server.handleChallengeJoin(wizardId);
   }
 
   update() {
@@ -56,7 +68,6 @@ class Challenge extends Phaser.Scene {
       if (dir.x != 0 || dir.y != 0) {
         const action = {
           type: "move",
-          ts: Date.now(),
           playerId: this.playerId,
           dir,
         };
@@ -82,7 +93,13 @@ class Challenge extends Phaser.Scene {
 
   handlePlayerAdd() {
     console.log("Player added");
-    this.me = new Wizard("0", this, 400, 600, "logo").setScale(0.2);
+    this.me = new Wizard(
+      "0",
+      this,
+      CHALLENGE_PLAYER.x,
+      CHALLENGE_PLAYER.y,
+      "logo"
+    ).setScale(0.2);
   }
 
   handlePlayerMove(changedData) {

@@ -2,46 +2,32 @@ const { Room } = require("colyseus");
 const { ChallengeState } = require("../states/ChallengeState");
 
 exports.default = class ChallengeRoom extends Room {
-  onCreate(options) {
-    console.log("Challenge started");
-    //this.presence.publish("test", { yo: "DFASDA" });
-    this.setState(new ChallengeState(this.handleMessage));
+  onCreate() {
+    console.log("Challenge room created");
 
-    this.setSimulationInterval(() => this.handleTick());
+    this.setState(new ChallengeState());
 
-    //  Listen to messages from clients
+    this.setSimulationInterval(() => this.state.update());
+
     this.onMessage("*", (client, type, message) => {
-      const playerId = client.sessionId;
-
       switch (type) {
         case "move":
-          this.state.playerMove(playerId, message.ts, message.dir);
+          this.state.playerMove(message.dir);
           break;
       }
     });
   }
 
   onJoin(client, options) {
+    console.log("New client joined to a challenge room");
+
     this.state.setWizardId(options.wizardId);
-    this.state.setOwner(options.address);
-    //this.state.playerAdd(client.sessionId, options.playerName);
-    console.log("New client started a challenge");
-    this.lock();
-    //console.log(`${new Date().toISOString()} [Join] id=${client.sessionId} player=${options.playerName}`);
+    this.state.setWizardOwner(options.address);
+
+    this.lock(); // ? Lock the room for only one player
   }
 
   onLeave(client) {
-    // this.state.playerRemove(client.sessionId);
-    console.log("Client left a challenge");
-    //  console.log(`${new Date().toISOString()} [Leave] id=${client.sessionId}`);
+    console.log("Client left a challenge room");
   }
-
-  handleTick = () => {
-    this.state.update();
-  };
-
-  handleMessage = (message) => {
-    console.log("New message sent!");
-    this.broadcast(message.type, message);
-  };
 };
