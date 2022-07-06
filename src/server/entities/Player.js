@@ -5,23 +5,29 @@ const ArraySchema = schema.ArraySchema;
 const { Wizard } = require("./Wizard");
 
 class Player extends Schema {
-  constructor(id, name) {
+  constructor(id, address) {
     super();
-    this.id = id;
+    this.id = id; // session id
+    this.address = address;
     this.wizards = new ArraySchema(); // ! change to mapSchema // effect => this.wizards[id]
   }
 
   addWizards(wizardsState) {
     wizardsState.forEach((state, i) => {
-      this.wizards.push(new Wizard(i.toString(), state.x, state.y, 50, "name"));
+      const wizard = new Wizard(i.toString(), state.x, state.y, 50, state.name);
+      wizard.isAlive = state.isAlive;
+
+      this.wizards.push(wizard);
     });
     this.wizards[0].isSelected = true;
   }
 
   move(vectorX, vectorY, speed) {
-    this.wizards
-      .find((wizard) => wizard.isSelected)
-      .move(vectorX, vectorY, speed);
+    const wizard = this.wizards.find((wizard) => wizard.isSelected);
+
+    if (!wizard.isAlive) return; // TODO : fix it
+
+    wizard.move(vectorX, vectorY, speed);
   }
 
   selectWizard(wizardId) {

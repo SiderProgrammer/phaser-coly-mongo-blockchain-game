@@ -15,7 +15,14 @@ class Wizard extends Phaser.GameObjects.Sprite {
   }
 
   showName() {
-    this.scene.add.text(this.x, this.y - 50, this.name).setOrigin(0.5);
+    this.name = this.scene.add
+      .text(this.x, this.y - 50, this.name)
+      .setOrigin(0.5);
+  }
+
+  update(x, y) {
+    this.setPosition(x, y);
+    this.name.setPosition(x, y - 50);
   }
 }
 

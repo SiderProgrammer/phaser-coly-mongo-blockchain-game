@@ -1,9 +1,10 @@
 import Wizard from "./Wizard";
 
 class Player {
-  constructor(scene, playerId, isMe) {
+  constructor(scene, sessionId, walletAddress, isMe) {
     this.scene = scene;
-    this.playerId = playerId;
+    this.sessionId = sessionId;
+    this.walletAddress = walletAddress;
     this.isMe = isMe;
     this.wizards = [];
     this.state = "alive";
@@ -33,7 +34,7 @@ class Player {
     const wizardToUpdate = this.wizards.find(
       (wizard) => wizard.id === _wizard.id
     );
-    wizardToUpdate.setPosition(_wizard.x, _wizard.y);
+    wizardToUpdate.update(_wizard.x, _wizard.y);
   }
 
   getSelectedWizardId() {

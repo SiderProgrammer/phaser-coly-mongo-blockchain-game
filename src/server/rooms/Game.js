@@ -41,7 +41,7 @@ exports.default = class GameRoom extends Room {
 
     //  Listen to messages from clients
     this.onMessage("*", (client, type, message) => {
-      const playerId = message.playerId; // client.sessionId;
+      const playerId = client.sessionId; // message.playerId; // ;
       // console.log("Received message type: " + type);
       // Validate which type of message is accepted
       switch (type) {
@@ -51,10 +51,10 @@ exports.default = class GameRoom extends Room {
         case "select":
           this.state.playerSelectWizard(playerId, message.ts, message.wizardId);
           break;
-        case "play-challenge":
-          client.send("change-room", { roomName: "challenge" });
-          //this.state.playChallenge(playerId, message.ts, message.wizardId);
-          break;
+        // case "play-challenge":
+        //   client.send("change-room", { roomName: "challenge" });
+        //   //this.state.playChallenge(playerId, message.ts, message.wizardId);
+        //   break;
         // case "rotate":
         // case "shoot":
         //   this.state.playerPushAction({
@@ -75,8 +75,8 @@ exports.default = class GameRoom extends Room {
     //console.log(`${new Date().toISOString()} [Join] id=${client.sessionId} player=${options.playerName}`);
   }
 
-  onLeave(client) {
-    // this.state.playerRemove(client.sessionId);
+  onLeave(client, c) {
+    this.state.playerRemove(client.sessionId);
     console.log("Client left");
     //  console.log(`${new Date().toISOString()} [Leave] id=${client.sessionId}`);
   }

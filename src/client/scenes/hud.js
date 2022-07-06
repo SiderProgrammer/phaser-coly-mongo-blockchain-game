@@ -33,6 +33,11 @@ export default class Hud extends Phaser.Scene {
         .text(wizardButton.x + 30, wizardButton.y, "Play")
         .setOrigin(0, 0.5);
 
+      if (!wizards[i].isAlive) {
+        this.setState("dead");
+        return;
+      }
+
       wizardButton.stateText.setInteractive().on("pointerup", () => {
         // TODO - return if clicked wizard is selected || player is during challenge
         //this.player.getSelectedWizardId()
@@ -71,8 +76,8 @@ export default class Hud extends Phaser.Scene {
             break;
         }
       };
-
-      this.buttons[worldScene.me.getSelectedWizardId()].setState("playing");
+      // worldScene.me.getSelectedWizardId()
+      this.buttons[0].setState("playing");
     }
   }
 }

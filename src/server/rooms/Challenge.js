@@ -17,9 +17,6 @@ exports.default = class ChallengeRoom extends Room {
         case "move":
           this.state.playerMove(playerId, message.ts, message.dir);
           break;
-        case "leave-challenge":
-          client.send("change-room", { roomName: "world" });
-          break;
       }
     });
   }

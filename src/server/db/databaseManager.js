@@ -50,12 +50,14 @@ class DatabaseManager {
           address,
         }).then((player) => {
           const wizardsPromises = [];
+          const sampleNames = ["Eric", "Patrick", "John", "Caroline"];
+          const seed = Math.floor(Math.random() * 100000);
 
           for (let i = 0; i < 4; ++i) {
             const wizard = Wizard.create({
               x: Math.floor(Math.random() * 600),
               y: Math.floor(Math.random() * 600),
-              name: player.address + i,
+              name: sampleNames[i] + "_" + seed,
               isAlive: true,
               player: player.id,
             }).then((_wizard) => {
@@ -109,10 +111,12 @@ class DatabaseManager {
 
   killWizardRawMethod(address, wizardId) {
     // ? used from server-side
-    return this.getPlayerRawMethod(address).then((state) => {
-      state.wizards[wizardId].isAlive = false;
-      state.wizards[wizardId].save();
-    });
+    return Players.findOne({ address })
+      .populate("wizards")
+      .then((state) => {
+        state.wizards[wizardId].isAlive = false;
+        state.wizards[wizardId].save();
+      });
   }
 
   saveMoney(req, res) {

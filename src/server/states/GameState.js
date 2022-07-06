@@ -16,27 +16,14 @@ class State extends schema.Schema {
     const playerSavedState = db.getPlayerRawMethod(address);
 
     playerSavedState.then((state) => {
-      const player = new Player(address, address);
+      const player = new Player(id, address);
       player.addWizards(state.wizards);
-      this.players.set(address, player);
+      this.players.set(id, player);
     });
+  }
 
-    //const spawner = { x: Math.random() * 400, y: 350 };
-
-    // // Add the user to the "red" team by default
-    // if (this.game.mode === 'team deathmatch') {
-    //     player.setTeam('Red');
-    // }
-
-    // Broadcast message to other players
-    // this.sendMessage({
-    //   type: "joined",
-    //   from: "server",
-    //   ts: Date.now(),
-    //   params: {
-    //     playerName: this.players.get(id).name,
-    //   },
-    // });
+  playerRemove(id) {
+    this.players.delete(id);
   }
 
   playerMove(id, ts, dir) {

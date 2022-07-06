@@ -6,9 +6,14 @@ export default class Bootstrap extends Phaser.Scene {
     super("bootstrap");
   }
 
+  preload() {
+    this.load.image("logo", "./src/client/assets/logo.png");
+  }
+
   async create() {
     this.playerAccount = {};
-    const address = (Math.random() * 100).toString(); // wallet address
+    const address = (Math.random() * 100).toString(); //  wallet address
+    //  ! we'll need to generate JW token or something else so users can't change their address from client-side and cheat
 
     this.playerAccount = await GET_PLAYER({ address });
 
@@ -18,9 +23,9 @@ export default class Bootstrap extends Phaser.Scene {
     this.playerAccount = await this.playerAccount.json();
 
     this.server = new Server(this.playerAccount);
-
-    this.createWizardsHUD();
+    await this.server.handleWorldJoin();
     this.createNewGame(true);
+    this.createWizardsHUD();
   }
 
   createWizardsHUD() {
@@ -29,7 +34,9 @@ export default class Bootstrap extends Phaser.Scene {
     });
   }
 
-  createNewGame(joinServer) {
+  async createNewGame(joinServer) {
+    //joinServer && (await this.server.handleWorldJoin());
+
     this.scene.launch("world", {
       server: this.server,
       onPlayChallenge: this.onPlayChallenge.bind(this),
@@ -37,7 +44,7 @@ export default class Bootstrap extends Phaser.Scene {
     });
   }
 
-  onPlayChallenge() {
+  async onPlayChallenge(wizardId) {
     console.log("challenge started!");
 
     this.scene.stop("world");
@@ -46,17 +53,25 @@ export default class Bootstrap extends Phaser.Scene {
       onLoseChallenge: this.onLoseChallenge.bind(this),
       onWinChallenge: this.onWinChallenge.bind(this),
     });
+
+    await this.server.handleChallengeJoin(wizardId);
   }
 
-  onLoseChallenge() {
+  async onLoseChallenge() {
     console.log("Lose challenge");
+
+    await this.server.handleWorldJoin();
+
     this.scene.stop("challenge");
-    this.createNewGame(true);
+    this.createNewGame(false);
   }
 
-  onWinChallenge() {
+  async onWinChallenge() {
     console.log("Win challenge");
+
+    await this.server.handleWorldJoin();
+
     this.scene.stop("challenge");
-    this.createNewGame(true);
+    this.createNewGame(false);
   }
 }

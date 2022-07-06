@@ -5,9 +5,7 @@ class Challenge extends Phaser.Scene {
     super("challenge");
   }
 
-  preload() {
-    this.load.image("logo", "./src/client/assets/logo.png");
-  }
+  preload() {}
 
   create({ server, onLoseChallenge, onWinChallenge }) {
     this.server = server;
@@ -68,16 +66,6 @@ class Challenge extends Phaser.Scene {
     }
   }
 
-  handleLoseChallenge() {
-    this.onLoseChallenge();
-    const action = {
-      type: "leave-challenge",
-      ts: Date.now(),
-      playerId: this.playerId,
-    };
-    this.server.handleActionSendInChallenge(action);
-  }
-
   handleChangeState(changedData) {
     const updatedState = changedData.find(
       (data) => data.field === "challengeState"
@@ -85,7 +73,7 @@ class Challenge extends Phaser.Scene {
 
     if (updatedState) {
       if (updatedState.value === 0) {
-        this.handleLoseChallenge();
+        this.onLoseChallenge();
       } else if (updatedState.value === 1) {
         this.onWinChallenge();
       }

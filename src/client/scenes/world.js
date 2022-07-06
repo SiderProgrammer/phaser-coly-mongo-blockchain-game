@@ -11,9 +11,7 @@ class World extends Phaser.Scene {
     // const url = `${window.location.protocol.replace('http', 'ws')}//${host}${port ? `:${port}` : ''}`;
   }
 
-  preload() {
-    this.load.image("logo", "./src/client/assets/logo.png");
-  }
+  preload() {}
 
   async create({ server, onPlayChallenge, joinServer }) {
     //this.add.image(400, 200, "logo").setScale(0.2); // test obstacle
@@ -21,12 +19,9 @@ class World extends Phaser.Scene {
     this.onPlayChallenge = onPlayChallenge;
     this.playersSavedState = await (await GET_ALL_PLAYERS()).json();
 
-    if (!this.server) {
-      throw new Error("server instance missing");
-    }
-    if (joinServer) {
-      await this.server.join();
-    }
+    // if (!this.server) {
+    //   throw new Error("server instance missing");
+    // }
 
     this.playerId = this.server.getPlayerId();
 
@@ -89,30 +84,18 @@ class World extends Phaser.Scene {
     const button = new Button(this, 100, 500, "logo");
     button.setScale(0.5);
     button.addText("Play challenge");
-    button.onClick(() => this.playChallenge());
+    button.onClick(() => this.onPlayChallenge(this.me.getSelectedWizardId()));
   }
 
-  playChallenge() {
-    // const action = {
-    //   type: "play-challenge",
-    //   ts: Date.now(),
-    //   playerId: this.playerId,
-    //   wizardId: this.me.getSelectedWizardId(),
-    // };
-
-    // this.server.handleActionSend(action);
-    this.server.handleChallengeJoin(this.me.getSelectedWizardId());
-
-    this.onPlayChallenge();
-  }
+  isWalletAddressMe() {}
 
   isPlayerIdMe(playerId) {
-    return playerId === this.server.playerAccount.address;
+    return playerId === this.server.getPlayerId();
   }
 
   handleWizardChanged(wizard) {
     const wizardOwner = this.players.find(
-      (player) => player.playerId === wizard.ownerId
+      (player) => player.sessionId === wizard.playerId
     );
 
     wizardOwner.updateWizard(wizard);
@@ -120,53 +103,57 @@ class World extends Phaser.Scene {
 
   retrievePlayersState() {
     this.playersSavedState.forEach((player) => {
-      this.handlePlayerAdd(player, player.address);
+      this.handlePlayerAddFromDB(player, player.address);
     });
   }
 
-  handlePlayerAdd(player, playerId) {
-    console.log("Player added", player, playerId);
+  handlePlayerAddFromDB(player, address) {
+    if (address === this.server.walletAddress) return;
 
-    const me = this.players.find((player) => player.playerId === playerId); // check if ME exists
+    // this.playerAdd("", address, player, false);
+  }
 
-    if (me) return;
+  handlePlayerAdd(player) {
+    // ? handle add player which just joined a room
+    //console.log("Player added", player, playerId);
 
-    // const isMe = this.isPlayerIdMe(playerId);
-    // if (me) {
-    //   this.me = me;
-    //   return;
-    // }
-    console.log("NEW PLAYER", playerId, this.players);
-    const isMe = this.isPlayerIdMe(playerId);
-    const addedPlayer = this.playerAdd(playerId, player, isMe);
+    console.log(player);
+    // const me = this.players.some((player) => player.walletAddress === address); // check if ME exists
+
+    // if (me) return;
+
+    const isMe = this.isPlayerIdMe(player.id);
+    const walletAddress = isMe ? this.server.walletAddress : "";
+
+    const addedPlayer = this.playerAdd(player.id, walletAddress, player, isMe);
 
     if (isMe) {
       this.me = addedPlayer;
     }
   }
 
-  handlePlayerUpdate(player, playerId) {
-    const isMe = this.isPlayerIdMe(playerId);
-    this.playerUpdate(playerId, player, isMe);
-  }
-
-  playerUpdate(playerId, player, isMe) {
-    const playerToUpdate = this.players.find(
-      (player) => player.playerId === playerId
-    );
-
-    playerToUpdate.x = player.x;
-    playerToUpdate.y = player.y;
-  }
-
-  playerAdd(playerId, _player, isMe) {
-    const player = new Player(this, playerId, isMe);
+  playerAdd(sessionId, address, _player, isMe) {
+    const player = new Player(this, sessionId, address, isMe);
     player.addWizards(_player.wizards);
 
     this.players.push(player);
 
     return player;
   }
+
+  // handlePlayerUpdate(player, playerId) {
+  //   const isMe = this.isPlayerIdMe(playerId);
+  //   this.playerUpdate(playerId, player, isMe);
+  // }
+
+  // playerUpdate(playerId, player, isMe) {
+  //   const playerToUpdate = this.players.find(
+  //     (player) => player.playerId === playerId
+  //   );
+
+  //   playerToUpdate.x = player.x;
+  //   playerToUpdate.y = player.y;
+  // }
 
   //   handleMessage(type, message) {
   //     console.log(type, message);
