@@ -7,11 +7,11 @@ export default class Bootstrap extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image("logo", "./src/client/assets/logo.png");
-    this.load.image("green", "./src/client/assets/green.png");
-    this.load.image("red", "./src/client/assets/red.png");
-    this.load.image("white", "./src/client/assets/white.png");
-    this.load.image("wizard", "./src/client/assets/wizard.png");
+    this.load.image("logo", "src/client/assets/logo.png");
+    this.load.image("green", "src/client/assets/green.png");
+    this.load.image("red", "src/client/assets/red.png");
+    this.load.image("white", "src/client/assets/white.png");
+    this.load.image("wizard", "src/client/assets/wizard.png");
     this.load.image(
       "challengeButton",
       "./src/client/assets/challengeButton.png"
