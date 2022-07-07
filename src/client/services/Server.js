@@ -1,9 +1,9 @@
 import { Client } from "colyseus.js";
-import { SERVER_PORT } from "../../shared/config";
+import { WEBSOCKET_URL } from "./config";
 
 export default class Server {
   constructor(playerAccount) {
-    this.client = new Client(`ws://localhost:${SERVER_PORT}`);
+    this.client = new Client(WEBSOCKET_URL);
     this.events = new Phaser.Events.EventEmitter();
 
     this.playerAccount = playerAccount;
