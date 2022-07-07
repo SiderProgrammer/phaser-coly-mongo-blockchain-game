@@ -11,7 +11,6 @@ const path = require("path");
 const port = process.env.PORT || SERVER_PORT;
 const host = "0.0.0.0";
 const app = express();
-// const __dirname = dirname(__filename);
 
 app.use(cors());
 app.use(express.json());
@@ -19,6 +18,11 @@ app.use(express.json());
 app.use(
   "/",
   express.static(path.normalize(path.join(__dirname, "../../dist")))
+);
+
+app.use(
+  "/src/client/assets/",
+  express.static(path.normalize(path.join(__dirname, "../../assets")))
 );
 
 app.get("/", (req, res) => {
