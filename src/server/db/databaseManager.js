@@ -115,6 +115,14 @@ class DatabaseManager {
           state.wizards[i].y = wizard.y;
           state.wizards[i].save(); // ? improve saving code
         });
+      })
+      .catch((err) => {
+        console.log(
+          "Error while saving player wizards, player wallet address:",
+          address,
+          "error:",
+          err
+        );
       });
   }
 }

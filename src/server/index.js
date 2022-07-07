@@ -22,7 +22,7 @@ app.use(
 
 app.use(
   "/src/client/assets/",
-  express.static(path.normalize(path.join(__dirname, "../../assets")))
+  express.static(path.normalize(path.join(__dirname, "../../assets"))) // TODO : search for better solution
 );
 
 app.get("/", (req, res) => {
