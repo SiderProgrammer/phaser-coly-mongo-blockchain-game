@@ -6,6 +6,7 @@
   "scripts": {
     "build": "webpack --config webpack/prod.js ",
     "start": "webpack-dev-server --config webpack/base.js --open",
+    "play": "cross-env-shell NODE_ENV=production node server/server.js",
     "start-server": "nodemon src/server/index.js"
   },
   "repository": {
@@ -42,6 +43,7 @@
     "express": "^4.18.1",
     "mongoose": "^6.4.2",
     "nodemon": "^2.0.18",
+    "path": "^0.12.7",
     "phaser": "^3.55.2",
     "regenerator-runtime": "^0.13.9"
   }

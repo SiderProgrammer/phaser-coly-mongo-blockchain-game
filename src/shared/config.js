@@ -4,6 +4,7 @@
 // };
 
 // export const HUD_WIDTH = 500;
+const SERVER_PORT = 8080;
 
 const WORLD_SIZE = {
   WIDTH: 1280,
@@ -40,4 +41,5 @@ module.exports = {
   CHALLENGE_META,
   CHALLENGE_PLAYER,
   PLAYER_SIZE,
+  SERVER_PORT,
 }; // TODO : change to imports & exports  (need to configure webpack for server)

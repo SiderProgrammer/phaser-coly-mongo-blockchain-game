@@ -4,7 +4,7 @@ const srvConfig = require("./config/auth");
 const Wizard = require("./models/Wizard");
 const Players = require("./models/Player");
 
-const DATABASE_URL = `mongodb+srv://${srvConfig.USERNAME}:${srvConfig.PASSWORD}@${srvConfig.HOST}/${srvConfig.DB}?retryWrites=true&w=majority`;
+const DATABASE_URL = `mongodb+srv://${srvConfig.USERNAME}:${srvConfig.PASSWORD}@${srvConfig.HOST}/?retryWrites=true&w=majority`;
 
 class DatabaseManager {
   constructor() {}

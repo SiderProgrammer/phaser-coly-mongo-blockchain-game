@@ -1,5 +1,5 @@
 import { Client } from "colyseus.js";
-import { SERVER_PORT } from "./config";
+import { SERVER_PORT } from "../../shared/config";
 
 export default class Server {
   constructor(playerAccount) {
