@@ -5,8 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "build": "webpack --config webpack/prod.js ",
-    "start": "webpack-dev-server --config webpack/base.js --open",
-    "play": "cross-env-shell NODE_ENV=production node server/server.js",
+    "start": "cross-env-shell NODE_ENV=production node server/server.js",
+    "start-client": "webpack-dev-server --config webpack/base.js --open",
     "start-server": "nodemon src/server/index.js"
   },
   "repository": {

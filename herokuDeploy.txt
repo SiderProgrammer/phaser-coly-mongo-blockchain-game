@@ -1,0 +1,3 @@
+heroku create <app-name>
+heroku git:remote -a <app-name>
+git push heroku dev:main
