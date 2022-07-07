@@ -1,4 +1,5 @@
 class Wizard extends Phaser.GameObjects.Sprite {
+  // TODO : change this class to a container
   constructor(id, scene, x, y, sprite, name) {
     super(scene, x, y, sprite);
     scene.add.existing(this);

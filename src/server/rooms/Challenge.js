@@ -20,7 +20,7 @@ exports.default = class ChallengeRoom extends Room {
 
   onJoin(client, options) {
     console.log("New client joined to a challenge room");
-
+    // TODO : check if wizard is alive
     this.state.setWizardId(options.wizardId);
     this.state.setWizardOwner(options.address);
 

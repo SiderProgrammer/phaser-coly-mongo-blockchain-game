@@ -25,8 +25,11 @@ class Player extends Schema {
       wizard.isAlive = _wizard.isAlive;
 
       this.wizards.push(wizard);
+
+      if (wizard.isAlive) {
+        this.wizards[i].isSelected = true;
+      }
     });
-    this.wizards[0].isSelected = true;
   }
 
   move(vectorX, vectorY, speed) {

@@ -17,4 +17,14 @@ const config = {
   scene: [Bootstrap, Hud, World, Challenge],
 };
 
-new Phaser.Game(config);
+// ? just for dev purposes
+const address = document.getElementById("wallet-address");
+const confirm = document.getElementById("confirm-address");
+
+confirm.onclick = () => {
+  window.walletAddress = address.value;
+  address.style.display = "none";
+  confirm.style.display = "none";
+
+  new Phaser.Game(config);
+};

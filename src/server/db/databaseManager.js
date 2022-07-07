@@ -29,13 +29,13 @@ class DatabaseManager {
 
           const wizardsQueries = [];
           const sampleNames = ["Eric", "Patrick", "John", "Caroline"];
-          const seed = Math.floor(Math.random() * 1000);
+          // const seed = Math.floor(Math.random() * 1000);
 
           for (let i = 0; i < 4; ++i) {
             const wizard = Wizard.create({
               x: Math.floor(Math.random() * 600),
               y: Math.floor(Math.random() * 600),
-              name: sampleNames[i] + "_" + seed,
+              name: sampleNames[i] + "_" + address, // + seed
               isAlive: true,
               player: player.id,
             }).then((_wizard) => {

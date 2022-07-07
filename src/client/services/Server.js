@@ -5,10 +5,13 @@ export default class Server {
   constructor(playerAccount) {
     this.client = new Client(`ws://localhost:${SERVER_PORT}`);
     this.events = new Phaser.Events.EventEmitter();
+
     this.playerAccount = playerAccount;
     this.isHUDadded = false;
+    this.walletAddress = this.playerAccount.address;
   }
 
+  // TODO : change events names && break HUD, World, Challenge handlers into separate files
   async handleWorldJoin() {
     //if (this.challengeRoom) await this.challengeRoom.leave(true);
 
@@ -16,32 +19,20 @@ export default class Server {
       address: this.playerAccount.address,
     });
 
-    this.walletAddress = this.playerAccount.address;
-    this.playerId = this.room ? this.room.sessionId : ""; // session id
+    this.playerId = this.room ? this.room.sessionId : ""; // ? session id
 
     this.room.state.players.onAdd = (player, playerId) => {
-      this.events.emit("player-joined", player, playerId);
+      this.events.emit("player-joined", player);
 
       if (playerId === this.playerId) {
-        if (!this.isHUDadded) {
-          // TODO : make it in a better way
-          this.events.emit("player-joined-ui", player, playerId); // ? executed in HUD scene
-          this.isHUDadded = true;
-        } else {
-          this.events.emit("player-update-ui", player, playerId); // ? executed in HUD scene
-        }
+        this.handleAddHUD(player);
       }
 
       player.wizards.forEach((wizard) => {
-        wizard.playerId = player.id; // TODO : remove it //? it is needed to find a player owning this wizard
         wizard.onChange = () => {
-          this.events.emit("wizard-changed", wizard);
+          this.events.emit("wizard-changed", wizard, player.id);
         };
       });
-    };
-
-    this.room.state.players.onRemove = (player, playerId) => {
-      this.events.emit("player-removed", player, playerId);
     };
   }
 
@@ -64,8 +55,14 @@ export default class Server {
     };
   }
 
-  getPlayerId() {
-    return this.playerId;
+  handleAddHUD(player) {
+    if (!this.isHUDadded) {
+      // TODO : make it in a better way
+      this.events.emit("player-joined-ui", player, player.id); // ? callback in HUD scene
+      this.isHUDadded = true;
+    } else {
+      this.events.emit("player-update-ui", player, player.id); // ? callback in HUD scene
+    }
   }
 
   handleActionSend(action) {
@@ -74,6 +71,14 @@ export default class Server {
     }
 
     this.room.send(action.type, action);
+  }
+
+  getPlayerWalletAddress() {
+    return this.walletAddress;
+  }
+
+  getPlayerId() {
+    return this.playerId;
   }
 
   handleActionSendInChallenge(action) {
@@ -87,6 +92,18 @@ export default class Server {
     return this.events.eventNames().some((name) => name === event);
   }
 
+  // ! WORLD EVENTS
+  onPlayerJoined(cb, context) {
+    if (this.eventExists("player-joined")) return;
+    this.events.on("player-joined", cb, context);
+  }
+
+  onWizardChanged(cb, context) {
+    if (this.eventExists("wizard-changed")) return;
+    this.events.on("wizard-changed", cb, context);
+  }
+
+  // ! CHALLENGE EVENTS
   onPlayerMovedInChallenge(cb, context) {
     if (this.eventExists("player-move-challenge")) return;
     this.events.on("player-move-challenge", cb, context);
@@ -102,19 +119,7 @@ export default class Server {
     this.events.on("player-joined-challenge", cb, context);
   }
 
-  onPlayerJoined(cb, context) {
-    if (this.eventExists("player-joined")) return;
-    this.events.on("player-joined", cb, context);
-  }
-
-  onPlayerRemoved(cb, context) {
-    if (this.eventExists("player-removed")) return;
-    this.events.on("player-removed", cb, context);
-  }
-  onWizardChanged(cb, context) {
-    if (this.eventExists("wizard-changed")) return;
-    this.events.on("wizard-changed", cb, context);
-  }
+  // ! UI EVENTS
 
   onPlayerJoinedUI(cb, context) {
     //  if (this.eventExists("player-joined-ui")) return;

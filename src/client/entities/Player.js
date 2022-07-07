@@ -43,12 +43,6 @@ class Player {
     wizardToUpdate.update(_wizard.x, _wizard.y);
   }
 
-  // updateWizards(wizards) {
-  //   this.wizards.forEach((wizard) => wizard.destroy());
-  //   this.wizards.forEach((wizard) => wizard.name.destroy());
-  //   this.addWizards(wizards);
-  // }
-
   getSelectedWizardId() {
     return this.selectedWizardId;
   }
