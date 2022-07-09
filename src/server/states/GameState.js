@@ -4,18 +4,19 @@ const DatabaseManager = require("../db/databaseManager");
 
 const db = new DatabaseManager();
 
+const PLAYER_SPEED = 5;
+
 class State extends schema.Schema {
-  constructor(sendMessage) {
+  constructor() {
     super();
     this.players = new schema.MapSchema();
-    this.sendMessage = sendMessage;
   }
   playerAdd(id, address) {
-    const PLAYER_SIZE = 50;
-
-    const playerSavedState = db.getPlayerRawMethod(address);
+    const playerSavedState = db.getPlayerQuery(address);
 
     playerSavedState.then((state) => {
+      console.log("Player added to a world room");
+
       const player = new Player(id, address);
       player.addWizards(state.wizards);
       this.players.set(id, player);
@@ -23,43 +24,25 @@ class State extends schema.Schema {
   }
 
   playerRemove(id) {
+    const player = this.players.get(id);
+    db.savePlayerWizards(player.address, player.wizards);
+
     this.players.delete(id);
   }
 
-  playerMove(id, ts, dir) {
+  playerMove(id, dir) {
     const player = this.players.get(id);
+    if (!player) return;
 
-    if (dir.x == 0 && dir.y == 0) dir.empty = true;
-
-    if (!player || dir.empty) {
-      return;
-    }
-
-    player.move(dir.x, dir.y, 5);
+    player.move(dir.x, dir.y, PLAYER_SPEED);
   }
 
-  playerSelectWizard(id, ts, wizardId) {
+  playerSelectWizard(id, wizardId) {
     const player = this.players.get(id);
+
+    if (!player || !player.wizards[wizardId].isAlive) return; // TODO : test it
+
     player.selectWizard(wizardId);
-  }
-
-  playChallenge(id, ts, wizardId) {
-    // const player = this.players.get(id);
-    // const wizard = player.getWizardById(wizardId);
-  }
-
-  update() {
-    // this.players.forEach((player, playerId) => {
-    //   obstacles.forEach((obstacle) => {
-    //     if (this.isColliding(player, obstacle)) {
-    //       console.log("collision!");
-    //     }
-    //   });
-    // });
-    // this.updateGame();
-    // this.updatePlayers();
-    // this.updateMonsters();
-    // this.updateBullets();
   }
 }
 schema.defineTypes(State, {

@@ -7,13 +7,22 @@ export default class Bootstrap extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image("logo", "./src/client/assets/logo.png");
+    this.load.image("logo", "src/client/assets/logo.png");
+    this.load.image("green", "src/client/assets/green.png");
+    this.load.image("red", "src/client/assets/red.png");
+    this.load.image("white", "src/client/assets/white.png");
+    this.load.image("wizard", "src/client/assets/wizard.png");
+    this.load.image(
+      "challengeButton",
+      "./src/client/assets/challengeButton.png"
+    );
   }
 
   async create() {
     this.playerAccount = {};
-    const address = (Math.random() * 100).toString(); //  wallet address
-    //  ! we'll need to generate JW token or something else so users can't change their address from client-side and cheat
+    const address = window.walletAddress; // (Math.random() * 100).toString();
+    // ? random generated wallet address for development purpose (later it will be real wallet address)
+    // ! we'll need to generate JW token or something else so users can't change their address from client-side and cheat
 
     this.playerAccount = await GET_PLAYER({ address });
 
@@ -23,8 +32,8 @@ export default class Bootstrap extends Phaser.Scene {
     this.playerAccount = await this.playerAccount.json();
 
     this.server = new Server(this.playerAccount);
-    await this.server.handleWorldJoin();
-    this.createNewGame(true);
+
+    this.createNewGame();
     this.createWizardsHUD();
   }
 
@@ -32,46 +41,42 @@ export default class Bootstrap extends Phaser.Scene {
     this.scene.launch("hud", {
       server: this.server,
     });
+
+    this.scene.bringToTop("hud");
   }
 
-  async createNewGame(joinServer) {
-    //joinServer && (await this.server.handleWorldJoin());
-
+  async createNewGame() {
     this.scene.launch("world", {
       server: this.server,
       onPlayChallenge: this.onPlayChallenge.bind(this),
-      joinServer: joinServer,
     });
+
+    console.log("World created!");
   }
 
   async onPlayChallenge(wizardId) {
-    console.log("challenge started!");
-
     this.scene.stop("world");
     this.scene.launch("challenge", {
       server: this.server,
       onLoseChallenge: this.onLoseChallenge.bind(this),
       onWinChallenge: this.onWinChallenge.bind(this),
+      wizardId,
     });
 
-    await this.server.handleChallengeJoin(wizardId);
+    console.log("Challenge started!");
   }
 
   async onLoseChallenge() {
-    console.log("Lose challenge");
-
-    await this.server.handleWorldJoin();
-
     this.scene.stop("challenge");
-    this.createNewGame(false);
+    this.createNewGame();
+
+    console.log("Challenge lost");
   }
 
   async onWinChallenge() {
-    console.log("Win challenge");
-
-    await this.server.handleWorldJoin();
-
     this.scene.stop("challenge");
-    this.createNewGame(false);
+    this.createNewGame();
+
+    console.log("Challenge won");
   }
 }

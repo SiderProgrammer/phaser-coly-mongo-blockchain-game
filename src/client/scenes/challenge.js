@@ -1,3 +1,9 @@
+import {
+  CHALLENGE_META,
+  CHALLENGE_OBSTACLES,
+  CHALLENGE_PLAYER,
+} from "../../shared/config";
+import InputManager from "../components/InputManager";
 import Wizard from "../entities/Wizard";
 
 class Challenge extends Phaser.Scene {
@@ -7,66 +13,42 @@ class Challenge extends Phaser.Scene {
 
   preload() {}
 
-  create({ server, onLoseChallenge, onWinChallenge }) {
+  async create({ server, onLoseChallenge, onWinChallenge, wizardId }) {
     this.server = server;
     this.onLoseChallenge = onLoseChallenge;
     this.onWinChallenge = onWinChallenge;
 
-    this.add.image(400, 300, "logo").setDisplaySize(50, 50);
-    this.add.image(400, 50, "logo").setDisplaySize(50, 50);
+    this.add.image(CHALLENGE_META.x, CHALLENGE_META.y, "white");
+
+    this.add.image(CHALLENGE_OBSTACLES[0].x, CHALLENGE_OBSTACLES[0].y, "red");
+
     this.me = null;
 
     this.server.onPlayerJoinedChallenge(this.handlePlayerAdd, this);
     this.server.onPlayerMovedInChallenge(this.handlePlayerMove, this);
     this.server.onChallengeStateChanged(this.handleChangeState, this);
-    this.cursors = this.input.keyboard.createCursorKeys();
+
+    this.inputManager = new InputManager(this);
+
+    await this.server.handleChallengeJoin(wizardId);
   }
 
   update() {
-    if (!this.cursors) return;
+    this.inputManager && this.inputManager.update();
+  }
 
-    const dir = {
-      // vector to determine move direction
-      x: 0,
-      y: 0,
+  playerMoved(dir) {
+    const action = {
+      type: "move",
+      playerId: this.playerId,
+      dir,
     };
 
-    if (
-      this.cursors.up.isDown ||
-      this.cursors.down.isDown ||
-      this.cursors.left.isDown ||
-      this.cursors.right.isDown
-    ) {
-      if (this.cursors.up.isDown) {
-        dir.y -= 1;
-      }
-
-      if (this.cursors.down.isDown) {
-        dir.y += 1;
-      }
-
-      if (this.cursors.left.isDown) {
-        dir.x -= 1;
-      }
-
-      if (this.cursors.right.isDown) {
-        dir.x += 1;
-      }
-
-      if (dir.x != 0 || dir.y != 0) {
-        const action = {
-          type: "move",
-          ts: Date.now(),
-          playerId: this.playerId,
-          dir,
-        };
-
-        this.server.handleActionSendInChallenge(action);
-      }
-    }
+    this.server.handleActionSendInChallenge(action);
   }
 
   handleChangeState(changedData) {
+    // TODO : improve this function code
     const updatedState = changedData.find(
       (data) => data.field === "challengeState"
     );
@@ -81,11 +63,17 @@ class Challenge extends Phaser.Scene {
   }
 
   handlePlayerAdd() {
-    console.log("Player added");
-    this.me = new Wizard("0", this, 400, 600, "logo").setScale(0.2);
+    this.me = new Wizard(
+      "0", // ? not needed here
+      this,
+      CHALLENGE_PLAYER.x,
+      CHALLENGE_PLAYER.y,
+      "wizard" // ? not needed here
+    );
   }
 
   handlePlayerMove(changedData) {
+    // TODO : improve this function code
     const updatedPosition = changedData.filter(
       (data) => data.field === "x" || data.field === "y"
     );

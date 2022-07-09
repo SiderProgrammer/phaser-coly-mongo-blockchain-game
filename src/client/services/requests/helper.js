@@ -5,7 +5,7 @@ const headers = {
   Accept: "application/json",
 };
 
-export const postFunction = (data, url) => {
+export const requestPost = (data, url) => {
   return fetch(`${SERVER_URL}/${url}`, {
     method: "post",
     headers: headers,
@@ -13,22 +13,8 @@ export const postFunction = (data, url) => {
   });
 };
 
-export const getFunction = (url) => {
+export const requestGet = (url) => {
   return fetch(`${SERVER_URL}/${url}`, {
     headers: headers,
   });
 };
-export async function fetchWithTimeout(resource, options) {
-  const { timeout } = options;
-
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-
-  const response = await fetch(resource, {
-    ...options,
-    signal: controller.signal,
-  });
-  clearTimeout(id);
-
-  return response;
-}

@@ -1,95 +1,35 @@
 const { Room } = require("colyseus");
-// const { Constants, Maths, Models, Types } = require("@tosios/common");
 const { GameState } = require("../states/GameState");
 
 exports.default = class GameRoom extends Room {
-  //
-  // Lifecycle
-  //
-  onCreate(options) {
-    // Set max number of clients for this room
-    // this.presence.subscribe("test", (c) => console.log("TEST!", c));
-    console.log("Room created");
-    // this.maxClients = Maths.clamp(
-    //     options.roomMaxPlayers || 0,
-    //     Constants.ROOM_PLAYERS_MIN,
-    //     Constants.ROOM_PLAYERS_MAX,
-    // );
+  onCreate() {
+    console.log("World room created");
 
-    // const playerName = options.playerName.slice(0, Constants.PLAYER_NAME_MAX);
-    // const roomName = options.roomName.slice(0, Constants.ROOM_NAME_MAX);
+    this.setState(new GameState());
 
-    // // Init Metadata
-    // this.setMetadata({
-    //     playerName,
-    //     roomName,
-    //     roomMap: options.roomMap,
-    //     roomMaxPlayers: this.maxClients,
-    //     mode: options.mode,
-    // });
+    //this.setSimulationInterval(() => this.state.update());
 
-    // // Init State
-    this.setState(new GameState(this.handleMessage));
-
-    this.setSimulationInterval(() => this.handleTick());
-
-    // console.log(
-    //     `${new Date().toISOString()} [Create] player=${playerName} room=${roomName} map=${options.roomMap} max=${
-    //         this.maxClients
-    //     } mode=${options.mode}`,
-    // );
-
-    //  Listen to messages from clients
     this.onMessage("*", (client, type, message) => {
-      const playerId = client.sessionId; // message.playerId; // ;
-      // console.log("Received message type: " + type);
-      // Validate which type of message is accepted
+      const playerId = client.sessionId;
+
       switch (type) {
         case "move":
-          this.state.playerMove(playerId, message.ts, message.dir);
+          this.state.playerMove(playerId, message.dir);
           break;
         case "select":
-          this.state.playerSelectWizard(playerId, message.ts, message.wizardId);
+          this.state.playerSelectWizard(playerId, message.wizardId);
           break;
-        // case "play-challenge":
-        //   client.send("change-room", { roomName: "challenge" });
-        //   //this.state.playChallenge(playerId, message.ts, message.wizardId);
-        //   break;
-        // case "rotate":
-        // case "shoot":
-        //   this.state.playerPushAction({
-        //     playerId,
-        //     ...message,
-        //   });
-        //   break;
-        // default:
-        //   break;
       }
     });
   }
 
   onJoin(client, options) {
-    // client and options are sent from front-end
     this.state.playerAdd(client.sessionId, options.address);
-    console.log("New client joined!");
-    //console.log(`${new Date().toISOString()} [Join] id=${client.sessionId} player=${options.playerName}`);
+    console.log("New client joined to a world room");
   }
 
   onLeave(client, c) {
     this.state.playerRemove(client.sessionId);
-    console.log("Client left");
-    //  console.log(`${new Date().toISOString()} [Leave] id=${client.sessionId}`);
+    console.log("Client left a world room");
   }
-
-  //
-  // Handlers
-  //
-  handleTick = () => {
-    this.state.update();
-  };
-
-  handleMessage = (message) => {
-    console.log("New message sent!");
-    this.broadcast(message.type, message);
-  };
 };

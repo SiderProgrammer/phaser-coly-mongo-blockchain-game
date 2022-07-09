@@ -1,3 +1,5 @@
+import { HUD_WIDTH } from "../../shared/config";
+
 export default class Hud extends Phaser.Scene {
   constructor() {
     super("hud");
@@ -7,77 +9,98 @@ export default class Hud extends Phaser.Scene {
     this.server = server;
     this.onPlayChallenge = onPlayChallenge;
 
+    this.HUDwidth = HUD_WIDTH;
+
     this.buttons = [];
 
+    this.add
+      .image(0, 0, "green")
+      .setDisplaySize(this.HUDwidth, this.game.renderer.height * 2); // ? HUD background
+
     this.server.onPlayerJoinedUI(this.handlePlayerJoinedUI, this);
+    this.server.onPlayerUpdateUI(this.updateWizardsStates, this);
   }
 
-  handlePlayerJoinedUI(player, playerId) {
-    this.add.text(30, 30, "Your wizards").setOrigin(0.5);
-    this.setWizards(player, playerId);
+  handlePlayerJoinedUI(player) {
+    this.add.text(this.HUDwidth / 4, 30, "Your wizards").setOrigin(0.5);
+    this.setWizards(player);
   }
 
-  setWizards(player, playerId) {
-    const wizards = player.wizards;
-    const worldScene = this.scene.get("world"); //  TODO - some middleware
-
-    for (let i = 0; i < wizards.length; i++) {
-      const wizardButton = this.add
-        .image(30, 60 + i * 70, "logo")
-        .setScale(0.1);
-      wizardButton.id = wizards[i].id;
-
-      this.buttons[i] = wizardButton;
-
-      wizardButton.stateText = this.add
-        .text(wizardButton.x + 30, wizardButton.y, "Play")
-        .setOrigin(0, 0.5);
-
-      if (!wizards[i].isAlive) {
-        this.setState("dead");
-        return;
+  updateWizardsStates(player) {
+    player.wizards.forEach((wizard, i) => {
+      if (!wizard.isAlive) {
+        this.buttons[i].setState("dead");
       }
+    });
+  }
 
-      wizardButton.stateText.setInteractive().on("pointerup", () => {
-        // TODO - return if clicked wizard is selected || player is during challenge
-        //this.player.getSelectedWizardId()
+  addWizardButton(wizard, i) {
+    const wizardButton = this.add.image(50, 90 + i * 70, "wizard");
+    wizardButton.id = wizard.id;
 
-        const action = {
-          type: "select",
-          ts: Date.now(),
-          playerId: playerId,
-          wizardId: wizardButton.id,
-        };
+    this.buttons[i] = wizardButton;
 
-        this.server.handleActionSend(action);
+    wizardButton.setState = (state) => {
+      switch (state) {
+        case "playing":
+          const wizard = this.buttons.find(
+            (button) => button.currentState === "playing"
+          );
 
-        wizardButton.setState("playing");
-        worldScene.me.setSelectedWizardId(wizardButton.id);
-      });
+          wizard && wizard.setState("alive");
+          wizardButton.currentState = "playing";
+          wizardButton.stateText.setText("Playing...");
+          break;
+        case "alive":
+          wizardButton.currentState = "alive";
+          wizardButton.stateText.setText("Play");
+          break;
+        case "dead":
+          wizardButton.currentState = "dead";
+          wizardButton.stateText.setText("Dead");
+          break;
+      }
+    };
+  }
 
-      wizardButton.setState = (state) => {
-        switch (state) {
-          case "playing":
-            const wizard = this.buttons.find(
-              (button) => button.currentState === "playing"
-            );
+  addWizardButtonStateText(worldScene, wizardButton, i, playerId) {
+    wizardButton.stateText = this.add
+      .text(wizardButton.x + 180, wizardButton.y, "Play")
+      .setOrigin(1, 0.5);
 
-            wizard && wizard.setState("alive");
-            wizardButton.currentState = "playing";
-            wizardButton.stateText.setText("Playing...");
-            break;
-          case "alive":
-            wizardButton.currentState = "alive";
-            wizardButton.stateText.setText("Play");
-            break;
-          case "dead":
-            wizardButton.currentState = "dead";
-            wizardButton.stateText.setText("Dead");
-            break;
-        }
+    wizardButton.stateText.setInteractive().on("pointerup", () => {
+      // TODO : return if clicked wizard is selected || player is during challenge
+      //this.player.getSelectedWizardId()
+      if (wizardButton.currentState === "dead") return;
+
+      const action = {
+        type: "select",
+        playerId: playerId,
+        wizardId: wizardButton.id,
       };
-      // worldScene.me.getSelectedWizardId()
-      this.buttons[0].setState("playing");
-    }
+
+      this.server.handleActionSend(action);
+
+      wizardButton.setState("playing");
+      worldScene.me.setSelectedWizardId(wizardButton.id);
+    });
+  }
+
+  setWizards(player) {
+    const playerId = player.id;
+    const wizards = player.wizards;
+    const worldScene = this.scene.get("world"); //  TODO : some middleware
+
+    wizards.forEach((wizard, i) => {
+      this.addWizardButton(wizard, i);
+      this.addWizardButtonStateText(worldScene, this.buttons[i], i, playerId);
+
+      if (!wizard.isAlive) {
+        this.buttons[i].setState("dead");
+      }
+    });
+
+    const id = worldScene.me.getSelectedWizardId();
+    this.buttons[id].setState("playing");
   }
 }

@@ -2,17 +2,32 @@ const http = require("http");
 const express = require("express");
 const cors = require("cors");
 const { Server, LocalPresence } = require("@colyseus/core");
-const { monitor } = require("@colyseus/monitor");
 const Game = require("./rooms/Game").default;
 const Challenge = require("./rooms/Challenge").default;
 const DatabaseManager = require("./db/databaseManager");
+const { SERVER_PORT } = require("../shared/config");
+const path = require("path");
 
-const port = Number(process.env.PORT || 8080);
-const host = undefined;
+const port = process.env.PORT || SERVER_PORT;
+const host = "0.0.0.0";
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+app.use(
+  "/",
+  express.static(path.normalize(path.join(__dirname, "../../dist")))
+);
+
+app.use(
+  "/src/client/assets/",
+  express.static(path.normalize(path.join(__dirname, "../../assets"))) // TODO : search for better solution
+);
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../../index.html"));
+});
 
 const server = http.createServer(app);
 const gameServer = new Server({
