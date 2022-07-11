@@ -3,15 +3,43 @@ const mongoose = require("mongoose");
 const srvConfig = require("./config/auth");
 const Wizard = require("./models/Wizard");
 const Players = require("./models/Player");
+const GameState = require("./models/GameState");
 
 const DATABASE_URL = `mongodb+srv://${srvConfig.USERNAME}:${srvConfig.PASSWORD}@${srvConfig.HOST}/?retryWrites=true&w=majority`;
 
 class DatabaseManager {
   constructor() {}
   connectDatabase() {
-    mongoose.connect(DATABASE_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+    mongoose
+      .connect(DATABASE_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      })
+      .then(() => {
+        GameState.exists({}).then((isExsisting) => {
+          if (isExsisting) return;
+
+          GameState.create({
+            day: 1,
+            gameStartTimestamp: Date.now(),
+          });
+        });
+
+        // this.refreshDay();
+      });
+  }
+
+  refreshDay() {
+    GameState.updateOne({}, { $inc: { day: 1 } }).then(() => {
+      Wizard.updateMany(
+        { dailyChallengeCompleted: false },
+        { $set: { isAlive: false } }
+      );
+
+      Wizard.updateMany(
+        { dailyChallengeCompleted: true },
+        { $set: { dailyChallengeCompleted: false } }
+      );
     });
   }
 
@@ -26,7 +54,11 @@ class DatabaseManager {
           address,
         }).then((player) => {
           // TODO : Handle Errors && Create 4 wizards in one batch Query
-
+          //   .insertMany( [
+          //     { "_id" : 1, "grades" : [ 85, 80, 80 ] },
+          //     { "_id" : 2, "grades" : [ 88, 90, 92 ] },
+          //     { "_id" : 3, "grades" : [ 85, 100, 90 ] }
+          //  ] )
           const wizardsQueries = [];
           const sampleNames = ["Eric", "Patrick", "John", "Caroline"];
           // const seed = Math.floor(Math.random() * 1000);
@@ -37,6 +69,7 @@ class DatabaseManager {
               y: Math.floor(Math.random() * 600),
               name: sampleNames[i] + "_" + address, // + seed
               isAlive: true,
+              dailyChallengeCompleted: false,
               player: player.id,
             }).then((_wizard) => {
               player.wizards.push(_wizard);
@@ -93,10 +126,19 @@ class DatabaseManager {
       .select("-_id");
   }
 
+  setCompletedDailyChallenge(address, wizardId) {
+    return Players.findOne({ address }) // ? Maybe Wizards.updateOne({...})
+      .populate("wizards")
+      .then((state) => {
+        state.wizards[wizardId].completedDailyChallenge = true;
+        state.wizards[wizardId].save();
+      });
+  }
+
   killWizard(address, wizardId) {
     // TODO : Handle Errors  && Improve this Query (search for better solution)
 
-    return Players.findOne({ address })
+    return Players.findOne({ address }) // ? Maybe Wizards.updateOne({...})
       .populate("wizards")
       .then((state) => {
         state.wizards[wizardId].isAlive = false;

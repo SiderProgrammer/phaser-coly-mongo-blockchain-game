@@ -3,6 +3,9 @@ const { GameState } = require("../states/GameState");
 
 exports.default = class GameRoom extends Room {
   onCreate() {
+    //   if (options.secret !== "MY-SECRET-VALUE") {
+    //     throw new Error("unauthorized");
+    // }
     console.log("World room created");
 
     this.setState(new GameState());

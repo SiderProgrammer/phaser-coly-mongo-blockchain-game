@@ -64,6 +64,7 @@ class State extends schema.Schema {
 
   checkMetaCollision() {
     if (this.isColliding(this.wizard, meta)) {
+      db.setCompletedDailyChallenge(this.owner, this.wizardId);
       this.challengeState = 1;
 
       console.log("Won a challenge");

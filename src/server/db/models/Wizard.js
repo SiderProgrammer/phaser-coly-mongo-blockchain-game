@@ -5,6 +5,7 @@ const wizardSchema = new mongoose.Schema({
   y: Number,
   name: String,
   isAlive: Boolean,
+  dailyChallengeCompleted: Boolean,
   player: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Player",
