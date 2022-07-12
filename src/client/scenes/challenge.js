@@ -2,6 +2,7 @@ import {
   CHALLENGE_META,
   CHALLENGE_OBSTACLES,
   CHALLENGE_PLAYER,
+  PLAYER_SIZE,
 } from "../../shared/config";
 import InputManager from "../components/InputManager";
 import Wizard from "../entities/Wizard";
@@ -18,9 +19,13 @@ class Challenge extends Phaser.Scene {
     this.onLoseChallenge = onLoseChallenge;
     this.onWinChallenge = onWinChallenge;
 
-    this.add.image(CHALLENGE_META.x, CHALLENGE_META.y, "white");
+    this.add
+      .image(CHALLENGE_META.x, CHALLENGE_META.y, "white")
+      .setDisplaySize(CHALLENGE_META.size, CHALLENGE_META.size);
 
-    this.add.image(CHALLENGE_OBSTACLES[0].x, CHALLENGE_OBSTACLES[0].y, "red");
+    this.add
+      .image(CHALLENGE_OBSTACLES[0].x, CHALLENGE_OBSTACLES[0].y, "red")
+      .setDisplaySize(CHALLENGE_OBSTACLES[0].size, CHALLENGE_OBSTACLES[0].size);
 
     this.me = null;
 
@@ -69,7 +74,7 @@ class Challenge extends Phaser.Scene {
       CHALLENGE_PLAYER.x,
       CHALLENGE_PLAYER.y,
       "wizard" // ? not needed here
-    );
+    ).setDisplaySize(PLAYER_SIZE, PLAYER_SIZE);
   }
 
   handlePlayerMove(changedData) {

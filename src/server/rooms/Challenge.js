@@ -3,6 +3,9 @@ const { ChallengeState } = require("../states/ChallengeState");
 
 exports.default = class ChallengeRoom extends Room {
   onCreate() {
+    //   if (options.secret !== "MY-SECRET-VALUE" || !hasAliveWizards) {
+    //     throw new Error("unauthorized");
+    // }
     console.log("Challenge room created");
 
     this.setState(new ChallengeState());

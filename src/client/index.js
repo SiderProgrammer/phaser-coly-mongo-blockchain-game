@@ -8,8 +8,8 @@ import { WORLD_SIZE } from "../shared/config";
 const config = {
   type: Phaser.AUTO,
   parent: "game",
-  width: WORLD_SIZE.WIDTH,
-  height: WORLD_SIZE.HEIGHT,
+  width: 1280,
+  height: 720,
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

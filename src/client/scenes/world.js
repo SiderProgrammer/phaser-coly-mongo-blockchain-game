@@ -34,6 +34,13 @@ class World extends Phaser.Scene {
 
     this.playerId = this.server.getPlayerId();
     this.walletAddress = this.server.getPlayerWalletAddress();
+
+    // this.map = this.make.tilemap({ key: "worldMap" });
+    //const worldTileset = this.map.addTilesetImage("tiles32x32", "tiles32x32");
+
+    // this.groundLayer = this.map.createLayer("ground", worldTileset);
+
+    // this.obstaclesLayer = this.map.createLayer("obstacles", worldTileset);
   }
 
   update() {

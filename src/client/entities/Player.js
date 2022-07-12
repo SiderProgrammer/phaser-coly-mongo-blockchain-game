@@ -1,3 +1,4 @@
+import { PLAYER_SIZE } from "../../shared/config";
 import Wizard from "./Wizard";
 
 class Player {
@@ -29,6 +30,8 @@ class Player {
         "wizard",
         _wizard.name
       );
+
+      wizard.setDisplaySize(PLAYER_SIZE, PLAYER_SIZE);
 
       if (!_wizard.isAlive) wizard.kill();
 

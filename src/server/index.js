@@ -7,6 +7,8 @@ const Challenge = require("./rooms/Challenge").default;
 const DatabaseManager = require("./db/databaseManager");
 const { SERVER_PORT } = require("../shared/config");
 const path = require("path");
+const cron = require("node-cron");
+const MapManager = require("./map/mapManager");
 
 const port = process.env.PORT || SERVER_PORT;
 const host = "0.0.0.0";
@@ -32,17 +34,32 @@ app.get("/", (req, res) => {
 const server = http.createServer(app);
 const gameServer = new Server({
   server,
-  presence: new LocalPresence(),
+  //presence: new LocalPresence(),
 });
 
 gameServer.define("game", Game);
 gameServer.define("challenge", Challenge);
-const databaseManager = new DatabaseManager();
 
-//server.post();
+const databaseManager = new DatabaseManager();
+const mapManager = new MapManager();
+
+// cron.schedule("*/10 * * * * *", () => {
+//   // ? every 10 minutes
+
+//   databaseManager.refreshDay().then(() => {});
+
+//   // TODO :
+//   /* send a message to every player in a game room OR
+//      just fetch the database from the client-side
+//      when remaining time to finish the daily challenge is 0
+//   */
+// });
+
 app.post("/createPlayer", databaseManager.createPlayer);
 app.post("/getPlayer", databaseManager.getPlayer);
 app.get("/getAllPlayers", databaseManager.getAllPlayers);
+
+app.get("/getWorldMap", mapManager.getWorldMap);
 // app.use("/colyseus", monitor());
 
 gameServer.listen(port, host, undefined, () =>

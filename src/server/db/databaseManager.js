@@ -24,23 +24,27 @@ class DatabaseManager {
             gameStartTimestamp: Date.now(),
           });
         });
-
-        // this.refreshDay();
       });
   }
 
-  refreshDay() {
-    GameState.updateOne({}, { $inc: { day: 1 } }).then(() => {
-      Wizard.updateMany(
-        { dailyChallengeCompleted: false },
-        { $set: { isAlive: false } }
-      );
+  killDelayedWizards() {
+    return Wizard.updateMany(
+      { dailyChallengeCompleted: false },
+      { $set: { isAlive: false } }
+    );
+  }
 
-      Wizard.updateMany(
-        { dailyChallengeCompleted: true },
-        { $set: { dailyChallengeCompleted: false } }
-      );
-    });
+  refreshWizardsChallenges() {
+    return Wizard.updateMany(
+      { dailyChallengeCompleted: true },
+      { $set: { dailyChallengeCompleted: false } }
+    );
+  }
+
+  refreshDay() {
+    return GameState.updateOne({}, { $inc: { day: 1 } })
+      .then(this.killDelayedWizards)
+      .then(this.refreshWizardsChallenges);
   }
 
   createPlayer(req, res) {
@@ -130,7 +134,7 @@ class DatabaseManager {
     return Players.findOne({ address }) // ? Maybe Wizards.updateOne({...})
       .populate("wizards")
       .then((state) => {
-        state.wizards[wizardId].completedDailyChallenge = true;
+        state.wizards[wizardId].dailyChallengeCompleted = true;
         state.wizards[wizardId].save();
       });
   }

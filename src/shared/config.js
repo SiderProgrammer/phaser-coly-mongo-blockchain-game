@@ -7,31 +7,30 @@
 const SERVER_PORT = 8080;
 
 const WORLD_SIZE = {
-  WIDTH: 1280,
-  HEIGHT: 720,
+  WIDTH: 2048,
+  HEIGHT: 2048,
 };
 
 const HUD_WIDTH = 500;
-const PLAYER_SIZE = 50;
+const PLAYER_SIZE = 32;
 
 const CHALLENGE_META = {
   x: HUD_WIDTH / 4 + WORLD_SIZE.WIDTH / 2,
   y: 100,
-  size: 50,
+  size: PLAYER_SIZE,
 };
 
 const CHALLENGE_OBSTACLES = [
   {
     x: HUD_WIDTH / 4 + WORLD_SIZE.WIDTH / 2,
     y: WORLD_SIZE.HEIGHT / 2,
-    size: 50,
+    size: PLAYER_SIZE,
   },
 ];
 
 const CHALLENGE_PLAYER = {
   x: HUD_WIDTH / 4 + WORLD_SIZE.WIDTH / 2,
   y: WORLD_SIZE.HEIGHT - 100,
-  size: PLAYER_SIZE,
 };
 
 module.exports = {

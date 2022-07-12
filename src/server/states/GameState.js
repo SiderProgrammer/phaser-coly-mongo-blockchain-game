@@ -4,7 +4,7 @@ const DatabaseManager = require("../db/databaseManager");
 
 const db = new DatabaseManager();
 
-const PLAYER_SPEED = 5;
+const PLAYER_SPEED = 32;
 
 class State extends schema.Schema {
   constructor() {

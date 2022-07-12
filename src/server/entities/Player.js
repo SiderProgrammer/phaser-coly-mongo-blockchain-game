@@ -34,7 +34,7 @@ class Player extends Schema {
 
   move(vectorX, vectorY, speed) {
     const wizard = this.getSelectedWizard();
-    if (!wizard.isAlive) return;
+    if (!wizard || !wizard.isAlive) return;
 
     wizard.move(vectorX, vectorY, speed);
   }
