@@ -11,26 +11,34 @@ const WORLD_SIZE = {
   HEIGHT: 2048,
 };
 
-const HUD_WIDTH = 500;
+const VIEWPORT_SIZE = {
+  WIDTH: 1280,
+  HEIGHT: 720,
+};
+
+const HUD_WIDTH = 250; // TODO : change to GUT_WIDTH
+const HUD_HEIGHT = 70;
+
 const PLAYER_SIZE = 32;
+const TILE_SIZE = 32;
 
 const CHALLENGE_META = {
-  x: HUD_WIDTH / 4 + WORLD_SIZE.WIDTH / 2,
+  x: HUD_WIDTH / 2 + VIEWPORT_SIZE.WIDTH / 2,
   y: 100,
   size: PLAYER_SIZE,
 };
 
 const CHALLENGE_OBSTACLES = [
   {
-    x: HUD_WIDTH / 4 + WORLD_SIZE.WIDTH / 2,
-    y: WORLD_SIZE.HEIGHT / 2,
+    x: HUD_WIDTH / 2 + VIEWPORT_SIZE.WIDTH / 2,
+    y: VIEWPORT_SIZE.HEIGHT / 2,
     size: PLAYER_SIZE,
   },
 ];
 
 const CHALLENGE_PLAYER = {
-  x: HUD_WIDTH / 4 + WORLD_SIZE.WIDTH / 2,
-  y: WORLD_SIZE.HEIGHT - 100,
+  x: HUD_WIDTH / 2 + VIEWPORT_SIZE.WIDTH / 2,
+  y: VIEWPORT_SIZE.HEIGHT - 100,
 };
 
 module.exports = {
@@ -41,4 +49,6 @@ module.exports = {
   CHALLENGE_PLAYER,
   PLAYER_SIZE,
   SERVER_PORT,
+  TILE_SIZE,
+  HUD_HEIGHT,
 }; // TODO : change to imports & exports  (need to configure webpack for server)

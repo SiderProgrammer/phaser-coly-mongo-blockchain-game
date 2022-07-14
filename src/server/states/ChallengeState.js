@@ -6,6 +6,7 @@ const {
   CHALLENGE_OBSTACLES,
   CHALLENGE_META,
   PLAYER_SIZE,
+  TILE_SIZE,
 } = require("../../shared/config");
 
 const obstacles = CHALLENGE_OBSTACLES;
@@ -14,7 +15,7 @@ const meta = CHALLENGE_META;
 const db = new DatabaseManager();
 
 class State extends schema.Schema {
-  constructor() {
+  constructor(presenceEmit) {
     super();
 
     this.wizard = new Wizard(
@@ -24,6 +25,8 @@ class State extends schema.Schema {
       PLAYER_SIZE,
       "" // not needed in this room
     );
+
+    this.presenceEmit = presenceEmit;
 
     this.challengeState = -1;
     this.owner = "";
@@ -41,7 +44,7 @@ class State extends schema.Schema {
   playerMove(dir) {
     if (!this.wizard) return;
 
-    this.wizard.move(dir.x, dir.y, 5);
+    this.wizard.move(dir.x, dir.y, TILE_SIZE);
   }
 
   update() {
@@ -56,7 +59,7 @@ class State extends schema.Schema {
       if (this.isColliding(this.wizard, obstacle)) {
         this.challengeState = 0;
         db.killWizard(this.owner, this.wizardId);
-
+        this.presenceEmit("wizardDied");
         console.log("Lost a challenge");
       }
     });

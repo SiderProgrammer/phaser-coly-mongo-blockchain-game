@@ -1,5 +1,6 @@
 import { Client } from "colyseus.js";
 import { WEBSOCKET_URL } from "./config";
+import { GET_ALL_PLAYERS } from "./requests/requests";
 
 export default class Server {
   constructor(playerAccount) {
@@ -7,14 +8,13 @@ export default class Server {
     this.events = new Phaser.Events.EventEmitter();
 
     this.playerAccount = playerAccount;
-    this.isHUDadded = false;
     this.walletAddress = this.playerAccount.address;
   }
 
   // TODO : change events names && break HUD, World, Challenge handlers into separate files
   async handleWorldJoin() {
     //if (this.challengeRoom) await this.challengeRoom.leave(true);
-
+    this.playersSavedState = await (await GET_ALL_PLAYERS()).json(); // ! maybe move it to server-side
     this.room = await this.client.joinOrCreate("game", {
       address: this.playerAccount.address,
     });
@@ -25,7 +25,7 @@ export default class Server {
       this.events.emit("player-joined", player);
 
       if (playerId === this.playerId) {
-        this.handleAddHUD(player);
+        this.events.emit("update-gui", player);
       }
 
       player.wizards.forEach((wizard) => {
@@ -34,6 +34,13 @@ export default class Server {
         };
       });
     };
+
+    this.room.state.listen("wizardsAliveCount", (count) =>
+      this.events.emit("update-hud", count, "alive")
+    );
+    this.room.state.listen("wizardsCount", (count) =>
+      this.events.emit("update-hud", count, "all")
+    );
   }
 
   async handleChallengeJoin(wizardId) {
@@ -53,16 +60,6 @@ export default class Server {
     this.challengeRoom.state.wizard.onChange = (changedData) => {
       this.events.emit("player-move-challenge", changedData);
     };
-  }
-
-  handleAddHUD(player) {
-    if (!this.isHUDadded) {
-      // TODO : make it in a better way
-      this.events.emit("player-joined-ui", player, player.id); // ? callback in HUD scene
-      this.isHUDadded = true;
-    } else {
-      this.events.emit("player-update-ui", player, player.id); // ? callback in HUD scene
-    }
   }
 
   handleActionSend(action) {
@@ -121,13 +118,14 @@ export default class Server {
 
   // ! UI EVENTS
 
-  onPlayerJoinedUI(cb, context) {
-    //  if (this.eventExists("player-joined-ui")) return;
-    this.events.on("player-joined-ui", cb, context);
+  onUpdateGUI(cb, context) {
+    if (this.eventExists("update-gui")) return;
+    this.events.on("update-gui", cb, context);
   }
 
-  onPlayerUpdateUI(cb, context) {
-    //  if (this.eventExists("player-joined-ui")) return;
-    this.events.on("player-update-ui", cb, context);
+  onUpdateHUD(cb, context) {
+    if (this.eventExists("update-hud")) return;
+
+    this.events.on("update-hud", cb, context);
   }
 }

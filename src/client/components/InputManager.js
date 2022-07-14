@@ -1,42 +1,37 @@
 export default class InputManager {
   constructor(scene) {
     this.scene = scene;
-    this.cursors = scene.input.keyboard.createCursorKeys();
+
+    scene.input.keyboard.addKey("LEFT").on("down", () => this.update("LEFT"));
+    scene.input.keyboard.addKey("RIGHT").on("down", () => this.update("RIGHT"));
+    scene.input.keyboard.addKey("UP").on("down", () => this.update("UP"));
+    scene.input.keyboard.addKey("DOWN").on("down", () => this.update("DOWN"));
   }
 
-  update() {
-    if (!this.cursors) return;
-
+  update(key) {
     const dir = {
       x: 0,
       y: 0,
     };
 
-    if (
-      this.cursors.up.isDown ||
-      this.cursors.down.isDown ||
-      this.cursors.left.isDown ||
-      this.cursors.right.isDown
-    ) {
-      if (this.cursors.up.isDown) {
+    {
+      if (key === "UP") {
         dir.y -= 1;
       }
 
-      if (this.cursors.down.isDown) {
+      if (key === "DOWN") {
         dir.y += 1;
       }
 
-      if (this.cursors.left.isDown) {
+      if (key === "LEFT") {
         dir.x -= 1;
       }
 
-      if (this.cursors.right.isDown) {
+      if (key === "RIGHT") {
         dir.x += 1;
       }
 
-      if (dir.x != 0 || dir.y != 0) {
-        this.scene.playerMoved(dir);
-      }
+      this.scene.playerMoved(dir);
     }
   }
 }

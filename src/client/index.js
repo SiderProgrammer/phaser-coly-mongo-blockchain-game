@@ -2,8 +2,9 @@ import Phaser from "phaser";
 import World from "./scenes/world";
 import Bootstrap from "./scenes/bootstrap";
 import Challenge from "./scenes/challenge";
-import Hud from "./scenes/hud";
+import Gui from "./scenes/gui";
 import { WORLD_SIZE } from "../shared/config";
+import Hud from "./scenes/hud";
 
 const config = {
   type: Phaser.AUTO,
@@ -14,7 +15,7 @@ const config = {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [Bootstrap, Hud, World, Challenge],
+  scene: [Bootstrap, Gui, Hud, World, Challenge],
 };
 
 // ? just for dev purposes

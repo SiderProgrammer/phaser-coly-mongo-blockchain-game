@@ -4,6 +4,8 @@ const srvConfig = require("./config/auth");
 const Wizard = require("./models/Wizard");
 const Players = require("./models/Player");
 const GameState = require("./models/GameState");
+const Days = require("./models/Days");
+const { PLAYER_SIZE, WORLD_SIZE } = require("../../shared/config");
 
 const DATABASE_URL = `mongodb+srv://${srvConfig.USERNAME}:${srvConfig.PASSWORD}@${srvConfig.HOST}/?retryWrites=true&w=majority`;
 
@@ -21,8 +23,16 @@ class DatabaseManager {
 
           GameState.create({
             day: 1,
+            dayDuration: 1000 * 60 * 2, // 10 minutes
             gameStartTimestamp: Date.now(),
           });
+
+          Days.insertMany([
+            // for now
+            { day: 1, slogan: "First day slogan" },
+            { day: 2, slogan: "Second day slogan" },
+            { day: 3, slogan: "Third day slogan" },
+          ]);
         });
       });
   }
@@ -47,6 +57,20 @@ class DatabaseManager {
       .then(this.refreshWizardsChallenges);
   }
 
+  getGameState(req, res) {
+    GameState.findOne({})
+      .lean()
+      .select("-_id") // __v
+      .then((gameState) => {
+        Days.findOne({ day: gameState.day })
+          .lean()
+          .select("-_id") // __v
+          .then((dayState) => {
+            res.status(200).json({ ...gameState, ...dayState });
+          });
+      });
+  }
+
   createPlayer(req, res) {
     const { address } = req.body;
 
@@ -57,32 +81,35 @@ class DatabaseManager {
         Players.create({
           address,
         }).then((player) => {
-          // TODO : Handle Errors && Create 4 wizards in one batch Query
-          //   .insertMany( [
-          //     { "_id" : 1, "grades" : [ 85, 80, 80 ] },
-          //     { "_id" : 2, "grades" : [ 88, 90, 92 ] },
-          //     { "_id" : 3, "grades" : [ 85, 100, 90 ] }
-          //  ] )
-          const wizardsQueries = [];
-          const sampleNames = ["Eric", "Patrick", "John", "Caroline"];
-          // const seed = Math.floor(Math.random() * 1000);
+          // TODO : Handle Errors
 
-          for (let i = 0; i < 4; ++i) {
-            const wizard = Wizard.create({
-              x: Math.floor(Math.random() * 600),
-              y: Math.floor(Math.random() * 600),
+          const sampleNames = ["Eric", "Patrick", "John", "Caroline"];
+          const tileSize = PLAYER_SIZE;
+          const columns = WORLD_SIZE.WIDTH / tileSize;
+          const rows = WORLD_SIZE.HEIGHT / tileSize;
+
+          function getGeneratedWizard(i) {
+            return {
+              x: tileSize / 2 + Math.floor(Math.random() * columns) * tileSize,
+              y: tileSize / 2 + Math.floor(Math.random() * rows) * tileSize,
               name: sampleNames[i] + "_" + address, // + seed
               isAlive: true,
               dailyChallengeCompleted: false,
               player: player.id,
-            }).then((_wizard) => {
-              player.wizards.push(_wizard);
-            });
-
-            wizardsQueries.push(wizard);
+            };
           }
 
-          Promise.all(wizardsQueries).then(() => {
+          //const generatedWizards = // loop 4x getGeneratedWizard(i)
+
+          const createWizards = Wizard.insertMany([
+            getGeneratedWizard(0),
+            getGeneratedWizard(1),
+            getGeneratedWizard(2),
+            getGeneratedWizard(3),
+          ]);
+
+          createWizards.then((wizards) => {
+            player.wizards = wizards;
             player.save();
             res.status(200).json(player);
           });
@@ -106,6 +133,11 @@ class DatabaseManager {
       .lean()
       .populate("wizards")
       .select("-_id");
+  }
+
+  countWizards(condition = {}) {
+    // TODO : Handle Errors
+    return Wizard.countDocuments(condition);
   }
 
   getAllPlayers(req, res) {

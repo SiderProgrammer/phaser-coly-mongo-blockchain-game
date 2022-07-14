@@ -1,8 +1,8 @@
 import Phaser from "phaser";
+import { HUD_HEIGHT, HUD_WIDTH, WORLD_SIZE } from "../../shared/config";
 import Button from "../components/Button";
 import InputManager from "../components/InputManager";
 import Player from "../entities/Player";
-import { GET_ALL_PLAYERS } from "../services/requests/requests";
 
 class World extends Phaser.Scene {
   constructor() {
@@ -14,7 +14,7 @@ class World extends Phaser.Scene {
   async create({ server, onPlayChallenge }) {
     this.server = server;
     this.onPlayChallenge = onPlayChallenge;
-    this.playersSavedState = await (await GET_ALL_PLAYERS()).json();
+    //this.playersSavedState = await (await GET_ALL_PLAYERS()).json();
 
     this.gw = this.game.renderer.width;
     this.gh = this.game.renderer.height;
@@ -22,29 +22,37 @@ class World extends Phaser.Scene {
     this.players = [];
     this.me = null;
 
-    this.addPlayersFromSavedState();
-
     this.server.onPlayerJoined(this.handlePlayerAdd, this);
     this.server.onWizardChanged(this.handleWizardChanged, this);
 
     this.inputManager = new InputManager(this);
+
+    this.map = this.make.tilemap({ key: "worldMap" });
+    const worldTileset = this.map.addTilesetImage("tiles32x32", "tiles32x32");
+
+    this.groundLayer = this.map.createLayer("ground", worldTileset);
+
+    this.obstaclesLayer = this.map.createLayer("obstacles", worldTileset);
+
     this.addPlayChallengeButton();
+    this.cameras.main.setBounds(
+      -HUD_WIDTH,
+      -HUD_HEIGHT,
+      WORLD_SIZE.WIDTH + HUD_WIDTH,
+      WORLD_SIZE.HEIGHT + HUD_HEIGHT
+    );
 
     await this.server.handleWorldJoin();
 
+    this.playersSavedState = this.server.playersSavedState;
+    this.addPlayersFromSavedState();
+
     this.playerId = this.server.getPlayerId();
     this.walletAddress = this.server.getPlayerWalletAddress();
-
-    // this.map = this.make.tilemap({ key: "worldMap" });
-    //const worldTileset = this.map.addTilesetImage("tiles32x32", "tiles32x32");
-
-    // this.groundLayer = this.map.createLayer("ground", worldTileset);
-
-    // this.obstaclesLayer = this.map.createLayer("obstacles", worldTileset);
   }
 
   update() {
-    this.inputManager && this.inputManager.update();
+    //this.inputManager && this.inputManager.update();
   }
 
   playerMoved(dir) {

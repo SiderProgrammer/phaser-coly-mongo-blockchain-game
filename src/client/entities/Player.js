@@ -50,6 +50,7 @@ class Player {
     return this.selectedWizardId;
   }
   setSelectedWizardId(id) {
+    //if (!this.wizards[id]) return;
     this.scene.cameras.main.startFollow(this.wizards[id]);
     this.selectedWizardId = id;
   }

@@ -8,7 +8,7 @@ exports.default = class ChallengeRoom extends Room {
     // }
     console.log("Challenge room created");
 
-    this.setState(new ChallengeState());
+    this.setState(new ChallengeState(this.presenceEmit.bind(this)));
 
     this.setSimulationInterval(() => this.state.update());
 
@@ -30,7 +30,7 @@ exports.default = class ChallengeRoom extends Room {
     this.lock(); // ? Lock the room for only one player
   }
 
-  onLeave(client) {
-    console.log("Client left a challenge room");
+  presenceEmit(type) {
+    this.presence.publish(type);
   }
 };

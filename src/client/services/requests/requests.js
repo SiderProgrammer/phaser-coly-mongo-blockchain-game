@@ -11,3 +11,7 @@ export const GET_PLAYER = (data) => {
 export const GET_ALL_PLAYERS = () => {
   return requestGet("getAllPlayers");
 };
+
+export const GET_GAME_STATE = () => {
+  return requestGet("getGameState");
+};

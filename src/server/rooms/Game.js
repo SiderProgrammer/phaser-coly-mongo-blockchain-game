@@ -1,8 +1,10 @@
 const { Room } = require("colyseus");
 const { GameState } = require("../states/GameState");
+const DatabaseManager = require("../db/databaseManager");
 
+const db = new DatabaseManager();
 exports.default = class GameRoom extends Room {
-  onCreate() {
+  async onCreate() {
     //   if (options.secret !== "MY-SECRET-VALUE") {
     //     throw new Error("unauthorized");
     // }
@@ -10,7 +12,10 @@ exports.default = class GameRoom extends Room {
 
     this.setState(new GameState());
 
-    //this.setSimulationInterval(() => this.state.update());
+    this.state.wizardsCount = await db.countWizards();
+    this.state.wizardsAliveCount = await db.countWizards({ isAlive: true });
+   
+    this.presence.subscribe("wizardDied", ()=>this.state.subtractAlive(1))
 
     this.onMessage("*", (client, type, message) => {
       const playerId = client.sessionId;

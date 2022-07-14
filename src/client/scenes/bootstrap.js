@@ -1,4 +1,8 @@
-import { CREATE_PLAYER, GET_PLAYER } from "../services/requests/requests";
+import {
+  CREATE_PLAYER,
+  GET_GAME_STATE,
+  GET_PLAYER,
+} from "../services/requests/requests";
 import Server from "../services/Server";
 
 export default class Bootstrap extends Phaser.Scene {
@@ -14,9 +18,10 @@ export default class Bootstrap extends Phaser.Scene {
     this.load.image("white", "white.png");
     this.load.image("wizard", "wizard.png");
     this.load.image("challengeButton", "challengeButton.png");
+    this.load.image("checkmark", "checkmark.png");
 
-    // this.load.tilemapTiledJSON("worldMap", `tilemaps/sampleMap.json`);
-    // this.load.image("tiles32x32", `tilesets/tiles32x32.png`);
+    this.load.tilemapTiledJSON("worldMap", `tilemaps/sampleMap.json`);
+    this.load.image("tiles32x32", `tilesets/tiles32x32.png`);
   }
 
   async create() {
@@ -32,18 +37,32 @@ export default class Bootstrap extends Phaser.Scene {
     }
     this.playerAccount = await this.playerAccount.json();
 
+    this.gameState = await (await GET_GAME_STATE()).json(); // TODO : move to server-side
+
     this.server = new Server(this.playerAccount);
 
     this.createNewGame();
-    this.createWizardsHUD();
+    this.createGUI();
+    this.createHUD();
   }
 
-  createWizardsHUD() {
+  createHUD() {
     this.scene.launch("hud", {
       server: this.server,
+      gameState: this.gameState,
     });
 
     this.scene.bringToTop("hud");
+  }
+
+  createGUI() {
+    this.scene.launch("gui", {
+      server: this.server,
+      gameState: this.gameState,
+      player: this.playerAccount,
+    });
+
+    this.scene.bringToTop("gui");
   }
 
   async createNewGame() {

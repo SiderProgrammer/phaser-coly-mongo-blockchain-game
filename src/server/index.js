@@ -34,7 +34,7 @@ app.get("/", (req, res) => {
 const server = http.createServer(app);
 const gameServer = new Server({
   server,
-  //presence: new LocalPresence(),
+  presence: new LocalPresence(),
 });
 
 gameServer.define("game", Game);
@@ -43,7 +43,7 @@ gameServer.define("challenge", Challenge);
 const databaseManager = new DatabaseManager();
 const mapManager = new MapManager();
 
-// cron.schedule("*/10 * * * * *", () => {
+// cron.schedule("*/2 * * * *", () => {
 //   // ? every 10 minutes
 
 //   databaseManager.refreshDay().then(() => {});
@@ -58,6 +58,7 @@ const mapManager = new MapManager();
 app.post("/createPlayer", databaseManager.createPlayer);
 app.post("/getPlayer", databaseManager.getPlayer);
 app.get("/getAllPlayers", databaseManager.getAllPlayers);
+app.get("/getGameState", databaseManager.getGameState);
 
 app.get("/getWorldMap", mapManager.getWorldMap);
 // app.use("/colyseus", monitor());
