@@ -64,6 +64,25 @@ class State extends schema.Schema {
 
     player.selectWizard(wizardId);
   }
+
+  killDelayedWizards() {
+    this.players.forEach((player) => {
+      player.wizards.forEach((wizard) => {
+        if (!wizard.dailyChallengeCompleted) {
+          wizard.isAlive = false;
+        }
+        // wizard.dailyChallengeCompleted = false;
+      });
+    });
+  }
+
+  refreshWizardsChallenges() {
+    // this.players.forEach(player => {
+    //   player.wizards.forEach(wizard => {
+    //     wizard.dailyChallengeCompleted = false;
+    //   })
+    // })
+  }
 }
 schema.defineTypes(State, {
   players: { map: Player },

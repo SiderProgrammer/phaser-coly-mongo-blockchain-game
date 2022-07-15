@@ -1,5 +1,10 @@
 import Phaser from "phaser";
-import { HUD_HEIGHT, HUD_WIDTH, WORLD_SIZE } from "../../shared/config";
+import {
+  HUD_HEIGHT,
+  HUD_WIDTH,
+  PRE_MOVE_DISTANCE,
+  WORLD_SIZE,
+} from "../../shared/config";
 import Button from "../components/Button";
 import InputManager from "../components/InputManager";
 import Player from "../entities/Player";
@@ -31,8 +36,8 @@ class World extends Phaser.Scene {
     const worldTileset = this.map.addTilesetImage("tiles32x32", "tiles32x32");
 
     this.groundLayer = this.map.createLayer("ground", worldTileset);
-
     this.obstaclesLayer = this.map.createLayer("obstacles", worldTileset);
+    //this.obstaclesLayer.setCollisionByExclusion([-1]);
 
     this.addPlayChallengeButton();
     this.cameras.main.setBounds(
@@ -56,6 +61,8 @@ class World extends Phaser.Scene {
   }
 
   playerMoved(dir) {
+    this.me.preMove(dir, PRE_MOVE_DISTANCE);
+
     const action = {
       type: "move",
       playerId: this.playerId,

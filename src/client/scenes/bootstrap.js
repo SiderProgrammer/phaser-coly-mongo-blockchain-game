@@ -1,3 +1,4 @@
+import initPlayerAnims from "../anim/player";
 import {
   CREATE_PLAYER,
   GET_GAME_STATE,
@@ -19,6 +20,10 @@ export default class Bootstrap extends Phaser.Scene {
     this.load.image("wizard", "wizard.png");
     this.load.image("challengeButton", "challengeButton.png");
     this.load.image("checkmark", "checkmark.png");
+    this.load.spritesheet("player", "player.png", {
+      frameWidth: 32,
+      frameHeight: 32,
+    });
 
     this.load.tilemapTiledJSON("worldMap", `tilemaps/sampleMap.json`);
     this.load.image("tiles32x32", `tilesets/tiles32x32.png`);
@@ -41,6 +46,7 @@ export default class Bootstrap extends Phaser.Scene {
 
     this.server = new Server(this.playerAccount);
 
+    this.initAnimations();
     this.createNewGame();
     this.createGUI();
     this.createHUD();
@@ -98,5 +104,9 @@ export default class Bootstrap extends Phaser.Scene {
     this.createNewGame();
 
     console.log("Challenge won");
+  }
+
+  initAnimations() {
+    initPlayerAnims(this);
   }
 }

@@ -8,6 +8,7 @@ class Wizard extends Phaser.GameObjects.Sprite {
     this.id = id;
     this.isAlive = true;
     this.showName();
+    this.on("animationcomplete", () => this.play("idle"));
   }
 
   kill() {
@@ -19,6 +20,28 @@ class Wizard extends Phaser.GameObjects.Sprite {
     this.name = this.scene.add
       .text(this.x, this.y - 50, this.name)
       .setOrigin(0.5);
+  }
+
+  preMove(dir, distance) {
+    const speedX = distance * dir.x;
+    const speedY = distance * dir.y;
+    this.x += speedX;
+    this.y += speedY;
+  }
+
+  playWalkAnimation(dir) {
+    if (dir.x === -1) {
+      this.play("walk-left");
+    }
+    if (dir.x === 1) {
+      this.play("walk-right");
+    }
+    if (dir.y === -1) {
+      this.play("walk-up");
+    }
+    if (dir.y === 1) {
+      this.play("walk-down");
+    }
   }
 
   update(x, y) {

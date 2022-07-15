@@ -24,12 +24,18 @@ export default class Gui extends Phaser.Scene {
   }
 
   handleUpdate(player) {
-    // TODO : handle all wizards dead
+    // TODO : handle case all wizards dead
     player.wizards.forEach((wizard, i) => {
       if (!wizard.isAlive) {
         this.buttons[i].setState("dead");
+        this.buttons[i].setChallengeState("dead");
+      }
+
+      if (wizard.dailyChallengeCompleted) {
+        this.buttons[i].setChallengeState("completed");
       }
     });
+
     const worldScene = this.scene.get("world");
     const id = worldScene.me.getSelectedWizardId();
     this.buttons[id].setState("playing");
@@ -104,57 +110,100 @@ export default class Gui extends Phaser.Scene {
   }
 
   addWizardButtonChallengeState(wizard, wizardButton) {
-    let remainingTime =
-      this.gameState.gameStartTimestamp +
-      this.gameState.dayDuration -
-      Date.now();
+    wizardButton.setChallengeState = (state) => {
+      switch (state) {
+        case "completed":
+          wizardButton.currentChallengeState = "completed";
 
-    if (wizard.dailyChallengeCompleted) {
+          wizardButton.challengeStateInfo &&
+            wizardButton.challengeStateInfo.destroy();
+
+          wizardButton.challengeStateInfo =
+            wizardButton.addChallengeCompleted();
+
+          break;
+        case "uncompleted":
+          wizardButton.currentChallengeState = "uncompleted";
+
+          wizardButton.challengeStateInfo &&
+            wizardButton.challengeStateInfo.destroy();
+
+          wizardButton.challengeStateInfo =
+            wizardButton.addRemainingChallengeTime();
+          break;
+
+        case "dead":
+          wizardButton.currentChallengeState = "dead";
+
+          wizardButton.challengeStateInfo &&
+            wizardButton.challengeStateInfo.destroy();
+          break;
+      }
+    };
+
+    wizardButton.addChallengeCompleted = () => {
       return this.add.image(wizardButton.x + 100, wizardButton.y, "checkmark");
-    }
+    };
 
-    if (wizard.isDead) {
-      return this.add
-        .image(wizardButton.x + 100, wizardButton.y, "checkmark")
-        .setVisible(false);
-    }
+    let remainingTime =
+      Date.now() -
+      this.gameState.gameStartTimestamp +
+      this.gameState.dayDuration;
 
-    // if (remainingTime <= 0) {
-    //   // TODO: handle if wizard didn't complete challenge on time
-    //   return this.add.image(wizardButton.x + 100, wizardButton.y, "checkmark");
+    wizardButton.addRemainingChallengeTime = () => {
+      const time = this.add
+        .text(wizardButton.x + 100, wizardButton.y, "")
+        .setOrigin(0.5);
+
+      time.getConvertedTime = () => {
+        const newDateTime = new Date(remainingTime);
+
+        return (
+          newDateTime.getHours() - 1 + "h" + newDateTime.getMinutes() + "m"
+        );
+      };
+
+      time.update = () => {
+        remainingTime -= 1000 * 60;
+
+        if (remainingTime < 0) {
+          remainingTime = this.gameState.dayDuration;
+        }
+
+        time && time.setText(time.getConvertedTime());
+      };
+
+      this.timeUpdateInterval = this.time.addEvent({
+        repeat: -1,
+        delay: 1000 * 60,
+        callback: () => time.update(),
+      });
+
+      time.update();
+
+      return time;
+    };
+
+    wizardButton.setChallengeState("uncompleted");
+
+    // if (wizard.dailyChallengeCompleted) {
+    //   wizardButton.challengeState = this.add.image(wizardButton.x + 100, wizardButton.y, "checkmark")
+    //   return wizardButton.challengeState;
     // }
 
-    if (remainingTime > this.gameState.dayDuration) {
-      // TODO : handle day time end
-    }
+    // if (wizard.isDead) {
+    //   return this.add
+    //     .image(wizardButton.x + 100, wizardButton.y, "checkmark")
+    //     .setVisible(false);
+    // }
 
-    const time = this.add
-      .text(wizardButton.x + 100, wizardButton.y, "")
-      .setOrigin(0.5);
+    // if (remainingTime > this.gameState.dayDuration) {
+    //   // TODO : handle day time end
+    // }
 
-    time.getConvertedTime = () => {
-      const newDateTime = new Date(remainingTime);
+    // wizardButton.challengeState = time
 
-      return (
-        newDateTime.getHours() - 1 + "h" + (newDateTime.getMinutes() + 1) + "m"
-      );
-    };
-
-    time.update = () => {
-      remainingTime -= 1000 * 60;
-
-      time.setText(time.getConvertedTime());
-    };
-
-    this.time.addEvent({
-      repeat: -1,
-      delay: 1000 * 60,
-      callback: () => time.update(),
-    });
-
-    time.update();
-
-    return time;
+    return wizardButton.challengeStateInfo;
   }
 
   addWizards(player) {
@@ -178,6 +227,10 @@ export default class Gui extends Phaser.Scene {
 
       if (!wizard.isAlive) {
         wizardButton.setState("dead");
+      }
+
+      if (wizard.dailyChallengeCompleted) {
+        wizardButton.setChallengeState("completed");
       }
     });
   }

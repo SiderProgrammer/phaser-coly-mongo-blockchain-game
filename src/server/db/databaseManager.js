@@ -23,7 +23,7 @@ class DatabaseManager {
 
           GameState.create({
             day: 1,
-            dayDuration: 1000 * 60 * 2, // 10 minutes
+            dayDuration: 1000 * 60, // 10 minutes
             gameStartTimestamp: Date.now(),
           });
 
@@ -69,6 +69,10 @@ class DatabaseManager {
             res.status(200).json({ ...gameState, ...dayState });
           });
       });
+  }
+
+  getGameStateQuery() {
+    return GameState.findOne({}).lean().select("-_id"); // __v
   }
 
   createPlayer(req, res) {

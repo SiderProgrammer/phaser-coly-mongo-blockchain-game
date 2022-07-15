@@ -24,16 +24,26 @@ export default class Server {
     this.room.state.players.onAdd = (player, playerId) => {
       this.events.emit("player-joined", player);
 
-      if (playerId === this.playerId) {
+      if (this.isMyID(player.id)) {
         this.events.emit("update-gui", player);
       }
 
       player.wizards.forEach((wizard) => {
-        wizard.onChange = () => {
-          this.events.emit("wizard-changed", wizard, player.id);
+        wizard.onChange = (changed) => {
+          if (
+            changed.find((change) => change.field === "isAlive") &&
+            this.isMyID(player.id)
+          ) {
+            this.events.emit("update-gui", player);
+          }
+
+          this.events.emit("wizard-changed", wizard, player.id); // ? it handles wizards x,y,alive states
         };
       });
     };
+    // this.room.state.listen(
+    //   "isAlive",
+    // );
 
     this.room.state.listen("wizardsAliveCount", (count) =>
       this.events.emit("update-hud", count, "alive")
@@ -60,6 +70,10 @@ export default class Server {
     this.challengeRoom.state.wizard.onChange = (changedData) => {
       this.events.emit("player-move-challenge", changedData);
     };
+  }
+
+  isMyID(id) {
+    return this.playerId === id;
   }
 
   handleActionSend(action) {

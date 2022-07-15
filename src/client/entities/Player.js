@@ -27,7 +27,7 @@ class Player {
         this.scene,
         _wizard.x,
         _wizard.y,
-        "wizard",
+        "player",
         _wizard.name
       );
 
@@ -39,11 +39,27 @@ class Player {
     });
   }
 
+  preMove(dir, distance) {
+    const wizard = this.getSelectedWizard();
+    wizard.preMove(dir, distance);
+    wizard.playWalkAnimation(dir);
+  }
+
   updateWizard(_wizard) {
     const wizardToUpdate = this.wizards.find(
       (wizard) => wizard.id === _wizard.id
     );
+    if (!_wizard.isAlive && wizardToUpdate.isAlive) {
+      wizardToUpdate.kill();
+      return;
+    }
     wizardToUpdate.update(_wizard.x, _wizard.y);
+  }
+
+  getSelectedWizard() {
+    return this.wizards.find(
+      (wizard) => wizard.id === this.selectedWizardId.toString()
+    );
   }
 
   getSelectedWizardId() {

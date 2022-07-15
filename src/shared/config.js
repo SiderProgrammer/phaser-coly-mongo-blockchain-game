@@ -21,6 +21,7 @@ const HUD_HEIGHT = 70;
 
 const PLAYER_SIZE = 32;
 const TILE_SIZE = 32;
+const PRE_MOVE_DISTANCE = 5;
 
 const CHALLENGE_META = {
   x: HUD_WIDTH / 2 + VIEWPORT_SIZE.WIDTH / 2,
@@ -51,4 +52,5 @@ module.exports = {
   SERVER_PORT,
   TILE_SIZE,
   HUD_HEIGHT,
+  PRE_MOVE_DISTANCE,
 }; // TODO : change to imports & exports  (need to configure webpack for server)
