@@ -3,7 +3,6 @@ const mapData = require("./sampleMap");
 class MapManager {
   constructor() {
     this.mapLayers = {
-      ground: [],
       obstacles: [],
       lethals: [],
       objects: [],
@@ -33,7 +32,7 @@ class MapManager {
     for (let r = 0; r < row; ++r) {
       for (let c = 0; c < column; ++c) {
         if (data[i] !== 0) {
-          positions.push({ x: c, y: r });
+          positions.push({ r, c });
         }
 
         ++i;
@@ -43,13 +42,13 @@ class MapManager {
     return positions;
   }
 
+  getLethals(req, res) {
+    res.status(200).json(this.mapLayers["lethals"]);
+  }
+
   getWorldMap() {
     // ? API will return this function execution //  app.get("/getWorldMap", mapManager.getWorldMap);
-    return {
-      ground: this.mapLayers.ground,
-      obstacles: this.mapLayers.obstacles,
-      mixed: [...this.mapLayers.lethals, ...this.mapLayers.objects], // ! we want to hide a layer type from a player so we mix these layers
-    };
+    return this.mapLayers;
   }
 }
 

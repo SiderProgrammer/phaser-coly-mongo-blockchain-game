@@ -1,4 +1,5 @@
 import { HUD_HEIGHT } from "../../shared/config";
+import { GET_GAME_STATE } from "../services/requests/requests";
 
 export default class Hud extends Phaser.Scene {
   constructor() {
@@ -21,7 +22,19 @@ export default class Hud extends Phaser.Scene {
     this.addDays();
     this.addSlogan();
     this.addWizardsLeft();
+    this.addCollectedObjects();
+    this.wizardsCollectedObjects = {
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+    };
+
+    this.worldScene = this.scene.get("world");
+
     this.server.onUpdateHUD(this.handleUpdate, this);
+    this.server.onUpdateSlogan(this.updateSlogan, this);
+    this.server.onUpdateHUDobjects(this.updateCollectedObjects, this);
   }
 
   handleUpdate(count, type) {
@@ -36,6 +49,17 @@ export default class Hud extends Phaser.Scene {
     );
   }
 
+  async updateSlogan() {
+    // TODO : fix it
+    const gameState = await (await GET_GAME_STATE()).json();
+    this.slogan.setText(gameState.slogan);
+    this.day.setText(`DAY ${gameState.day}`);
+  }
+
+  updateCollectedObjects(newValue) {
+    this.collectedObjects.setText(`Collected objects: ${newValue}`);
+  }
+
   addWizardsLeft() {
     this.wizardsLeft = this.add
       .text(10, 10, "", {
@@ -44,7 +68,7 @@ export default class Hud extends Phaser.Scene {
       .setOrigin(0, 0);
   }
   addDays() {
-    this.add
+    this.day = this.add
       .text(this.width / 2, 10, `DAY ${this.gameState.day}`, {
         font: "35px Arial",
       })
@@ -52,11 +76,17 @@ export default class Hud extends Phaser.Scene {
   }
 
   addSlogan() {
-    this.add
+    this.slogan = this.add
       .text(this.width / 2, this.height - 10, this.gameState.slogan, {
         font: "15px Arial",
       })
       .setOrigin(0.5, 1);
   }
-  addCollectedObjects() {}
+  addCollectedObjects() {
+    this.collectedObjects = this.add
+      .text(this.width - 10, 10, "Collected objects: 0", {
+        font: "35px Arial",
+      })
+      .setOrigin(1, 0);
+  }
 }

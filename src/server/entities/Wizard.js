@@ -10,6 +10,8 @@ class Wizard extends schema.Schema {
     this.name = name;
     this.isSelected = false;
     this.isAlive = true;
+    this.dailyChallengeCompleted = false;
+    this.collectedObjectsCount = 0;
   }
 
   move(dirX, dirY, speed) {
@@ -29,6 +31,8 @@ schema.defineTypes(Wizard, {
   name: "string",
   isSelected: "boolean",
   isAlive: "boolean",
+  dailyChallengeCompleted: "boolean",
+  collectedObjectsCount: "number",
 });
 
 exports.Wizard = Wizard;

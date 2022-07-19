@@ -26,7 +26,7 @@ export default class Gui extends Phaser.Scene {
   handleUpdate(player) {
     // TODO : handle case all wizards dead
     player.wizards.forEach((wizard, i) => {
-      if (!wizard.isAlive) {
+      if (!wizard.isAlive && this.buttons[i].currentState !== "dead") {
         this.buttons[i].setState("dead");
         this.buttons[i].setChallengeState("dead");
       }
@@ -121,6 +121,7 @@ export default class Gui extends Phaser.Scene {
           wizardButton.challengeStateInfo =
             wizardButton.addChallengeCompleted();
 
+          this.leftBarContainer.add(wizardButton.challengeStateInfo);
           break;
         case "uncompleted":
           wizardButton.currentChallengeState = "uncompleted";
@@ -130,6 +131,7 @@ export default class Gui extends Phaser.Scene {
 
           wizardButton.challengeStateInfo =
             wizardButton.addRemainingChallengeTime();
+          this.leftBarContainer.add(wizardButton.challengeStateInfo);
           break;
 
         case "dead":
@@ -147,12 +149,15 @@ export default class Gui extends Phaser.Scene {
 
     let remainingTime =
       Date.now() -
-      this.gameState.gameStartTimestamp +
-      this.gameState.dayDuration;
+      this.gameState.gameStartTimestamp -
+      (this.gameState.day - 1) * this.gameState.dayDuration;
+    // Date.now() -
+    // this.gameState.gameStartTimestamp +
+    // this.gameState.dayDuration * this.gameState.day;
 
     wizardButton.addRemainingChallengeTime = () => {
       const time = this.add
-        .text(wizardButton.x + 100, wizardButton.y, "")
+        .text(wizardButton.x + 60, wizardButton.y, "")
         .setOrigin(0.5);
 
       time.getConvertedTime = () => {
@@ -168,12 +173,13 @@ export default class Gui extends Phaser.Scene {
 
         if (remainingTime < 0) {
           remainingTime = this.gameState.dayDuration;
+          this.server.updateSlogan();
         }
 
-        time && time.setText(time.getConvertedTime());
+        time.active && time.setText(time.getConvertedTime());
       };
 
-      this.timeUpdateInterval = this.time.addEvent({
+      this.time.addEvent({
         repeat: -1,
         delay: 1000 * 60,
         callback: () => time.update(),
@@ -213,6 +219,7 @@ export default class Gui extends Phaser.Scene {
 
     wizards.forEach((wizard, i) => {
       const wizardButton = this.addWizardButton(i);
+
       const challengeState = this.addWizardButtonChallengeState(
         wizard,
         wizardButton

@@ -7,6 +7,7 @@ class Wizard extends Phaser.GameObjects.Sprite {
     this.name = name;
     this.id = id;
     this.isAlive = true;
+    this.lastPreMove = {};
     this.showName();
     this.on("animationcomplete", () => this.play("idle"));
   }
@@ -25,8 +26,19 @@ class Wizard extends Phaser.GameObjects.Sprite {
   preMove(dir, distance) {
     const speedX = distance * dir.x;
     const speedY = distance * dir.y;
+
+    this.lastPreMove = {
+      speedX,
+      speedY,
+    };
+
     this.x += speedX;
     this.y += speedY;
+  }
+
+  reversePreMove() {
+    this.x -= this.lastPreMove.speedX;
+    this.y -= this.lastPreMove.speedY;
   }
 
   playWalkAnimation(dir) {

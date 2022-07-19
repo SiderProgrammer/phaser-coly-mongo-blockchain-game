@@ -14,7 +14,7 @@ export default class Server {
   // TODO : change events names && break HUD, World, Challenge handlers into separate files
   async handleWorldJoin() {
     //if (this.challengeRoom) await this.challengeRoom.leave(true);
-    this.playersSavedState = await (await GET_ALL_PLAYERS()).json(); // ! maybe move it to server-side
+    this.playersSavedState = await (await GET_ALL_PLAYERS()).json(); // ! maybe get players from back-end players state
     this.room = await this.client.joinOrCreate("game", {
       address: this.playerAccount.address,
     });
@@ -35,6 +35,18 @@ export default class Server {
             this.isMyID(player.id)
           ) {
             this.events.emit("update-gui", player);
+          }
+
+          if (
+            changed.find(
+              (change) => change.field === "collectedObjectsCount"
+            ) &&
+            this.isMyID(player.id)
+          ) {
+            this.events.emit(
+              "update-hud-objects",
+              wizard.collectedObjectsCount
+            );
           }
 
           this.events.emit("wizard-changed", wizard, player.id); // ? it handles wizards x,y,alive states
@@ -70,6 +82,10 @@ export default class Server {
     this.challengeRoom.state.wizard.onChange = (changedData) => {
       this.events.emit("player-move-challenge", changedData);
     };
+  }
+
+  updateSlogan() {
+    this.events.emit("update-hud-slogan");
   }
 
   isMyID(id) {
@@ -141,5 +157,16 @@ export default class Server {
     if (this.eventExists("update-hud")) return;
 
     this.events.on("update-hud", cb, context);
+  }
+  onUpdateHUDobjects(cb, context) {
+    if (this.eventExists("update-hud-objects")) return;
+
+    this.events.on("update-hud-objects", cb, context);
+  }
+
+  onUpdateSlogan(cb, context) {
+    if (this.eventExists("update-hud-slogan")) return;
+
+    this.events.on("update-hud-slogan", cb, context);
   }
 }

@@ -51,8 +51,8 @@ class DatabaseManager {
     );
   }
 
-  refreshDay() {
-    return GameState.updateOne({}, { $inc: { day: 1 } })
+  refreshDay(daysToAdd = 1) {
+    return GameState.updateOne({}, { $inc: { day: daysToAdd } })
       .then(this.killDelayedWizards)
       .then(this.refreshWizardsChallenges);
   }
@@ -99,6 +99,7 @@ class DatabaseManager {
               name: sampleNames[i] + "_" + address, // + seed
               isAlive: true,
               dailyChallengeCompleted: false,
+              collectedObjectsCount: 0,
               player: player.id,
             };
           }
@@ -155,7 +156,24 @@ class DatabaseManager {
       .select("-_id");
   }
 
+  getAllPlayersQuery() {
+    // TODO : Handle Errors
+
+    return Players.find({}).lean().populate("wizards").select("-_id");
+  }
+
   // ? Methods used from backend
+
+  increaseWizardObjectsCount(address, wizardId) {
+    // TODO : Handle Errors  && Improve this Query (search for better solution)
+
+    Players.findOne({ address }) // ? Maybe Wizards.updateOne({...})
+      .populate("wizards")
+      .then((state) => {
+        state.wizards[wizardId].collectedObjectsCount++;
+        state.wizards[wizardId].save();
+      });
+  }
 
   getPlayerQuery(address) {
     // TODO : Handle Errors

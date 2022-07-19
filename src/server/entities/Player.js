@@ -24,6 +24,7 @@ class Player extends Schema {
       );
       wizard.isAlive = _wizard.isAlive;
       wizard.dailyChallengeCompleted = _wizard.dailyChallengeCompleted;
+      wizard.collectedObjectsCount = _wizard.collectedObjectsCount;
 
       this.wizards.push(wizard);
 
@@ -40,20 +41,14 @@ class Player extends Schema {
     wizard.move(vectorX, vectorY, speed);
   }
 
-  canMove(dirX, dirY, speed) {
+  canMove() {
     const wizard = this.getSelectedWizard();
     if (!wizard || !wizard.isAlive) return false;
-
-    const speedX = speed * dirX;
-    const speedY = speed * dirY;
-
-    if (wizard.x + speedX < 0) return false;
-    if (wizard.x + speedX > WORLD_SIZE.WIDTH) return false;
-
-    if (wizard.y + speedY < 0) return false;
-    if (wizard.y + speedY > WORLD_SIZE.HEIGHT) return false;
-
     return true;
+  }
+
+  killSelectedWizard() {
+    this.getSelectedWizard().isAlive = false;
   }
 
   selectWizard(wizardId) {
@@ -63,6 +58,9 @@ class Player extends Schema {
 
   getSelectedWizard() {
     return this.wizards.find((wizard) => wizard.isSelected);
+  }
+  getSelectedWizardId() {
+    return this.wizards.find((wizard) => wizard.isSelected).id;
   }
 }
 

@@ -10,37 +10,19 @@ exports.default = class GameRoom extends Room {
     // }
     console.log("World room created");
 
+    this.autoDispose = false; // prevent from auto-closing the room when last client disconnected
+
     this.gameStateDB = await db.getGameStateQuery();
-    let remainingTime =
-      Date.now() -
-      this.gameStateDB.gameStartTimestamp +
-      this.gameStateDB.dayDuration * this.gameStateDB.day;
 
-    function handleDayEnd() {
-      db.refreshDay();
-      this.state.killDelayedWizards();
-      this.state.refreshWizardsChallenges();
-      remainingTime = this.gameStateDB.dayDuration;
+    //await this.setDaysHandler();
 
-      console.log("refreshing a day");
-
-      setTimeout(() => {
-        handleDayEnd.call(this);
-      }, remainingTime);
-    }
-
-    setTimeout(() => {
-      handleDayEnd.call(this);
-    }, remainingTime);
-
-    this.setState(new GameState());
+    const playersFromDB = await db.getAllPlayersQuery();
+    this.setState(new GameState(playersFromDB, this.gameStateDB));
 
     this.state.wizardsCount = await db.countWizards();
     this.state.wizardsAliveCount = await db.countWizards({ isAlive: true });
 
     this.presence.subscribe("wizardDied", () => this.state.subtractAlive(1));
-
-    this.autoDispose = false; // prevent from auto-closing the room
 
     this.onMessage("*", (client, type, message) => {
       const playerId = client.sessionId;
@@ -54,6 +36,45 @@ exports.default = class GameRoom extends Room {
           break;
       }
     });
+  }
+
+  async setDaysHandler() {
+    // Maybe we can move part of this code to server node-cron
+    // const remainingTime =
+    //   Date.now() -
+    //   this.gameStateDB.gameStartTimestamp +
+    //   this.gameStateDB.dayDuration * this.gameStateDB.day;
+
+    const dayCount =
+      Math.floor(
+        (Date.now() - this.gameStateDB.gameStartTimestamp) /
+          this.gameStateDB.dayDuration
+      ) + 1;
+
+    if (dayCount !== this.gameStateDB.day) {
+      await db.refreshDay(dayCount - this.gameStateDB.day);
+      console.log("refreshing a day");
+    }
+    const remainingTime =
+      Date.now() -
+      this.gameStateDB.gameStartTimestamp -
+      (dayCount - 1) * this.gameStateDB.dayDuration;
+
+    function handleDayEnd() {
+      db.refreshDay();
+      this.state.killDelayedWizards();
+      this.state.refreshWizardsChallenges();
+
+      console.log("refreshing a day");
+    }
+
+    setTimeout(() => {
+      handleDayEnd.call(this);
+
+      setInterval(() => {
+        handleDayEnd.call(this);
+      }, this.gameStateDB.dayDuration);
+    }, remainingTime);
   }
 
   onJoin(client, options) {

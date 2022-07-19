@@ -1,4 +1,4 @@
-import { PLAYER_SIZE } from "../../shared/config";
+import { PLAYER_SIZE, PRE_MOVE_DISTANCE } from "../../shared/config";
 import Wizard from "./Wizard";
 
 class Player {
@@ -39,10 +39,15 @@ class Player {
     });
   }
 
-  preMove(dir, distance) {
+  preMove(dir) {
     const wizard = this.getSelectedWizard();
-    wizard.preMove(dir, distance);
+    wizard.preMove(dir, PRE_MOVE_DISTANCE);
     wizard.playWalkAnimation(dir);
+  }
+
+  reversePreMove() {
+    const wizard = this.getSelectedWizard();
+    wizard.reversePreMove();
   }
 
   updateWizard(_wizard) {

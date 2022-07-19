@@ -37,7 +37,8 @@ class World extends Phaser.Scene {
 
     this.groundLayer = this.map.createLayer("ground", worldTileset);
     this.obstaclesLayer = this.map.createLayer("obstacles", worldTileset);
-    //this.obstaclesLayer.setCollisionByExclusion([-1]);
+    this.objectsLayer = this.map.createLayer("objects", worldTileset);
+    this.obstaclesLayer.setCollisionByExclusion([-1]);
 
     this.addPlayChallengeButton();
     this.cameras.main.setBounds(
@@ -61,7 +62,7 @@ class World extends Phaser.Scene {
   }
 
   playerMoved(dir) {
-    this.me.preMove(dir, PRE_MOVE_DISTANCE);
+    this.me.preMove(dir);
 
     const action = {
       type: "move",
