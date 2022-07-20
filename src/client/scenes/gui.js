@@ -36,8 +36,7 @@ export default class Gui extends Phaser.Scene {
       }
     });
 
-    const worldScene = this.scene.get("world");
-    const id = worldScene.me.getSelectedWizardId();
+    const id = this.scene.get("world").me.getSelectedWizardId();
     this.buttons[id].setState("playing");
   }
 
@@ -103,7 +102,8 @@ export default class Gui extends Phaser.Scene {
 
       wizardButton.setState("playing");
 
-      worldScene.me.setSelectedWizardId(wizardButton.id);
+      worldScene.me.setSelectedWizardId(wizardButton.id); // TODO : remove it, handle it with state change from back-end 
+      this.scene.get("hud").setWizardObjectsCounter(wizardButton.id)  // TODO : remove it, handle it with state change from back-end
     });
 
     return wizardButton.stateText;
@@ -216,7 +216,7 @@ export default class Gui extends Phaser.Scene {
     const playerId = player.id;
     const wizards = player.wizards;
     const worldScene = this.scene.get("world");
-
+   
     wizards.forEach((wizard, i) => {
       const wizardButton = this.addWizardButton(i);
 

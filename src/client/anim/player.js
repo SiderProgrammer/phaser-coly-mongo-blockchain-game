@@ -1,3 +1,5 @@
+const frameRate = 4;
+
 export default function initPlayerAnims(scene) {
   const anims = [
     {
@@ -7,17 +9,17 @@ export default function initPlayerAnims(scene) {
     {
       key: "walk-down",
       frames: scene.anims.generateFrameNumbers("player", { start: 0, end: 3 }),
-      frameRate: 20,
+      frameRate,
     },
     {
       key: "walk-left",
       frames: scene.anims.generateFrameNumbers("player", { start: 4, end: 7 }),
-      frameRate: 20,
+      frameRate,
     },
     {
       key: "walk-right",
       frames: scene.anims.generateFrameNumbers("player", { start: 8, end: 11 }),
-      frameRate: 20,
+      frameRate,
     },
     {
       key: "walk-up",
@@ -25,7 +27,7 @@ export default function initPlayerAnims(scene) {
         start: 12,
         end: 15,
       }),
-      frameRate: 20,
+      frameRate,
     },
   ];
 

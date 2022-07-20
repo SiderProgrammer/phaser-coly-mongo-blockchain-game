@@ -45,17 +45,21 @@ export default class Server {
           ) {
             this.events.emit(
               "update-hud-objects",
-              wizard.collectedObjectsCount
+              wizard.collectedObjectsCount,
+              changed.find((change) => change.field === "id")
+                ? changed.find((change) => change.field === "id").value
+                : null
             );
           }
-
+     
           this.events.emit("wizard-changed", wizard, player.id); // ? it handles wizards x,y,alive states
         };
       });
     };
-    // this.room.state.listen(
-    //   "isAlive",
-    // );
+
+    this.room.state.objects.onRemove = (removedObject) => {
+      this.events.emit("object-removed", removedObject);
+    };
 
     this.room.state.listen("wizardsAliveCount", (count) =>
       this.events.emit("update-hud", count, "alive")
@@ -129,7 +133,10 @@ export default class Server {
     if (this.eventExists("wizard-changed")) return;
     this.events.on("wizard-changed", cb, context);
   }
-
+  onObjectRemoved(cb, context) {
+    if (this.eventExists("object-removed")) return;
+    this.events.on("object-removed", cb, context);
+  }
   // ! CHALLENGE EVENTS
   onPlayerMovedInChallenge(cb, context) {
     if (this.eventExists("player-move-challenge")) return;

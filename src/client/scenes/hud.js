@@ -56,8 +56,24 @@ export default class Hud extends Phaser.Scene {
     this.day.setText(`DAY ${gameState.day}`);
   }
 
-  updateCollectedObjects(newValue) {
-    this.collectedObjects.setText(`Collected objects: ${newValue}`);
+  updateCollectedObjects(newValue, _wizardId) {
+    let wizardId = _wizardId;
+
+    if (!wizardId) {
+      wizardId = this.scene.get("world").me.getSelectedWizardId();
+    }
+
+    this.wizardsCollectedObjects[wizardId] = newValue;
+
+    wizardId = this.scene.get("world").me.getSelectedWizardId();
+    this.collectedObjects.setText(
+      `Collected objects: ${this.wizardsCollectedObjects[wizardId]}`
+    );
+  }
+
+  setWizardObjectsCounter(wizardId) {
+    const count = this.wizardsCollectedObjects[wizardId];
+    this.collectedObjects.setText(`Collected objects: ${count}`);
   }
 
   addWizardsLeft() {

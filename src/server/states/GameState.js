@@ -1,4 +1,5 @@
 const { Player } = require("../entities/Player");
+const { CollectableObject } = require("../entities/Object");
 const schema = require("@colyseus/schema");
 const DatabaseManager = require("../db/databaseManager");
 const {
@@ -11,7 +12,7 @@ const MapManager = require("../map/mapManager");
 const db = new DatabaseManager();
 
 class State extends schema.Schema {
-  constructor(playersFromDB, gameDayState) {
+  constructor(playersFromDB, collectedObjects) {
     super();
     // this.daySlogan = ""
     this.playersFromDB = this.getMapPlayersFromDB(playersFromDB); // ? needed to prevent players overlapping
@@ -26,7 +27,21 @@ class State extends schema.Schema {
 
     this.mapManager = new MapManager();
     this.mapLayers = this.mapManager.getWorldMap();
+
+    this.mapLayers.objects = this.mapLayers.objects.filter((obj) => {
+      return !collectedObjects.some(
+        (collectedObj) => collectedObj.c === obj.c && collectedObj.r === obj.r
+      );
+    });
+
     this.addLayersToGrid(this.mapLayers);
+
+    this.objects = new schema.ArraySchema();
+
+    this.mapLayers.objects.forEach((obj) => {
+      this.objects.push(new CollectableObject(obj.r, obj.c));
+    });
+
     //this.addMapBoundaryToGrid();
   }
   addMapBoundaryToGrid() {
@@ -153,11 +168,14 @@ class State extends schema.Schema {
     const player = this.players.get(id);
 
     if (!player || !player.canMove(dir.x, dir.y, TILE_SIZE)) return;
-    5;
-
+    // TODO: remove reversePreMove property and generate world grid on client-side
     const selectedWizard = player.getSelectedWizard();
+    selectedWizard.reversePreMove = false;
 
-    if (!this.isTileWalkable(selectedWizard, dir.x, dir.y, TILE_SIZE)) return;
+    if (!this.isTileWalkable(selectedWizard, dir.x, dir.y, TILE_SIZE)) {
+      selectedWizard.reversePreMove = true;
+      return;
+    }
 
     if (this.isWizardOnTile(selectedWizard.x, selectedWizard.y)) {
       this.setTileEmpty(selectedWizard.x, selectedWizard.y);
@@ -170,6 +188,10 @@ class State extends schema.Schema {
     }
 
     this.handleTile(player, selectedWizard.x, selectedWizard.y);
+
+    if (this.isTileObject(selectedWizard.x, selectedWizard.y)) {
+      this.addWizardToGrid(selectedWizard);
+    }
   }
 
   handleTile(player, x, y) {
@@ -177,12 +199,22 @@ class State extends schema.Schema {
     const tile = this.worldGrid[r][c];
     if (tile === "let") {
       player.killSelectedWizard();
+      this.subtractAlive(1);
+      db.killWizard(player.address, player.getSelectedWizardId());
     } else if (tile === "obj") {
       db.increaseWizardObjectsCount(
         player.address,
         player.getSelectedWizardId()
       );
+      db.setObjectCollected(r, c);
       player.getSelectedWizard().collectedObjectsCount++;
+
+      const indexOfObject = this.objects.findIndex(
+        (obj) => obj.c === c && obj.r === r
+      );
+
+      this.objects.splice(indexOfObject, 1);
+
       console.log("collected an obj");
     }
   }
@@ -196,7 +228,11 @@ class State extends schema.Schema {
 
     return this.worldGrid[r][c] === "";
   }
+  isTileObject(x, y) {
+    const { r, c } = this.getRowColumnFromCoords(x, y);
 
+    return this.worldGrid[r][c] === "obj";
+  }
   isTileWalkable(wizard, dirX, dirY, speed) {
     const speedX = speed * dirX;
     const speedY = speed * dirY;
@@ -206,9 +242,22 @@ class State extends schema.Schema {
       wizard.y + speedY
     );
 
+    const isTileOutOfBounds = this.isTileOutOfBounds(r, c);
+    if (isTileOutOfBounds) return false;
+
     const tile = this.worldGrid[r][c];
+
     return tile === "" || tile === "let" || tile === "obj";
   }
+
+  isTileOutOfBounds(r, c) {
+    return !(
+      this.worldGrid[r] &&
+      this.worldGrid[c] &&
+      typeof this.worldGrid[r][c] === "string"
+    );
+  }
+
   playerSelectWizard(id, wizardId) {
     const player = this.players.get(id);
 
@@ -240,6 +289,7 @@ schema.defineTypes(State, {
   players: { map: Player },
   wizardsAliveCount: "number",
   wizardsCount: "number",
+  objects: [CollectableObject],
 });
 
 exports.GameState = State;

@@ -43,7 +43,7 @@ class MapManager {
   }
 
   getLethals(req, res) {
-    res.status(200).json(this.mapLayers["lethals"]);
+    res.status(200).json(this.mapLayers.lethals);
   }
 
   getWorldMap() {

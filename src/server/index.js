@@ -59,6 +59,7 @@ app.post("/createPlayer", databaseManager.createPlayer);
 app.post("/getPlayer", databaseManager.getPlayer);
 app.get("/getAllPlayers", databaseManager.getAllPlayers);
 app.get("/getGameState", databaseManager.getGameState);
+app.get("/getAllCollectedObjects", databaseManager.getAllCollectedObjects);
 
 // app.get("/getLethals", mapManager.getLethals);
 // app.use("/colyseus", monitor());

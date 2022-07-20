@@ -41,6 +41,8 @@ class Player {
 
   preMove(dir) {
     const wizard = this.getSelectedWizard();
+    if (!wizard.isAlive) return;
+
     wizard.preMove(dir, PRE_MOVE_DISTANCE);
     wizard.playWalkAnimation(dir);
   }
@@ -58,7 +60,25 @@ class Player {
       wizardToUpdate.kill();
       return;
     }
-    wizardToUpdate.update(_wizard.x, _wizard.y);
+    wizardToUpdate.isReversePreMove = _wizard.reversePreMove;
+    if (wizardToUpdate.isReversePreMove) {
+      wizardToUpdate.canMove = true;
+      this.reversePreMove();
+      return;
+    }
+    if (_wizard.x != wizardToUpdate.x || _wizard.y != wizardToUpdate.y) {
+      // wizardToUpdate.moveTween =
+      this.scene.tweens.add({
+        // TODO : we should keep walk animation on hold until server respawn
+        targets: [wizardToUpdate, wizardToUpdate.name],
+        x: _wizard.x,
+        y: _wizard.y,
+        duration: 1000,
+        onUpdate: () => (wizardToUpdate.name.y = wizardToUpdate.y - 50), // TODO : handle it better / create container
+        onComplete: () => (wizardToUpdate.canMove = true),
+      });
+    }
+    // wizardToUpdate.update(_wizard.x, _wizard.y);
   }
 
   getSelectedWizard() {

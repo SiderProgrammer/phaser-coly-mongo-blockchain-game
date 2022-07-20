@@ -7,7 +7,10 @@ class Wizard extends Phaser.GameObjects.Sprite {
     this.name = name;
     this.id = id;
     this.isAlive = true;
+    this.canMove = true;
     this.lastPreMove = {};
+    this.moveTween = null;
+
     this.showName();
     this.on("animationcomplete", () => this.play("idle"));
   }
@@ -31,7 +34,6 @@ class Wizard extends Phaser.GameObjects.Sprite {
       speedX,
       speedY,
     };
-
     this.x += speedX;
     this.y += speedY;
   }

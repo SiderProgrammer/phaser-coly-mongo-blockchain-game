@@ -4,6 +4,7 @@ const srvConfig = require("./config/auth");
 const Wizard = require("./models/Wizard");
 const Players = require("./models/Player");
 const GameState = require("./models/GameState");
+const CollectedObjects = require("./models/CollectedObjects");
 const Days = require("./models/Days");
 const { PLAYER_SIZE, WORLD_SIZE } = require("../../shared/config");
 
@@ -163,6 +164,21 @@ class DatabaseManager {
   }
 
   // ? Methods used from backend
+
+  setObjectCollected(r, c) {
+    CollectedObjects.create({ r, c });
+  }
+
+  getAllCollectedObjectsQuery() {
+    return CollectedObjects.find().lean().select("-_id");
+  }
+
+  getAllCollectedObjects(req, res) {
+    CollectedObjects.find()
+      .lean()
+      .select("-_id")
+      .then((objects) => res.status(200).json(objects));
+  }
 
   increaseWizardObjectsCount(address, wizardId) {
     // TODO : Handle Errors  && Improve this Query (search for better solution)

@@ -12,6 +12,7 @@ class Wizard extends schema.Schema {
     this.isAlive = true;
     this.dailyChallengeCompleted = false;
     this.collectedObjectsCount = 0;
+    this.reversePreMove = false;
   }
 
   move(dirX, dirY, speed) {
@@ -33,6 +34,7 @@ schema.defineTypes(Wizard, {
   isAlive: "boolean",
   dailyChallengeCompleted: "boolean",
   collectedObjectsCount: "number",
+  reversePreMove: "boolean",
 });
 
 exports.Wizard = Wizard;

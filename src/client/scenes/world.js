@@ -8,6 +8,7 @@ import {
 import Button from "../components/Button";
 import InputManager from "../components/InputManager";
 import Player from "../entities/Player";
+import { GET_ALL_COLLECTED_OBJECTS } from "../services/requests/requests";
 
 class World extends Phaser.Scene {
   constructor() {
@@ -29,6 +30,9 @@ class World extends Phaser.Scene {
 
     this.server.onPlayerJoined(this.handlePlayerAdd, this);
     this.server.onWizardChanged(this.handleWizardChanged, this);
+    this.server.onObjectRemoved(this.handleObjectRemoved, this);
+
+    const collectedObjects = await (await GET_ALL_COLLECTED_OBJECTS()).json();
 
     this.inputManager = new InputManager(this);
 
@@ -55,6 +59,8 @@ class World extends Phaser.Scene {
 
     this.playerId = this.server.getPlayerId();
     this.walletAddress = this.server.getPlayerWalletAddress();
+
+    collectedObjects.forEach((obj) => this.map.removeTileAt(obj.c, obj.r));
   }
 
   update() {
@@ -62,7 +68,19 @@ class World extends Phaser.Scene {
   }
 
   playerMoved(dir) {
+    // TODO : make pre move animations with 2 first frame of movement
+    // TODO : play pre move animation when hit obstacle/bounds/player and on complete return player to previous position
+    // TODO : keep player movement animation on hold when there is no server response yet
+    const wizardMoved = this.me.getSelectedWizard();
+    if (!wizardMoved.canMove) return;
+    wizardMoved.canMove = false;
+
     this.me.preMove(dir);
+
+    if (this.me.getSelectedWizard().isReversePreMove) {
+      this.me.getSelectedWizard().reversePreMove();
+      wizardMoved.canMove = true;
+    }
 
     const action = {
       type: "move",
@@ -91,6 +109,10 @@ class World extends Phaser.Scene {
     );
 
     wizardOwner.updateWizard(wizard);
+  }
+
+  handleObjectRemoved(object) {
+    this.map.removeTileAt(object.c, object.r);
   }
 
   addPlayersFromSavedState() {
