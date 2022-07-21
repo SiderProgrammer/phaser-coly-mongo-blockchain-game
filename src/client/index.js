@@ -8,9 +8,12 @@ import Hud from "./scenes/hud";
 
 const config = {
   type: Phaser.AUTO,
-  parent: "game",
   width: 1280,
   height: 720,
+  parent: "game",
+  dom: {
+    createContainer: true,
+  },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

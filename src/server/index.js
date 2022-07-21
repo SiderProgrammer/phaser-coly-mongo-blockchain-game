@@ -43,7 +43,7 @@ gameServer.define("challenge", Challenge);
 const databaseManager = new DatabaseManager();
 const mapManager = new MapManager();
 
-// cron.schedule("*/2 * * * *", () => {
+// cron.schedule("*/2 * * * *", () => {  // ! it is handled in game room
 //   // ? every 10 minutes
 
 //   databaseManager.refreshDay().then(() => {});
@@ -56,6 +56,7 @@ const mapManager = new MapManager();
 // });
 
 app.post("/createPlayer", databaseManager.createPlayer);
+app.post("/changeName", databaseManager.changeName);
 app.post("/getPlayer", databaseManager.getPlayer);
 app.get("/getAllPlayers", databaseManager.getAllPlayers);
 app.get("/getGameState", databaseManager.getGameState);

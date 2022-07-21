@@ -68,15 +68,7 @@ class Player {
     }
     if (_wizard.x != wizardToUpdate.x || _wizard.y != wizardToUpdate.y) {
       // wizardToUpdate.moveTween =
-      this.scene.tweens.add({
-        // TODO : we should keep walk animation on hold until server respawn
-        targets: [wizardToUpdate, wizardToUpdate.name],
-        x: _wizard.x,
-        y: _wizard.y,
-        duration: 1000,
-        onUpdate: () => (wizardToUpdate.name.y = wizardToUpdate.y - 50), // TODO : handle it better / create container
-        onComplete: () => (wizardToUpdate.canMove = true),
-      });
+      wizardToUpdate.walkTo(_wizard.x, _wizard.y);
     }
     // wizardToUpdate.update(_wizard.x, _wizard.y);
   }

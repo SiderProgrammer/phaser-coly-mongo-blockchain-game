@@ -20,6 +20,10 @@ class Wizard extends Phaser.GameObjects.Sprite {
     this.setAlpha(0.3);
   }
 
+  setName(name) {
+    this.name.setText(name);
+  }
+
   showName() {
     this.name = this.scene.add
       .text(this.x, this.y - 50, this.name)
@@ -56,6 +60,18 @@ class Wizard extends Phaser.GameObjects.Sprite {
     if (dir.y === 1) {
       this.play("walk-down");
     }
+  }
+
+  walkTo(x, y) {
+    this.scene.tweens.add({
+      // TODO : we should keep walk animation on hold until server respawn
+      targets: [this, this.name],
+      x: x,
+      y: y,
+      duration: 1000,
+      onUpdate: () => (this.name.y = this.y - 50), // TODO : handle it better / create container
+      onComplete: () => (this.canMove = true),
+    });
   }
 
   update(x, y) {

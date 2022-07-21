@@ -3,9 +3,11 @@ import {
   CHALLENGE_OBSTACLES,
   CHALLENGE_PLAYER,
   PLAYER_SIZE,
+  PRE_MOVE_DISTANCE,
 } from "../../shared/config";
 import InputManager from "../components/InputManager";
 import Wizard from "../entities/Wizard";
+import { CHALLENGE_SCENE } from "./currentScenes";
 
 class Challenge extends Phaser.Scene {
   constructor() {
@@ -15,6 +17,7 @@ class Challenge extends Phaser.Scene {
   preload() {}
 
   async create({ server, onLoseChallenge, onWinChallenge, wizardId }) {
+    CHALLENGE_SCENE.setScene(this);
     this.server = server;
     this.onLoseChallenge = onLoseChallenge;
     this.onWinChallenge = onWinChallenge;
@@ -29,20 +32,17 @@ class Challenge extends Phaser.Scene {
 
     this.me = null;
 
-    this.server.onPlayerJoinedChallenge(this.handlePlayerAdd, this);
-    this.server.onPlayerMovedInChallenge(this.handlePlayerMove, this);
-    this.server.onChallengeStateChanged(this.handleChangeState, this);
-
     this.inputManager = new InputManager(this);
 
     await this.server.handleChallengeJoin(wizardId);
   }
 
-  update() {
-    this.inputManager && this.inputManager.update();
-  }
-
   playerMoved(dir) {
+    if (!this.me || !this.me.canMove) return;
+    this.me.canMove = false;
+    this.me.preMove(dir, PRE_MOVE_DISTANCE);
+    this.me.playWalkAnimation(dir);
+
     const action = {
       type: "move",
       playerId: this.playerId,
@@ -73,11 +73,11 @@ class Challenge extends Phaser.Scene {
       this,
       CHALLENGE_PLAYER.x,
       CHALLENGE_PLAYER.y,
-      "wizard" // ? not needed here
+      "player" // ? not needed here
     ).setDisplaySize(PLAYER_SIZE, PLAYER_SIZE);
   }
 
-  handlePlayerMove(changedData) {
+  handlePlayerMoved(changedData) {
     // TODO : improve this function code
     const updatedPosition = changedData.filter(
       (data) => data.field === "x" || data.field === "y"
@@ -89,7 +89,8 @@ class Challenge extends Phaser.Scene {
       ? updatedPosition.find((pos) => pos.field === "y").value
       : this.me.y;
 
-    this.me.setPosition(updatedX, updatedY);
+    this.me.walkTo(updatedX, updatedY);
+    //this.me.setPosition(updatedX, updatedY);
   }
 }
 

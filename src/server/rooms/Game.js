@@ -39,6 +39,7 @@ exports.default = class GameRoom extends Room {
   }
 
   async setDaysHandler() {
+    // ! Just for now implementation
     // Maybe we can move part of this code to server node-cron
     // const remainingTime =
     //   Date.now() -
@@ -56,9 +57,9 @@ exports.default = class GameRoom extends Room {
       console.log("refreshing a day");
     }
     const remainingTime =
-      Date.now() -
-      this.gameStateDB.gameStartTimestamp -
-      (dayCount - 1) * this.gameStateDB.dayDuration;
+      this.gameStateDB.gameStartTimestamp +
+      dayCount * this.gameStateDB.dayDuration -
+      Date.now();
 
     function handleDayEnd() {
       db.refreshDay();

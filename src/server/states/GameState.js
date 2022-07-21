@@ -8,6 +8,7 @@ const {
   WORLD_COLUMNS_COUNT,
 } = require("../../shared/config");
 const MapManager = require("../map/mapManager");
+const MapGridManager = require("../map/mapGridManager");
 
 const db = new DatabaseManager();
 
@@ -15,101 +16,50 @@ class State extends schema.Schema {
   constructor(playersFromDB, collectedObjects) {
     super();
     // this.daySlogan = ""
-    this.playersFromDB = this.getMapPlayersFromDB(playersFromDB); // ? needed to prevent players overlapping
+    this.playersFromDB = this.getPlayersFromDB(playersFromDB); // ? needed to prevent players overlapping
     this.players = new schema.MapSchema();
     this.wizardsAliveCount = 0;
     this.wizardsCount = 0;
-    this.worldGrid = this.createWorldGrid();
+
+    this.mapGridManager = new MapGridManager(this);
+    this.worldGrid = this.mapGridManager.createWorldGrid();
 
     this.playersFromDB.forEach((player) =>
-      this.addWizardsToGrid(player.wizards)
+      this.mapGridManager.addWizardsToGrid(player.wizards)
     );
 
-    this.mapManager = new MapManager();
+    this.mapManager = new MapManager(this);
     this.mapLayers = this.mapManager.getWorldMap();
 
-    this.mapLayers.objects = this.mapLayers.objects.filter((obj) => {
+    this.mapLayers.objects =
+      this.getObjectsLayerCollectedRemoved(collectedObjects);
+
+    this.mapGridManager.addLayersToGrid(this.mapLayers);
+
+    this.objects = new schema.ArraySchema(); // ? needed to handle objects state
+
+    this.mapLayers.objects.forEach((obj) => {
+      this.objects.push(new CollectableObject(obj.r, obj.c)); // ? needed to handle objects state
+    });
+
+    //this.mapManager.addMapBoundaryToGrid();
+  }
+
+  getObjectsLayerCollectedRemoved(collectedObjects) {
+    return this.mapLayers.objects.filter((obj) => {
       return !collectedObjects.some(
         (collectedObj) => collectedObj.c === obj.c && collectedObj.r === obj.r
       );
     });
-
-    this.addLayersToGrid(this.mapLayers);
-
-    this.objects = new schema.ArraySchema();
-
-    this.mapLayers.objects.forEach((obj) => {
-      this.objects.push(new CollectableObject(obj.r, obj.c));
-    });
-
-    //this.addMapBoundaryToGrid();
-  }
-  addMapBoundaryToGrid() {
-    for (let c = 0; c < WORLD_COLUMNS_COUNT; c++) {
-      this.worldGrid[0][c] = "bon";
-    }
-    for (let c = 0; c < WORLD_COLUMNS_COUNT; c++) {
-      this.worldGrid[WORLD_ROWS_COUNT - 1][c] = "bon";
-    }
-
-    for (let r = 0; r < WORLD_ROWS_COUNT; r++) {
-      this.worldGrid[0][r] = "bon";
-    }
-
-    for (let r = 0; r < WORLD_ROWS_COUNT; r++) {
-      this.worldGrid[WORLD_COLUMNS_COUNT - 1][r] = "bon";
-    }
   }
 
-  getMapPlayersFromDB(playersFromDB) {
+  getPlayersFromDB(playersFromDB) {
     const players = new Map();
     playersFromDB.forEach((player) => {
       players.set(player.address, player);
     });
 
     return players;
-  }
-
-  createWorldGrid() {
-    const grid = [];
-    for (let r = 0; r < WORLD_ROWS_COUNT; r++) {
-      grid[r] = new Array(WORLD_COLUMNS_COUNT).fill("");
-    }
-    return grid;
-  }
-
-  addLayersToGrid(layers) {
-    for (const layer in layers) {
-      layers[layer].forEach((tile) => {
-        this.worldGrid[tile.r][tile.c] = layer.slice(0, 3);
-      });
-    }
-  }
-  addWizardsToGrid(wizards) {
-    const wizardsGridPos = wizards.map((wizard) =>
-      this.getRowColumnFromCoords(wizard.x, wizard.y)
-    );
-
-    wizardsGridPos.forEach((pos) => {
-      this.worldGrid[pos.r][pos.c] = "wiz";
-    });
-  }
-
-  setTileEmpty(x, y) {
-    const { r, c } = this.getRowColumnFromCoords(x, y);
-    this.worldGrid[r][c] = "";
-  }
-
-  addWizardToGrid(wizard) {
-    const { r, c } = this.getRowColumnFromCoords(wizard.x, wizard.y);
-    this.worldGrid[r][c] = "wiz";
-  }
-
-  getRowColumnFromCoords(x, y) {
-    return {
-      r: Math.floor(y / TILE_SIZE),
-      c: Math.floor(x / TILE_SIZE),
-    };
   }
 
   subtractAlive(count) {
@@ -146,7 +96,7 @@ class State extends schema.Schema {
       //   this.playersFromDB.set(address, state);
       // }
 
-      this.addWizardsToGrid(state.wizards);
+      this.mapGridManager.addWizardsToGrid(state.wizards);
       // console.log(this.worldGrid);
       this.updateWizardsCounter(state.wizards); // TODO : fix it
     });
@@ -172,30 +122,39 @@ class State extends schema.Schema {
     const selectedWizard = player.getSelectedWizard();
     selectedWizard.reversePreMove = false;
 
-    if (!this.isTileWalkable(selectedWizard, dir.x, dir.y, TILE_SIZE)) {
+    if (
+      !this.mapGridManager.isTileWalkable(
+        selectedWizard,
+        dir.x,
+        dir.y,
+        TILE_SIZE
+      )
+    ) {
       selectedWizard.reversePreMove = true;
       return;
     }
 
-    if (this.isWizardOnTile(selectedWizard.x, selectedWizard.y)) {
-      this.setTileEmpty(selectedWizard.x, selectedWizard.y);
+    if (
+      this.mapGridManager.isWizardOnTile(selectedWizard.x, selectedWizard.y)
+    ) {
+      this.mapGridManager.setTileEmpty(selectedWizard.x, selectedWizard.y);
     }
 
     player.move(dir.x, dir.y, TILE_SIZE);
 
-    if (this.isTileFree(selectedWizard.x, selectedWizard.y)) {
-      this.addWizardToGrid(selectedWizard);
+    if (this.mapGridManager.isTileFree(selectedWizard.x, selectedWizard.y)) {
+      this.mapGridManager.addWizardToGrid(selectedWizard);
     }
 
     this.handleTile(player, selectedWizard.x, selectedWizard.y);
 
-    if (this.isTileObject(selectedWizard.x, selectedWizard.y)) {
-      this.addWizardToGrid(selectedWizard);
+    if (this.mapGridManager.isTileObject(selectedWizard.x, selectedWizard.y)) {
+      this.mapGridManager.addWizardToGrid(selectedWizard);
     }
   }
 
   handleTile(player, x, y) {
-    const { r, c } = this.getRowColumnFromCoords(x, y);
+    const { r, c } = this.mapGridManager.getRowColumnFromCoords(x, y);
     const tile = this.worldGrid[r][c];
     if (tile === "let") {
       player.killSelectedWizard();
@@ -218,45 +177,6 @@ class State extends schema.Schema {
       console.log("collected an obj");
     }
   }
-  isWizardOnTile(x, y) {
-    const { r, c } = this.getRowColumnFromCoords(x, y);
-
-    return this.worldGrid[r][c] === "wiz";
-  }
-  isTileFree(x, y) {
-    const { r, c } = this.getRowColumnFromCoords(x, y);
-
-    return this.worldGrid[r][c] === "";
-  }
-  isTileObject(x, y) {
-    const { r, c } = this.getRowColumnFromCoords(x, y);
-
-    return this.worldGrid[r][c] === "obj";
-  }
-  isTileWalkable(wizard, dirX, dirY, speed) {
-    const speedX = speed * dirX;
-    const speedY = speed * dirY;
-
-    const { r, c } = this.getRowColumnFromCoords(
-      wizard.x + speedX,
-      wizard.y + speedY
-    );
-
-    const isTileOutOfBounds = this.isTileOutOfBounds(r, c);
-    if (isTileOutOfBounds) return false;
-
-    const tile = this.worldGrid[r][c];
-
-    return tile === "" || tile === "let" || tile === "obj";
-  }
-
-  isTileOutOfBounds(r, c) {
-    return !(
-      this.worldGrid[r] &&
-      this.worldGrid[c] &&
-      typeof this.worldGrid[r][c] === "string"
-    );
-  }
 
   playerSelectWizard(id, wizardId) {
     const player = this.players.get(id);
@@ -267,22 +187,26 @@ class State extends schema.Schema {
   }
 
   killDelayedWizards() {
+    let killedWizards = 0;
     this.players.forEach((player) => {
       player.wizards.forEach((wizard) => {
         if (!wizard.dailyChallengeCompleted) {
           wizard.isAlive = false;
+          killedWizards;
         }
         // wizard.dailyChallengeCompleted = false;
       });
     });
+
+    this.subtractAlive(killedWizards);
   }
 
   refreshWizardsChallenges() {
-    // this.players.forEach(player => {
-    //   player.wizards.forEach(wizard => {
-    //     wizard.dailyChallengeCompleted = false;
-    //   })
-    // })
+    this.players.forEach((player) => {
+      player.wizards.forEach((wizard) => {
+        wizard.dailyChallengeCompleted = false;
+      });
+    });
   }
 }
 schema.defineTypes(State, {

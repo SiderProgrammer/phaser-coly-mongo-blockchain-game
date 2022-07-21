@@ -1,20 +1,17 @@
 import { Client } from "colyseus.js";
-import {
-  CHALLENGE_SCENE,
-  GUI_SCENE,
-  HUD_SCENE,
-  WORLD_SCENE,
-} from "../scenes/currentScenes";
 import { WEBSOCKET_URL } from "./config";
 import { GET_ALL_PLAYERS } from "./requests/requests";
+import WorldServerManager from "./world";
 
 export default class Server {
   constructor(playerAccount) {
     this.client = new Client(WEBSOCKET_URL);
-    this.events = new Phaser.Events.EventEmitter();
+    //this.events = new Phaser.Events.EventEmitter();
 
     this.playerAccount = playerAccount;
     this.walletAddress = this.playerAccount.address;
+
+    this.worldServerManager = new WorldServerManager();
   }
 
   // TODO : change events names && break HUD, World, Challenge handlers into separate files
@@ -24,9 +21,22 @@ export default class Server {
     this.room = await this.client.joinOrCreate("game", {
       address: this.playerAccount.address,
     });
+    this.worldServerManager.setRoom(this.room);
 
     this.playerId = this.room ? this.room.sessionId : ""; // ? session id
-    this.setWorldListeners();
+
+    this.room.state.players.onAdd = this.handleWorldPlayerJoined.bind(this);
+
+    this.room.state.objects.onRemove = (removedObject) => {
+      this.worldServerManager.events.emit("object-removed", removedObject);
+    };
+
+    this.room.state.listen("wizardsAliveCount", (count) =>
+      this.HudServerManager.events.emit("update", count, "alive")
+    );
+    this.room.state.listen("wizardsCount", (count) =>
+      this.HudServerManager.events.emit("update", count, "all")
+    );
   }
 
   async handleChallengeJoin(wizardId) {
@@ -37,46 +47,26 @@ export default class Server {
       wizardId: wizardId,
     });
 
-    CHALLENGE_SCENE.SCENE.handlePlayerAdd();
+    this.events.emit("player-joined-challenge");
 
-    this.setChallengeListeners();
-  }
-
-  setWorldListeners() {
-    this.room.state.players.onAdd = this.handleWorldPlayerJoined.bind(this);
-
-    this.room.state.objects.onRemove = (removedObject) => {
-      WORLD_SCENE.SCENE.handleObjectRemoved(removedObject);
-    };
-
-    this.room.state.listen("wizardsAliveCount", (count) =>
-      HUD_SCENE.SCENE.handleUpdate(count, "alive")
-    );
-    this.room.state.listen("wizardsCount", (count) =>
-      HUD_SCENE.SCENE.handleUpdate(count, "all")
-    );
-  }
-
-  setChallengeListeners() {
     this.challengeRoom.state.onChange = (state) => {
-      CHALLENGE_SCENE.SCENE.handleChangeState(state);
+      this.events.emit("challenge-state-changed", state); // TODO : change to state.listen("stateChanged")
     };
 
     this.challengeRoom.state.wizard.onChange = (changedData) => {
-      CHALLENGE_SCENE.SCENE.handlePlayerMoved(changedData);
+      this.events.emit("player-move-challenge", changedData);
     };
   }
 
   handleWorldPlayerJoined(player) {
-    WORLD_SCENE.SCENE.handlePlayerAdd(player);
+    this.worldServerManager.events.emit("player-joined", player);
 
     if (this.isMyID(player.id)) {
-      GUI_SCENE.SCENE.handleUpdate(player);
+      this.guiServerManager.events.emit("update", player);
     }
 
     player.wizards.forEach((wizard) => {
-      wizard.onChange = (changed) =>
-        this.handleWorldWizardChanged(changed, player, wizard);
+      wizard.onChange = handleWorldWizardChanged.bind(this, player, wizard);
     });
   }
 
@@ -85,39 +75,27 @@ export default class Server {
       changed.find((change) => change.field === "isAlive") &&
       this.isMyID(player.id)
     ) {
-      GUI_SCENE.SCENE.handleUpdate(player);
+      this.guiServerManager.events.emit("update", player);
     }
 
     if (
       changed.find((change) => change.field === "collectedObjectsCount") &&
       this.isMyID(player.id)
     ) {
-      HUD_SCENE.SCENE.updateCollectedObjects(
+      this.events.emit(
+        "update-hud-objects",
         wizard.collectedObjectsCount,
         changed.find((change) => change.field === "id")
           ? changed.find((change) => change.field === "id").value
           : null
       );
     }
-    WORLD_SCENE.SCENE.handleWizardChanged(wizard, player.id);
-  }
 
-  handleActionSend(action) {
-    if (!this.room) {
-      return;
-    }
-
-    this.room.send(action.type, action);
-  }
-  handleActionSendInChallenge(action) {
-    if (!this.challengeRoom) {
-      return;
-    }
-    this.challengeRoom.send(action.type, action);
+    this.events.emit("wizard-changed", wizard, player.id); // ? it handles wizards x,y,alive states
   }
 
   updateSlogan() {
-    HUD_SCENE.SCENE.updateSlogan();
+    this.serverHudManager.events.emit("update-hud-slogan");
   }
 
   isMyID(id) {

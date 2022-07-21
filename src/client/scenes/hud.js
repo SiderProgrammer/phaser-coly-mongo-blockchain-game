@@ -1,5 +1,6 @@
 import { HUD_HEIGHT } from "../../shared/config";
 import { GET_GAME_STATE } from "../services/requests/requests";
+import { HUD_SCENE } from "./currentScenes";
 
 export default class Hud extends Phaser.Scene {
   constructor() {
@@ -7,6 +8,7 @@ export default class Hud extends Phaser.Scene {
   }
 
   create({ server, gameState }) {
+    HUD_SCENE.setScene(this);
     this.server = server;
     this.gameState = gameState;
     this.width = this.game.renderer.width;
@@ -31,10 +33,6 @@ export default class Hud extends Phaser.Scene {
     };
 
     this.worldScene = this.scene.get("world");
-
-    this.server.onUpdateHUD(this.handleUpdate, this);
-    this.server.onUpdateSlogan(this.updateSlogan, this);
-    this.server.onUpdateHUDobjects(this.updateCollectedObjects, this);
   }
 
   handleUpdate(count, type) {

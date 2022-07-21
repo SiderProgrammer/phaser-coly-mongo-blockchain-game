@@ -1,4 +1,7 @@
 import { HUD_WIDTH } from "../../shared/config";
+import Button from "../components/Button";
+import { CHANGE_NAME } from "../services/requests/requests";
+import { GUI_SCENE, HUD_SCENE, WORLD_SCENE } from "./currentScenes";
 
 export default class Gui extends Phaser.Scene {
   constructor() {
@@ -6,6 +9,7 @@ export default class Gui extends Phaser.Scene {
   }
 
   create({ server, gameState, player }) {
+    GUI_SCENE.setScene(this)
     this.server = server;
     this.gameState = gameState;
     this.player = player;
@@ -20,7 +24,7 @@ export default class Gui extends Phaser.Scene {
       .setOrigin(0);
     this.leftBarContainer = this.add.container(0, 70);
     this.addPlayer(this.player);
-    this.server.onUpdateGUI(this.handleUpdate, this);
+    
   }
 
   handleUpdate(player) {
@@ -36,7 +40,7 @@ export default class Gui extends Phaser.Scene {
       }
     });
 
-    const id = this.scene.get("world").me.getSelectedWizardId();
+    const id = WORLD_SCENE.SCENE.me.getSelectedWizardId();
     this.buttons[id].setState("playing");
   }
 
@@ -56,6 +60,8 @@ export default class Gui extends Phaser.Scene {
     this.buttons[i] = wizardButton;
 
     wizardButton.setState = (state) => {
+      if (wizardButton.currentState === "dead") return;
+
       switch (state) {
         case "playing":
           const wizard = this.buttons.find(
@@ -82,7 +88,7 @@ export default class Gui extends Phaser.Scene {
     return wizardButton;
   }
 
-  addWizardButtonStateText(worldScene, wizardButton, playerId) {
+  addWizardButtonStateText(wizardButton, playerId) {
     wizardButton.stateText = this.add
       .text(wizardButton.x + 180, wizardButton.y, "Play")
       .setOrigin(1, 0.5);
@@ -102,8 +108,8 @@ export default class Gui extends Phaser.Scene {
 
       wizardButton.setState("playing");
 
-      worldScene.me.setSelectedWizardId(wizardButton.id); // TODO : remove it, handle it with state change from back-end 
-      this.scene.get("hud").setWizardObjectsCounter(wizardButton.id)  // TODO : remove it, handle it with state change from back-end
+      WORLD_SCENE.SCENE.me.setSelectedWizardId(wizardButton.id); // TODO : remove it, handle it with state change from back-end
+      HUD_SCENE.SCENE.setWizardObjectsCounter(wizardButton.id); // TODO : remove it, handle it with state change from back-end
     });
 
     return wizardButton.stateText;
@@ -147,13 +153,10 @@ export default class Gui extends Phaser.Scene {
       return this.add.image(wizardButton.x + 100, wizardButton.y, "checkmark");
     };
 
-    let remainingTime =
-      Date.now() -
-      this.gameState.gameStartTimestamp -
-      (this.gameState.day - 1) * this.gameState.dayDuration;
-    // Date.now() -
-    // this.gameState.gameStartTimestamp +
-    // this.gameState.dayDuration * this.gameState.day;
+    let remainingTime = // TODO : handle it to not repeat the code in game room
+      this.gameState.gameStartTimestamp +
+      this.gameState.day * this.gameState.dayDuration -
+      Date.now();
 
     wizardButton.addRemainingChallengeTime = () => {
       const time = this.add
@@ -161,7 +164,7 @@ export default class Gui extends Phaser.Scene {
         .setOrigin(0.5);
 
       time.getConvertedTime = () => {
-        const newDateTime = new Date(remainingTime);
+        const newDateTime = new Date(remainingTime); // TODO: make it more synchronized
 
         return (
           newDateTime.getHours() - 1 + "h" + newDateTime.getMinutes() + "m"
@@ -169,23 +172,30 @@ export default class Gui extends Phaser.Scene {
       };
 
       time.update = () => {
-        remainingTime -= 1000 * 60;
+        remainingTime -= 1000 * 1; // TODO : fix time is not synchronized with server
 
         if (remainingTime < 0) {
           remainingTime = this.gameState.dayDuration;
+
+          this.buttons.forEach((button) => {
+            if (button.currentChallengeState === "completed")
+              button.setChallengeState("uncompleted");
+          });
+
+          wizardButton.timer.remove(); // TODO : fix timer, not working correctly after day refresh
           this.server.updateSlogan();
         }
 
         time.active && time.setText(time.getConvertedTime());
       };
 
-      this.time.addEvent({
+      wizardButton.timer = this.time.addEvent({
         repeat: -1,
-        delay: 1000 * 60,
+        delay: 1000 * 1, // TODO: handle it better instead of checking every second
         callback: () => time.update(),
       });
 
-      time.update();
+      time.setText(time.getConvertedTime());
 
       return time;
     };
@@ -212,11 +222,87 @@ export default class Gui extends Phaser.Scene {
     return wizardButton.challengeStateInfo;
   }
 
+  openSettings() {
+    // TODO : refactor code, move settings to a new scene
+    let settings = [];
+    const bg = this.add
+      .image(this.leftBar.displayWidth / 2, 250, "red")
+      .setDisplaySize(this.GUIwidth - 30, this.GUIwidth - 30);
+    const inputbox = this.add.rexNinePatch({
+      x: this.leftBar.displayWidth / 2,
+      y: 250,
+      width: this.GUIwidth - 70,
+      height: 40,
+      key: "inputBox",
+      columns: [15, undefined, 15],
+      rows: [10, undefined, 10],
+    });
+
+    let newName = "";
+    const inputText = this.add
+      .rexInputText({
+        x: this.leftBar.displayWidth / 2,
+        y: 260,
+        width: this.GUIwidth - 70,
+        height: 40,
+        type: "textarea",
+        placeholder: "New name",
+        fontSize: "20px",
+        fontFamily: "SwisBlack",
+        color: "#ffffff",
+        align: "center",
+        maxLength: 10,
+      })
+      .resize(this.GUIwidth - 70, 40)
+      .on("textchange", ({ text }) => {
+        newName = text;
+      });
+
+    const confirmButton = new Button(
+      this,
+      this.leftBar.displayWidth / 2,
+      330,
+      "white"
+    )
+      .setDisplaySize(100, 30)
+      .onClick(() => {
+        // TODO: handle nickname changes errors etc.
+        const me = WORLD_SCENE.SCENE.me;
+
+        CHANGE_NAME({
+          name: newName,
+          address: this.player.address,
+          wizardId: me.getSelectedWizardId(),
+        });
+
+        settings.forEach((el) => el.destroy());
+        console.log(newName);
+
+        me.getSelectedWizard().setName(newName);
+      })
+      .addText("Confirm", { font: "20px Arial", color: "	#000000" });
+
+    settings = [bg, inputbox, inputText, confirmButton];
+  }
+
+  addSettings(wizardButton) {
+    return new Button(
+      this,
+      wizardButton.x + wizardButton.displayWidth / 2,
+      wizardButton.y,
+      "gear"
+    )
+      .setOrigin(0.5, 0.5)
+      .onClick(() => {
+        this.openSettings(wizardButton.id);
+      });
+  }
+
   addWizards(player) {
     const playerId = player.id;
     const wizards = player.wizards;
-    const worldScene = this.scene.get("world");
-   
+  
+
     wizards.forEach((wizard, i) => {
       const wizardButton = this.addWizardButton(i);
 
@@ -225,12 +311,19 @@ export default class Gui extends Phaser.Scene {
         wizardButton
       );
       const stateText = this.addWizardButtonStateText(
-        worldScene,
+ 
         wizardButton,
         playerId
       );
 
-      this.leftBarContainer.add([wizardButton, challengeState, stateText]);
+      const settings = this.addSettings(wizardButton);
+
+      this.leftBarContainer.add([
+        wizardButton,
+        settings,
+        challengeState,
+        stateText,
+      ]);
 
       if (!wizard.isAlive) {
         wizardButton.setState("dead");

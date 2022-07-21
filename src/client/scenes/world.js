@@ -9,6 +9,7 @@ import Button from "../components/Button";
 import InputManager from "../components/InputManager";
 import Player from "../entities/Player";
 import { GET_ALL_COLLECTED_OBJECTS } from "../services/requests/requests";
+import { WORLD_SCENE } from "./currentScenes";
 
 class World extends Phaser.Scene {
   constructor() {
@@ -18,6 +19,7 @@ class World extends Phaser.Scene {
   preload() {}
 
   async create({ server, onPlayChallenge }) {
+    WORLD_SCENE.setScene(this);
     this.server = server;
     this.onPlayChallenge = onPlayChallenge;
     //this.playersSavedState = await (await GET_ALL_PLAYERS()).json();
@@ -27,10 +29,6 @@ class World extends Phaser.Scene {
 
     this.players = [];
     this.me = null;
-
-    this.server.onPlayerJoined(this.handlePlayerAdd, this);
-    this.server.onWizardChanged(this.handleWizardChanged, this);
-    this.server.onObjectRemoved(this.handleObjectRemoved, this);
 
     const collectedObjects = await (await GET_ALL_COLLECTED_OBJECTS()).json();
 

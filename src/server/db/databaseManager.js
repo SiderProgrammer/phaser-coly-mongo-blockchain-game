@@ -6,7 +6,13 @@ const Players = require("./models/Player");
 const GameState = require("./models/GameState");
 const CollectedObjects = require("./models/CollectedObjects");
 const Days = require("./models/Days");
-const { PLAYER_SIZE, WORLD_SIZE } = require("../../shared/config");
+const {
+  PLAYER_SIZE,
+  WORLD_SIZE,
+  CHALLENGE_PLAYER,
+  CHALLENGE_OBSTACLES,
+} = require("../../shared/config");
+const Challenge = require("./models/Challenge");
 
 const DATABASE_URL = `mongodb+srv://${srvConfig.USERNAME}:${srvConfig.PASSWORD}@${srvConfig.HOST}/?retryWrites=true&w=majority`;
 
@@ -24,7 +30,7 @@ class DatabaseManager {
 
           GameState.create({
             day: 1,
-            dayDuration: 1000 * 60, // 10 minutes
+            dayDuration: 1000 * 60 * 2, // 2 minutes
             gameStartTimestamp: Date.now(),
           });
 
@@ -33,8 +39,41 @@ class DatabaseManager {
             { day: 1, slogan: "First day slogan" },
             { day: 2, slogan: "Second day slogan" },
             { day: 3, slogan: "Third day slogan" },
+            { day: 4, slogan: "Fourth day slogan" },
+            { day: 5, slogan: "Fifth day slogan" },
+          ]);
+
+          const challengeData = {
+            winMessage: "win",
+            loseMessage: "lose",
+            startPosition: {
+              x: CHALLENGE_PLAYER.x,
+              y: CHALLENGE_PLAYER.y,
+            }
+      
+          };
+
+          Challenge.insertMany([
+            // for now
+            { ...challengeData, day: 1, dailyMessage: "first day" },
+            { ...challengeData, day: 2, dailyMessage: "second day" },
+            { ...challengeData, day: 3, dailyMessage: "third day" },
+            { ...challengeData, day: 4, dailyMessage: "fourth day" },
+            { ...challengeData, day: 5, dailyMessage: "fifth day" },
           ]);
         });
+      });
+  }
+
+  changeName(req, res) {
+    const { name, address, wizardId } = req.body;
+
+    Players.findOne({ address }) // ? Maybe Wizards.updateOne({...}) // handle errors
+      .populate("wizards")
+      .then((state) => {
+        state.wizards[wizardId].name = name;
+        state.wizards[wizardId].save();
+        res.status(200);
       });
   }
 
