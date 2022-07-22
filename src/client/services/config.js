@@ -7,7 +7,7 @@ if (location.protocol !== "https:") {
   SERVER_URL += `:${SERVER_PORT}`;
 }
 
-//const WEBSOCKET_URL = location.origin.replace(/^http/, "ws");
-const WEBSOCKET_URL = `ws://${location.hostname};`; // TODO : fix it
+const WEBSOCKET_URL = location.origin.replace(/^http/, "ws");
+//const WEBSOCKET_URL = `ws://${location.hostname};`; // TODO : fix it
 
 export { SERVER_URL, WEBSOCKET_URL };
