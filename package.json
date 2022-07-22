@@ -46,6 +46,7 @@
     "nodemon": "^2.0.18",
     "path": "^0.12.7",
     "phaser": "^3.55.2",
-    "regenerator-runtime": "^0.13.9"
+    "regenerator-runtime": "^0.13.9",
+    "uuid": "^8.3.2"
   }
 }
