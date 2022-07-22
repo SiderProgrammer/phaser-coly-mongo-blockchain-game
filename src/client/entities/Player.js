@@ -39,20 +39,8 @@ class Player {
     });
   }
 
-  preMove(dir) {
-    const wizard = this.getSelectedWizard();
-    if (!wizard.isAlive) return;
-
-    wizard.preMove(dir, PRE_MOVE_DISTANCE);
-    wizard.playWalkAnimation(dir);
-  }
-
-  reversePreMove() {
-    const wizard = this.getSelectedWizard();
-    wizard.reversePreMove();
-  }
-
   updateWizard(_wizard) {
+    // TODO : it needs improvements
     const wizardToUpdate = this.wizards.find(
       (wizard) => wizard.id === _wizard.id
     );
@@ -60,17 +48,26 @@ class Player {
       wizardToUpdate.kill();
       return;
     }
-    wizardToUpdate.isReversePreMove = _wizard.reversePreMove;
-    if (wizardToUpdate.isReversePreMove) {
-      wizardToUpdate.canMove = true;
-      this.reversePreMove();
-      return;
-    }
+
     if (_wizard.x != wizardToUpdate.x || _wizard.y != wizardToUpdate.y) {
-      // wizardToUpdate.moveTween =
-      wizardToUpdate.walkTo(_wizard.x, _wizard.y);
+      wizardToUpdate.walkTo(wizardToUpdate.preMoveDir, _wizard.x, _wizard.y);
+
+      this.scene.mapGridManager.setTileEmpty(
+        wizardToUpdate.x,
+        wizardToUpdate.y
+      );
+
+      // ? lag simulator
+      // setTimeout(
+      //   () =>
+      //     wizardToUpdate.walkTo(
+      //       wizardToUpdate.preMoveDir,
+      //       _wizard.x,
+      //       _wizard.y
+      //     ),
+      //   200
+      // );
     }
-    // wizardToUpdate.update(_wizard.x, _wizard.y);
   }
 
   getSelectedWizard() {

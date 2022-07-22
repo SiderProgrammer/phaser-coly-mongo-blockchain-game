@@ -9,7 +9,7 @@ export default class Gui extends Phaser.Scene {
   }
 
   create({ server, gameState, player }) {
-    GUI_SCENE.setScene(this)
+    GUI_SCENE.setScene(this);
     this.server = server;
     this.gameState = gameState;
     this.player = player;
@@ -24,7 +24,6 @@ export default class Gui extends Phaser.Scene {
       .setOrigin(0);
     this.leftBarContainer = this.add.container(0, 70);
     this.addPlayer(this.player);
-    
   }
 
   handleUpdate(player) {
@@ -301,7 +300,6 @@ export default class Gui extends Phaser.Scene {
   addWizards(player) {
     const playerId = player.id;
     const wizards = player.wizards;
-  
 
     wizards.forEach((wizard, i) => {
       const wizardButton = this.addWizardButton(i);
@@ -310,11 +308,7 @@ export default class Gui extends Phaser.Scene {
         wizard,
         wizardButton
       );
-      const stateText = this.addWizardButtonStateText(
- 
-        wizardButton,
-        playerId
-      );
+      const stateText = this.addWizardButtonStateText(wizardButton, playerId);
 
       const settings = this.addSettings(wizardButton);
 

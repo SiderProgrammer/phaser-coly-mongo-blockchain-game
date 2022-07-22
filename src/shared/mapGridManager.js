@@ -2,7 +2,8 @@ const {
   WORLD_COLUMNS_COUNT,
   WORLD_ROWS_COUNT,
   TILE_SIZE,
-} = require("../../shared/config");
+} = require("./config");
+
 class MapGridManager {
   constructor(scene) {
     this.scene = scene;

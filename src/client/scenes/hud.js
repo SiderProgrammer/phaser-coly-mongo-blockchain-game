@@ -1,6 +1,6 @@
 import { HUD_HEIGHT } from "../../shared/config";
 import { GET_GAME_STATE } from "../services/requests/requests";
-import { HUD_SCENE } from "./currentScenes";
+import { HUD_SCENE, WORLD_SCENE } from "./currentScenes";
 
 export default class Hud extends Phaser.Scene {
   constructor() {
@@ -31,8 +31,6 @@ export default class Hud extends Phaser.Scene {
       3: 0,
       4: 0,
     };
-
-    this.worldScene = this.scene.get("world");
   }
 
   handleUpdate(count, type) {
@@ -58,12 +56,12 @@ export default class Hud extends Phaser.Scene {
     let wizardId = _wizardId;
 
     if (!wizardId) {
-      wizardId = this.scene.get("world").me.getSelectedWizardId();
+      wizardId = WORLD_SCENE.SCENE.me.getSelectedWizardId();
     }
 
     this.wizardsCollectedObjects[wizardId] = newValue;
 
-    wizardId = this.scene.get("world").me.getSelectedWizardId();
+    wizardId = WORLD_SCENE.SCENE.me.getSelectedWizardId();
     this.collectedObjects.setText(
       `Collected objects: ${this.wizardsCollectedObjects[wizardId]}`
     );

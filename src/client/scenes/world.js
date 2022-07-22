@@ -3,12 +3,17 @@ import {
   HUD_HEIGHT,
   HUD_WIDTH,
   PRE_MOVE_DISTANCE,
+  TILE_SIZE,
   WORLD_SIZE,
 } from "../../shared/config";
+import MapGridManager from "../../shared/mapGridManager";
 import Button from "../components/Button";
 import InputManager from "../components/InputManager";
 import Player from "../entities/Player";
-import { GET_ALL_COLLECTED_OBJECTS } from "../services/requests/requests";
+import {
+  GET_ALL_COLLECTED_OBJECTS,
+  GET_OBSTACLES,
+} from "../services/requests/requests";
 import { WORLD_SCENE } from "./currentScenes";
 
 class World extends Phaser.Scene {
@@ -31,6 +36,7 @@ class World extends Phaser.Scene {
     this.me = null;
 
     const collectedObjects = await (await GET_ALL_COLLECTED_OBJECTS()).json();
+    const obstacles = await (await GET_OBSTACLES()).json();
 
     this.inputManager = new InputManager(this);
 
@@ -55,14 +61,17 @@ class World extends Phaser.Scene {
     this.playersSavedState = this.server.playersSavedState;
     this.addPlayersFromSavedState();
 
+    this.mapGridManager = new MapGridManager(this);
+    this.worldGrid = this.mapGridManager.createWorldGrid();
+    this.mapGridManager.addLayersToGrid({ obstacles });
+    this.playersSavedState.forEach((player) => {
+      this.mapGridManager.addWizardsToGrid(player.wizards);
+    });
+
     this.playerId = this.server.getPlayerId();
     this.walletAddress = this.server.getPlayerWalletAddress();
 
     collectedObjects.forEach((obj) => this.map.removeTileAt(obj.c, obj.r));
-  }
-
-  update() {
-    //this.inputManager && this.inputManager.update();
   }
 
   playerMoved(dir) {
@@ -71,14 +80,21 @@ class World extends Phaser.Scene {
     // TODO : keep player movement animation on hold when there is no server response yet
     const wizardMoved = this.me.getSelectedWizard();
     if (!wizardMoved.canMove) return;
+
     wizardMoved.canMove = false;
 
-    this.me.preMove(dir);
-
-    if (this.me.getSelectedWizard().isReversePreMove) {
-      this.me.getSelectedWizard().reversePreMove();
-      wizardMoved.canMove = true;
-    }
+    wizardMoved.preMove(dir, PRE_MOVE_DISTANCE, () => {
+      if (
+        !this.mapGridManager.isTileWalkable(
+          wizardMoved,
+          dir.x,
+          dir.y,
+          TILE_SIZE
+        )
+      ) {
+        wizardMoved.reversePreMove();
+      }
+    });
 
     const action = {
       type: "move",
@@ -94,8 +110,6 @@ class World extends Phaser.Scene {
     button.setScrollFactor(0, 0).setDepth(1000);
     button.onClick(() => this.onPlayChallenge(this.me.getSelectedWizardId()));
   }
-
-  // isWalletAddressMe() {}
 
   isPlayerIdMe(playerId) {
     return playerId === this.playerId;

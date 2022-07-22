@@ -10,9 +10,12 @@ class Wizard extends Phaser.GameObjects.Sprite {
     this.canMove = true;
     this.lastPreMove = {};
     this.moveTween = null;
+    this.preMoveDir = {};
 
     this.showName();
-    this.on("animationcomplete", () => this.play("idle"));
+    this.on("animationcomplete", ({ key }) => {
+      if (!key.includes("pre")) this.play("idle");
+    });
   }
 
   kill() {
@@ -29,8 +32,54 @@ class Wizard extends Phaser.GameObjects.Sprite {
       .text(this.x, this.y - 50, this.name)
       .setOrigin(0.5);
   }
+  reversePreMove() {
+    this.playPreWalkAnimation(this.preMoveDir, true);
+    this.scene.tweens.add({
+      // TODO : we should keep walk animation on hold until server respawn
+      targets: [this, this.name],
+      x: `-=${this.lastPreMove.speedX}`,
+      y: `-=${this.lastPreMove.speedY}`,
+      duration: 250,
+      onUpdate: () => (this.name.y = this.y - 50), // TODO : handle it better / create container
+      onComplete: () => {
+        this.canMove = true;
+        this.play("idle");
+      },
+    });
+  }
+  // TODO : handle movement & animations in a better way
+  playPreWalkAnimation(dir, reverse = false) {
+    if (dir.x === -1) {
+      if (reverse) {
+        this.play("pre-walk-left");
+      } else {
+        this.playReverse("pre-walk-left");
+      }
+    }
+    if (dir.x === 1) {
+      if (reverse) {
+        this.play("pre-walk-right");
+      } else {
+        this.playReverse("pre-walk-right");
+      }
+    }
+    if (dir.y === -1) {
+      if (reverse) {
+        this.play("pre-walk-up");
+      } else {
+        this.playReverse("pre-walk-up");
+      }
+    }
+    if (dir.y === 1) {
+      if (reverse) {
+        this.play("pre-walk-down");
+      } else {
+        this.playReverse("pre-walk-down");
+      }
+    }
+  }
 
-  preMove(dir, distance) {
+  preMove(dir, distance, callback) {
     const speedX = distance * dir.x;
     const speedY = distance * dir.y;
 
@@ -38,13 +87,19 @@ class Wizard extends Phaser.GameObjects.Sprite {
       speedX,
       speedY,
     };
-    this.x += speedX;
-    this.y += speedY;
-  }
+    this.preMoveDir = dir;
 
-  reversePreMove() {
-    this.x -= this.lastPreMove.speedX;
-    this.y -= this.lastPreMove.speedY;
+    this.playPreWalkAnimation(dir);
+
+    this.scene.tweens.add({
+      // TODO : we should keep walk animation on hold until server respawn
+      targets: [this, this.name],
+      x: `+=${speedX}`,
+      y: `+=${speedY}`,
+      duration: 250,
+      onUpdate: () => (this.name.y = this.y - 50), // TODO : handle it better / ,
+      onComplete: () => callback && callback(),
+    });
   }
 
   playWalkAnimation(dir) {
@@ -62,18 +117,23 @@ class Wizard extends Phaser.GameObjects.Sprite {
     }
   }
 
-  walkTo(x, y) {
+  walkTo(dir, x, y) {
+    this.playWalkAnimation(dir);
+
     this.scene.tweens.add({
       // TODO : we should keep walk animation on hold until server respawn
       targets: [this, this.name],
       x: x,
       y: y,
-      duration: 1000,
+      duration: 500,
       onUpdate: () => (this.name.y = this.y - 50), // TODO : handle it better / create container
-      onComplete: () => (this.canMove = true),
+      onComplete: () => {
+        this.canMove = true;
+        this.scene.mapGridManager &&
+          this.scene.mapGridManager.addWizardToGrid(this);
+      },
     });
   }
-
   update(x, y) {
     this.setPosition(x, y);
     this.name.setPosition(x, y - 50);

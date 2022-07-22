@@ -41,7 +41,6 @@ class Challenge extends Phaser.Scene {
     if (!this.me || !this.me.canMove) return;
     this.me.canMove = false;
     this.me.preMove(dir, PRE_MOVE_DISTANCE);
-    this.me.playWalkAnimation(dir);
 
     const action = {
       type: "move",
@@ -89,7 +88,7 @@ class Challenge extends Phaser.Scene {
       ? updatedPosition.find((pos) => pos.field === "y").value
       : this.me.y;
 
-    this.me.walkTo(updatedX, updatedY);
+    this.me.walkTo(this.me.preMoveDir, updatedX, updatedY);
     //this.me.setPosition(updatedX, updatedY);
   }
 }

@@ -81,6 +81,7 @@ export default class Server {
   }
 
   handleWorldWizardChanged(changed, player, wizard) {
+    // TODO: handle it in a better way
     if (
       changed.find((change) => change.field === "isAlive") &&
       this.isMyID(player.id)

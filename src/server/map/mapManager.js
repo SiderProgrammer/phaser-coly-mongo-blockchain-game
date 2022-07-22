@@ -44,13 +44,13 @@ class MapManager {
     return positions;
   }
 
-  // getLethals(req, res) { // ! lethals position is hidden from client
-  //   res.status(200).json(this.mapLayers.lethals);
-  // }
-
   getWorldMap() {
     // ? API will return this function execution //  app.get("/getWorldMap", mapManager.getWorldMap);
     return this.mapLayers;
+  }
+
+  fetchObstacles(req, res) {
+    res.status(200).json(this.mapLayers.obstacles);
   }
 }
 

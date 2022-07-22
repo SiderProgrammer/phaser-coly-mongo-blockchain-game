@@ -61,8 +61,7 @@ app.post("/getPlayer", databaseManager.getPlayer);
 app.get("/getAllPlayers", databaseManager.getAllPlayers);
 app.get("/getGameState", databaseManager.getGameState);
 app.get("/getAllCollectedObjects", databaseManager.getAllCollectedObjects);
-
-// app.get("/getLethals", mapManager.getLethals);
+app.get("/getObstacles", mapManager.fetchObstacles.bind(mapManager));
 // app.use("/colyseus", monitor());
 
 gameServer.listen(port, host, undefined, () =>

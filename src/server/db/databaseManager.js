@@ -30,7 +30,7 @@ class DatabaseManager {
 
           GameState.create({
             day: 1,
-            dayDuration: 1000 * 60 * 2, // 2 minutes
+            dayDuration: 1000 * 60 * 10, // 10 minutes
             gameStartTimestamp: Date.now(),
           });
 
@@ -49,8 +49,7 @@ class DatabaseManager {
             startPosition: {
               x: CHALLENGE_PLAYER.x,
               y: CHALLENGE_PLAYER.y,
-            }
-      
+            },
           };
 
           Challenge.insertMany([

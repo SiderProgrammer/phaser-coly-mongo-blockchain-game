@@ -2,13 +2,9 @@ const { Player } = require("../entities/Player");
 const { CollectableObject } = require("../entities/Object");
 const schema = require("@colyseus/schema");
 const DatabaseManager = require("../db/databaseManager");
-const {
-  TILE_SIZE,
-  WORLD_ROWS_COUNT,
-  WORLD_COLUMNS_COUNT,
-} = require("../../shared/config");
+const { TILE_SIZE } = require("../../shared/config");
 const MapManager = require("../map/mapManager");
-const MapGridManager = require("../map/mapGridManager");
+const MapGridManager = require("../../shared/mapGridManager");
 
 const db = new DatabaseManager();
 
@@ -118,9 +114,8 @@ class State extends schema.Schema {
     const player = this.players.get(id);
 
     if (!player || !player.canMove(dir.x, dir.y, TILE_SIZE)) return;
-    // TODO: remove reversePreMove property and generate world grid on client-side
     const selectedWizard = player.getSelectedWizard();
-    selectedWizard.reversePreMove = false;
+    // selectedWizard.reversePreMove = false;
 
     if (
       !this.mapGridManager.isTileWalkable(
@@ -130,7 +125,7 @@ class State extends schema.Schema {
         TILE_SIZE
       )
     ) {
-      selectedWizard.reversePreMove = true;
+      // selectedWizard.reversePreMove = true;
       return;
     }
 
