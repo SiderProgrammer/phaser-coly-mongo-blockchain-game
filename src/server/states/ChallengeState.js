@@ -9,23 +9,29 @@ const {
   TILE_SIZE,
 } = require("../../shared/config");
 
-const obstacles = CHALLENGE_OBSTACLES;
-const meta = CHALLENGE_META;
-
 const db = new DatabaseManager();
 
 class State extends schema.Schema {
-  constructor(presenceEmit) {
+  constructor(presenceEmit, challengeData) {
     super();
+
+    this.lethals = challengeData.lethals;
+    this.meta = challengeData.meta;
+    this.startPosition = challengeData.startPosition;
+
+    this.meta.size = CHALLENGE_META.size;
+    this.lethals.forEach(
+      (lethal) => (lethal.size = CHALLENGE_OBSTACLES[0].size)
+    );
 
     this.wizard = new Wizard(
       "0", // not needed in this room
-      CHALLENGE_PLAYER.x,
-      CHALLENGE_PLAYER.y,
+      this.startPosition.x,
+      this.startPosition.y,
       PLAYER_SIZE,
       "" // not needed in this room
     );
-
+    this.challengeData = challengeData;
     this.presenceEmit = presenceEmit;
 
     this.challengeState = -1;
@@ -55,8 +61,8 @@ class State extends schema.Schema {
   }
 
   checkObstaclesCollision() {
-    obstacles.forEach((obstacle) => {
-      if (this.isColliding(this.wizard, obstacle)) {
+    this.lethals.forEach((lethal) => {
+      if (this.isColliding(this.wizard, lethal)) {
         this.challengeState = 0;
         db.killWizard(this.owner, this.wizardId);
         this.presenceEmit("wizardDied");
@@ -66,7 +72,7 @@ class State extends schema.Schema {
   }
 
   checkMetaCollision() {
-    if (this.isColliding(this.wizard, meta)) {
+    if (this.isColliding(this.wizard, this.meta)) {
       db.setCompletedDailyChallenge(this.owner, this.wizardId);
       this.challengeState = 1;
 

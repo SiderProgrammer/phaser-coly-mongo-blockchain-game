@@ -60,6 +60,7 @@ app.post("/changeName", databaseManager.changeName);
 app.post("/getPlayer", databaseManager.getPlayer);
 app.get("/getAllPlayers", databaseManager.getAllPlayers);
 app.get("/getGameState", databaseManager.getGameState);
+app.get("/getChallenge", databaseManager.getChallenge);
 app.get("/getAllCollectedObjects", databaseManager.getAllCollectedObjects);
 app.get("/getObstacles", mapManager.fetchObstacles.bind(mapManager));
 // app.use("/colyseus", monitor());

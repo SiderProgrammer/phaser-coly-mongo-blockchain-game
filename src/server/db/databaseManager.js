@@ -11,6 +11,7 @@ const {
   WORLD_SIZE,
   CHALLENGE_PLAYER,
   CHALLENGE_OBSTACLES,
+  CHALLENGE_META,
 } = require("../../shared/config");
 const Challenge = require("./models/Challenge");
 
@@ -50,6 +51,11 @@ class DatabaseManager {
               x: CHALLENGE_PLAYER.x,
               y: CHALLENGE_PLAYER.y,
             },
+            // TODO: remove data from public files
+            lethals: [
+              { x: CHALLENGE_OBSTACLES[0].x, y: CHALLENGE_OBSTACLES[0].y },
+            ],
+            meta: { x: CHALLENGE_META.x, y: CHALLENGE_META.y },
           };
 
           Challenge.insertMany([
@@ -61,6 +67,21 @@ class DatabaseManager {
             { ...challengeData, day: 5, dailyMessage: "fifth day" },
           ]);
         });
+      });
+  }
+
+  getChallenge(req, res) {
+    GameState.findOne({})
+      .lean()
+      .select("-_id")
+      .then((state) => {
+        Challenge.findOne({ day: state.day })
+          .lean()
+          .select("-_id")
+          .then((challenge) => {
+            // TODO : we can filter data here to not send lethals positions client-side
+            res.status(200).json(challenge);
+          });
       });
   }
 
@@ -76,26 +97,6 @@ class DatabaseManager {
       });
   }
 
-  killDelayedWizards() {
-    return Wizard.updateMany(
-      { dailyChallengeCompleted: false },
-      { $set: { isAlive: false } }
-    );
-  }
-
-  refreshWizardsChallenges() {
-    return Wizard.updateMany(
-      { dailyChallengeCompleted: true },
-      { $set: { dailyChallengeCompleted: false } }
-    );
-  }
-
-  refreshDay(daysToAdd = 1) {
-    return GameState.updateOne({}, { $inc: { day: daysToAdd } })
-      .then(this.killDelayedWizards)
-      .then(this.refreshWizardsChallenges);
-  }
-
   getGameState(req, res) {
     GameState.findOne({})
       .lean()
@@ -108,10 +109,6 @@ class DatabaseManager {
             res.status(200).json({ ...gameState, ...dayState });
           });
       });
-  }
-
-  getGameStateQuery() {
-    return GameState.findOne({}).lean().select("-_id"); // __v
   }
 
   createPlayer(req, res) {
@@ -179,11 +176,6 @@ class DatabaseManager {
       .select("-_id");
   }
 
-  countWizards(condition = {}) {
-    // TODO : Handle Errors
-    return Wizard.countDocuments(condition);
-  }
-
   getAllPlayers(req, res) {
     // TODO : Handle Errors
 
@@ -195,20 +187,8 @@ class DatabaseManager {
       .select("-_id");
   }
 
-  getAllPlayersQuery() {
-    // TODO : Handle Errors
-
-    return Players.find({}).lean().populate("wizards").select("-_id");
-  }
-
-  // ? Methods used from backend
-
   setObjectCollected(r, c) {
     CollectedObjects.create({ r, c });
-  }
-
-  getAllCollectedObjectsQuery() {
-    return CollectedObjects.find().lean().select("-_id");
   }
 
   getAllCollectedObjects(req, res) {
@@ -225,35 +205,6 @@ class DatabaseManager {
       .populate("wizards")
       .then((state) => {
         state.wizards[wizardId].collectedObjectsCount++;
-        state.wizards[wizardId].save();
-      });
-  }
-
-  getPlayerQuery(address) {
-    // TODO : Handle Errors
-
-    return Players.findOne({ address })
-      .lean()
-      .populate("wizards")
-      .select("-_id");
-  }
-
-  setCompletedDailyChallenge(address, wizardId) {
-    return Players.findOne({ address }) // ? Maybe Wizards.updateOne({...})
-      .populate("wizards")
-      .then((state) => {
-        state.wizards[wizardId].dailyChallengeCompleted = true;
-        state.wizards[wizardId].save();
-      });
-  }
-
-  killWizard(address, wizardId) {
-    // TODO : Handle Errors  && Improve this Query (search for better solution)
-
-    return Players.findOne({ address }) // ? Maybe Wizards.updateOne({...})
-      .populate("wizards")
-      .then((state) => {
-        state.wizards[wizardId].isAlive = false;
         state.wizards[wizardId].save();
       });
   }
@@ -277,6 +228,86 @@ class DatabaseManager {
           "error:",
           err
         );
+      });
+  }
+
+  // *************************************** METHODS  USED FROM SERVER ********************************
+
+  killDelayedWizards() {
+    return Wizard.updateMany(
+      { dailyChallengeCompleted: false },
+      { $set: { isAlive: false } }
+    );
+  }
+
+  refreshWizardsChallenges() {
+    return Wizard.updateMany(
+      { dailyChallengeCompleted: true },
+      { $set: { dailyChallengeCompleted: false } }
+    );
+  }
+
+  refreshDay(daysToAdd = 1) {
+    return GameState.updateOne({}, { $inc: { day: daysToAdd } })
+      .then(this.killDelayedWizards)
+      .then(this.refreshWizardsChallenges);
+  }
+
+  getGameStateQuery() {
+    return GameState.findOne({}).lean().select("-_id"); // __v
+  }
+  countWizards(condition = {}) {
+    // TODO : Handle Errors
+    return Wizard.countDocuments(condition);
+  }
+
+  getAllPlayersQuery() {
+    // TODO : Handle Errors
+
+    return Players.find({}).lean().populate("wizards").select("-_id");
+  }
+
+  getAllCollectedObjectsQuery() {
+    return CollectedObjects.find().lean().select("-_id");
+  }
+
+  getPlayerQuery(address) {
+    // TODO : Handle Errors
+
+    return Players.findOne({ address })
+      .lean()
+      .populate("wizards")
+      .select("-_id");
+  }
+
+  getChallengeQuery() {
+    return GameState.findOne({})
+      .lean()
+      .select("-_id")
+      .then((state) => {
+        return Challenge.findOne({ day: state.day })
+          .lean()
+          .select("lethals startPosition meta");
+      });
+  }
+
+  setCompletedDailyChallenge(address, wizardId) {
+    return Players.findOne({ address }) // ? Maybe Wizards.updateOne({...})
+      .populate("wizards")
+      .then((state) => {
+        state.wizards[wizardId].dailyChallengeCompleted = true;
+        state.wizards[wizardId].save();
+      });
+  }
+
+  killWizard(address, wizardId) {
+    // TODO : Handle Errors  && Improve this Query (search for better solution)
+
+    return Players.findOne({ address }) // ? Maybe Wizards.updateOne({...})
+      .populate("wizards")
+      .then((state) => {
+        state.wizards[wizardId].isAlive = false;
+        state.wizards[wizardId].save();
       });
   }
 }

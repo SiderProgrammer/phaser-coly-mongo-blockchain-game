@@ -39,7 +39,7 @@ exports.default = class GameRoom extends Room {
   }
 
   async setDaysHandler() {
-    // ! Just for now implementation
+    // ! implementation just for now
     // Maybe we can move part of this code to server node-cron
     // const remainingTime =
     //   Date.now() -

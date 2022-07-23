@@ -10,6 +10,11 @@ export const GET_PLAYER = (data) => {
 export const CHANGE_NAME = (data) => {
   return requestPost(data, "changeName");
 };
+
+export const GET_CHALLENGE = () => {
+  return requestGet("getChallenge");
+};
+
 export const GET_ALL_PLAYERS = () => {
   return requestGet("getAllPlayers");
 };
@@ -19,6 +24,8 @@ export const GET_ALL_COLLECTED_OBJECTS = () => {
 export const GET_OBSTACLES = () => {
   return requestGet("getObstacles");
 };
+
+
 export const GET_GAME_STATE = () => {
   return requestGet("getGameState");
 };

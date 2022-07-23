@@ -4,6 +4,7 @@
 // };
 
 // export const HUD_WIDTH = 500;
+// ! neeed to hide some data from public files
 const SERVER_PORT = 8080;
 
 const WORLD_SIZE = {

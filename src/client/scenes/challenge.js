@@ -7,6 +7,7 @@ import {
 } from "../../shared/config";
 import InputManager from "../components/InputManager";
 import Wizard from "../entities/Wizard";
+import { GET_CHALLENGE } from "../services/requests/requests";
 import { CHALLENGE_SCENE } from "./currentScenes";
 
 class Challenge extends Phaser.Scene {
@@ -22,18 +23,27 @@ class Challenge extends Phaser.Scene {
     this.onLoseChallenge = onLoseChallenge;
     this.onWinChallenge = onWinChallenge;
 
+    this.gw = this.game.renderer.width;
+    this.gh = this.game.renderer.height;
+
+    this.challengeData = await (await GET_CHALLENGE()).json();
     this.add
-      .image(CHALLENGE_META.x, CHALLENGE_META.y, "white")
+      .image(this.challengeData.meta.x, this.challengeData.meta.y, "white")
       .setDisplaySize(CHALLENGE_META.size, CHALLENGE_META.size);
 
     this.add
-      .image(CHALLENGE_OBSTACLES[0].x, CHALLENGE_OBSTACLES[0].y, "red")
+      .image(
+        this.challengeData.lethals[0].x,
+        this.challengeData.lethals[0].y,
+        "red"
+      )
       .setDisplaySize(CHALLENGE_OBSTACLES[0].size, CHALLENGE_OBSTACLES[0].size);
 
     this.me = null;
 
     this.inputManager = new InputManager(this);
 
+    this.add.text(this.gw / 2, 150, this.challengeData.dailyMessage);
     await this.server.handleChallengeJoin(wizardId);
   }
 
@@ -59,9 +69,21 @@ class Challenge extends Phaser.Scene {
 
     if (updatedState) {
       if (updatedState.value === 0) {
-        this.onLoseChallenge();
+        this.add.text(
+          this.gw / 2,
+          this.gh / 2 - 100,
+          this.challengeData.loseMessage,
+          { font: "50px Arial" }
+        );
+        this.time.delayedCall(2000, () => this.onLoseChallenge());
       } else if (updatedState.value === 1) {
-        this.onWinChallenge();
+        this.add.text(
+          this.gw / 2,
+          this.gh / 2 - 100,
+          this.challengeData.winMessage,
+          { font: "50px Arial" }
+        );
+        this.time.delayedCall(2000, () => this.onWinChallenge());
       }
     }
   }
@@ -70,8 +92,8 @@ class Challenge extends Phaser.Scene {
     this.me = new Wizard(
       "0", // ? not needed here
       this,
-      CHALLENGE_PLAYER.x,
-      CHALLENGE_PLAYER.y,
+      this.challengeData.startPosition.x,
+      this.challengeData.startPosition.y,
       "player" // ? not needed here
     ).setDisplaySize(PLAYER_SIZE, PLAYER_SIZE);
   }

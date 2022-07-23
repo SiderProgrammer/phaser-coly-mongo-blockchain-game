@@ -1,14 +1,18 @@
 const { Room } = require("colyseus");
 const { ChallengeState } = require("../states/ChallengeState");
+const DatabaseManager = require("../db/databaseManager");
 
+const db = new DatabaseManager();
 exports.default = class ChallengeRoom extends Room {
-  onCreate() {
+  async onCreate() {
     //   if (options.secret !== "MY-SECRET-VALUE" || !hasAliveWizards) {
     //     throw new Error("unauthorized");
     // }
     console.log("Challenge room created");
-
-    this.setState(new ChallengeState(this.presenceEmit.bind(this)));
+    const challengeData = await db.getChallengeQuery();
+    this.setState(
+      new ChallengeState(this.presenceEmit.bind(this), challengeData)
+    );
 
     this.setSimulationInterval(() => this.state.update());
 
