@@ -1,7 +1,7 @@
 import { SERVER_PORT } from "../../shared/config";
 
 let SERVER_URL = `${location.protocol}//${location.hostname}`;
-const WEBSOCKET_URL = `ws://${location.hostname}:${SERVER_PORT}`;
+let WEBSOCKET_URL = `ws://${location.hostname}:${SERVER_PORT}`;
 
 if (location.protocol == "http:") {
   SERVER_URL += `:${SERVER_PORT}`;
