@@ -49,8 +49,12 @@ class Player {
       return;
     }
 
+    if (wizardToUpdate.name !== _wizard.name) {
+      wizardToUpdate.setName(_wizard.name);
+    }
+
     if (_wizard.x != wizardToUpdate.x || _wizard.y != wizardToUpdate.y) {
-      wizardToUpdate.walkTo(wizardToUpdate.preMoveDir, _wizard.x, _wizard.y);
+      wizardToUpdate.walkTo(_wizard.x, _wizard.y);
 
       this.scene.mapGridManager.setTileEmpty(
         wizardToUpdate.x,

@@ -1,4 +1,5 @@
 import initPlayerAnims from "../anim/player";
+
 import {
   CREATE_PLAYER,
   GET_GAME_STATE,
@@ -9,36 +10,6 @@ import Server from "../services/Server";
 export default class Bootstrap extends Phaser.Scene {
   constructor() {
     super("bootstrap");
-  }
-
-  preload() {
-    this.load.plugin(
-      "rexinputtextplugin",
-      "https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexinputtextplugin.min.js",
-      true
-    );
-    this.load.plugin(
-      "rexninepatchplugin",
-      "https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexninepatchplugin.min.js",
-      true
-    );
-    this.load.setPath("./src/client/assets/");
-    this.load.image("logo", "logo.png");
-    this.load.image("green", "green.png");
-    this.load.image("red", "red.png");
-    this.load.image("white", "white.png");
-    this.load.image("wizard", "wizard.png");
-    this.load.image("challengeButton", "challengeButton.png");
-    this.load.image("checkmark", "checkmark.png");
-    this.load.image("gear", "gear.png");
-    this.load.image("inputBox", "inputBox.png");
-    this.load.spritesheet("player", "player.png", {
-      frameWidth: 32,
-      frameHeight: 32,
-    });
-
-    this.load.tilemapTiledJSON("worldMap", `tilemaps/sampleMap.json`);
-    this.load.image("tiles32x32", `tilesets/tiles32x32.png`);
   }
 
   async create() {

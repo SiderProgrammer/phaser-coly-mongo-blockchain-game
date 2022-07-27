@@ -78,6 +78,15 @@ class State extends schema.Schema {
     });
   }
 
+  wizardNameChanged(id, wizardId) {
+    const player = this.players.get(id);
+    const newName = db.getPlayerWizardName(player.address, wizardId);
+
+    newName.then((name) => {
+      player.wizards[wizardId].name = name;
+    });
+  }
+
   playerAdd(id, address) {
     const playerSavedState = db.getPlayerQuery(address);
 
@@ -115,7 +124,6 @@ class State extends schema.Schema {
 
     if (!player || !player.canMove(dir.x, dir.y, TILE_SIZE)) return;
     const selectedWizard = player.getSelectedWizard();
-    // selectedWizard.reversePreMove = false;
 
     if (
       !this.mapGridManager.isTileWalkable(
@@ -125,7 +133,6 @@ class State extends schema.Schema {
         TILE_SIZE
       )
     ) {
-      // selectedWizard.reversePreMove = true;
       return;
     }
 
@@ -155,13 +162,23 @@ class State extends schema.Schema {
       player.killSelectedWizard();
       this.subtractAlive(1);
       db.killWizard(player.address, player.getSelectedWizardId());
-    } else if (tile === "obj") {
+    } else if (tile.includes("obj")) {
+      const objectType = tile.at(-1); // 1 / 2 / 3
+
       db.increaseWizardObjectsCount(
         player.address,
-        player.getSelectedWizardId()
+        player.getSelectedWizardId(),
+        objectType
       );
-      db.setObjectCollected(r, c);
-      player.getSelectedWizard().collectedObjectsCount++;
+      db.setObjectCollected(r, c, objectType);
+
+      const collectedObjectsMap =
+        player.getSelectedWizard().collectedObjectsCount;
+
+      collectedObjectsMap.set(
+        objectType,
+        collectedObjectsMap.get(objectType) + 1
+      );
 
       const indexOfObject = this.objects.findIndex(
         (obj) => obj.c === c && obj.r === r
@@ -169,7 +186,7 @@ class State extends schema.Schema {
 
       this.objects.splice(indexOfObject, 1);
 
-      console.log("collected an obj");
+      console.log("collected an obj with type:", objectType);
     }
   }
 

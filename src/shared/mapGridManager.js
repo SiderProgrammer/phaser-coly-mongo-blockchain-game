@@ -19,9 +19,24 @@ class MapGridManager {
   addLayersToGrid(layers) {
     for (const layer in layers) {
       layers[layer].forEach((tile) => {
-        this.scene.worldGrid[tile.r][tile.c] = layer.slice(0, 3);
+        let sign = layer.slice(0, 3);
+
+        const isLastCharacterNumber = !!Number(layer[layer.length - 1]);
+
+        // TODO : handle it better, change layer from objects to objects1
+
+        if (sign === "obj") {
+          if (isLastCharacterNumber) {
+            sign = sign + layer[layer.length - 1]; // ? obj2, obj3
+          } else {
+            sign = sign + "1"; // ? obj
+          }
+        }
+
+        this.scene.worldGrid[tile.r][tile.c] = sign;
       });
     }
+    console.log(this.scene.worldGrid);
   }
 
   addWizardsToGrid(wizards) {

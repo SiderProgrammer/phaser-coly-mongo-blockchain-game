@@ -9,6 +9,7 @@ import {
 import MapGridManager from "../../shared/mapGridManager";
 import Button from "../components/Button";
 import InputManager from "../components/InputManager";
+import SoundManager from "../components/SoundManager";
 import Player from "../entities/Player";
 import {
   GET_ALL_COLLECTED_OBJECTS,
@@ -27,7 +28,6 @@ class World extends Phaser.Scene {
     WORLD_SCENE.setScene(this);
     this.server = server;
     this.onPlayChallenge = onPlayChallenge;
-    //this.playersSavedState = await (await GET_ALL_PLAYERS()).json();
 
     this.gw = this.game.renderer.width;
     this.gh = this.game.renderer.height;
@@ -46,9 +46,13 @@ class World extends Phaser.Scene {
     this.groundLayer = this.map.createLayer("ground", worldTileset);
     this.obstaclesLayer = this.map.createLayer("obstacles", worldTileset);
     this.objectsLayer = this.map.createLayer("objects", worldTileset);
+    this.objectsLayer = this.map.createLayer("objects2", worldTileset);
+    this.objectsLayer = this.map.createLayer("objects3", worldTileset);
     this.obstaclesLayer.setCollisionByExclusion([-1]);
 
+    this.addSoundButton();
     this.addPlayChallengeButton();
+
     this.cameras.main.setBounds(
       -HUD_WIDTH,
       -HUD_HEIGHT,
@@ -72,14 +76,15 @@ class World extends Phaser.Scene {
     this.walletAddress = this.server.getPlayerWalletAddress();
 
     collectedObjects.forEach((obj) => this.map.removeTileAt(obj.c, obj.r));
+
+    SoundManager.play("BackgroundMusic", { loop: true });
   }
 
   playerMoved(dir) {
-    // TODO : make pre move animations with 2 first frame of movement
-    // TODO : play pre move animation when hit obstacle/bounds/player and on complete return player to previous position
-    // TODO : keep player movement animation on hold when there is no server response yet
     const wizardMoved = this.me.getSelectedWizard();
     if (!wizardMoved.canMove) return;
+
+    SoundManager.play("CharacterMove");
 
     wizardMoved.canMove = false;
 
@@ -109,6 +114,30 @@ class World extends Phaser.Scene {
     const button = new Button(this, 350, this.gh - 60, "challengeButton");
     button.setScrollFactor(0, 0).setDepth(1000);
     button.onClick(() => this.onPlayChallenge(this.me.getSelectedWizardId()));
+
+    this.playChallengeButton = button;
+  }
+
+  addSoundButton() {
+    const button = this.add
+      .text(this.gw - 20, HUD_HEIGHT + 20, "mute", { font: "40px Arial" })
+      .setOrigin(1, 0);
+
+    button.setInteractive().on("pointerdown", () => {
+      if (this.game.sound.mute) {
+        button.setText("mute");
+        this.game.sound.mute = false;
+      } else {
+        button.setText("unmute");
+        this.game.sound.mute = true;
+      }
+    });
+
+    button.setScrollFactor(0, 0).setDepth(1000);
+  }
+
+  showPlayChallengeButton(bool) {
+    this.playChallengeButton.setVisible(bool).setActive(bool);
   }
 
   isPlayerIdMe(playerId) {

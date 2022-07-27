@@ -116,12 +116,24 @@ class Wizard extends Phaser.GameObjects.Sprite {
       this.play("walk-down");
     }
   }
+  getMoveDirByTargetPos(targetX, targetY) {
+    const dir = {
+      x: 0,
+      y: 0,
+    };
 
-  walkTo(dir, x, y) {
+    if (targetX > this.x) dir.x = 1;
+    if (targetX < this.x) dir.x = -1;
+    if (targetY > this.y) dir.y = 1;
+    if (targetY < this.y) dir.y = -1;
+
+    return dir;
+  }
+  walkTo(x, y) {
+    const dir = this.getMoveDirByTargetPos(x, y);
     this.playWalkAnimation(dir);
 
     this.scene.tweens.add({
-      // TODO : we should keep walk animation on hold until server respawn
       targets: [this, this.name],
       x: x,
       y: y,

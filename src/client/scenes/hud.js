@@ -1,4 +1,5 @@
 import { HUD_HEIGHT } from "../../shared/config";
+import SoundManager from "../components/SoundManager";
 import { GET_GAME_STATE } from "../services/requests/requests";
 import { HUD_SCENE, WORLD_SCENE } from "./currentScenes";
 
@@ -57,6 +58,7 @@ export default class Hud extends Phaser.Scene {
 
     if (!wizardId) {
       wizardId = WORLD_SCENE.SCENE.me.getSelectedWizardId();
+      SoundManager.play("ObjectCollect");
     }
 
     this.wizardsCollectedObjects[wizardId] = newValue;

@@ -8,9 +8,22 @@ class MapManager {
       obstacles: [],
       lethals: [],
       objects: [],
+      objects2: [],
+      objects3: [],
     };
 
     this.setMapLayers();
+    this.mergeObjectLayers();
+  }
+
+  mergeObjectLayers() {
+    this.mapLayers.objects = [
+      ...this.mapLayers.objects,
+      ...this.mapLayers.objects2,
+      ...this.mapLayers.objects3,
+    ];
+    delete this.mapLayers.objects2;
+    delete this.mapLayers.objects3;
   }
 
   setMapLayers() {

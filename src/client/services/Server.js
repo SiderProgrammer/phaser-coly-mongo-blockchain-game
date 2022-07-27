@@ -57,16 +57,6 @@ export default class Server {
     );
   }
 
-  setChallengeListeners() {
-    this.challengeRoom.state.onChange = (state) => {
-      CHALLENGE_SCENE.SCENE.handleChangeState(state);
-    };
-
-    this.challengeRoom.state.wizard.onChange = (changedData) => {
-      CHALLENGE_SCENE.SCENE.handlePlayerMoved(changedData);
-    };
-  }
-
   handleWorldPlayerJoined(player) {
     WORLD_SCENE.SCENE.handlePlayerAdd(player);
 
@@ -82,6 +72,7 @@ export default class Server {
 
   handleWorldWizardChanged(changed, player, wizard) {
     // TODO: handle it in a better way
+
     if (
       changed.find((change) => change.field === "isAlive") &&
       this.isMyID(player.id)
@@ -93,6 +84,7 @@ export default class Server {
       changed.find((change) => change.field === "collectedObjectsCount") &&
       this.isMyID(player.id)
     ) {
+      console.log(chamge);
       HUD_SCENE.SCENE.updateCollectedObjects(
         wizard.collectedObjectsCount,
         changed.find((change) => change.field === "id")
@@ -100,7 +92,18 @@ export default class Server {
           : null
       );
     }
+
     WORLD_SCENE.SCENE.handleWizardChanged(wizard, player.id);
+  }
+
+  setChallengeListeners() {
+    this.challengeRoom.state.onChange = (state) => {
+      CHALLENGE_SCENE.SCENE.handleChangeState(state);
+    };
+
+    this.challengeRoom.state.wizard.onChange = (changedData) => {
+      CHALLENGE_SCENE.SCENE.handlePlayerMoved(changedData);
+    };
   }
 
   handleActionSend(action) {

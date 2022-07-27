@@ -4,6 +4,7 @@
   "description": "A Phaser 3 Project Template",
   "main": "src/index.js",
   "scripts": {
+    "pre-build":"node mapsPrebuild.js", 
     "build": "webpack --config webpack/prod.js ",
     "start": "NODE_ENV=production node src/server/index.js",
     "start-client": "webpack-dev-server --config webpack/base.js --open",

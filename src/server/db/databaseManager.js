@@ -91,9 +91,15 @@ class DatabaseManager {
     Players.findOne({ address }) // ? Maybe Wizards.updateOne({...}) // handle errors
       .populate("wizards")
       .then((state) => {
-        state.wizards[wizardId].name = name;
-        state.wizards[wizardId].save();
-        res.status(200);
+        const wizard = state.wizards[wizardId];
+        if (!wizard.hasCustomName) {
+          wizard.name = name;
+          wizard.hasCustomName = true;
+          wizard.save();
+          res.sendStatus(200);
+        } else {
+          res.sendStatus(403);
+        }
       });
   }
 
@@ -232,6 +238,22 @@ class DatabaseManager {
   }
 
   // *************************************** METHODS  USED FROM SERVER ********************************
+
+  getPlayerWizardName(address, wizardId) {
+    return Players.findOne({ address }) // ? Maybe Wizards.updateOne({...})
+      .populate("wizards")
+      .then((state) => {
+        return state.wizards[wizardId].name;
+      });
+  }
+  canWizardPlayChallenge(address, wizardId) {
+    return Players.findOne({ address }) // ? Maybe Wizards.updateOne({...})
+      .populate("wizards")
+      .then((state) => {
+        const wizard = state.wizards[wizardId];
+        return !wizard.dailyChallengeCompleted && wizard.isAlive;
+      });
+  }
 
   killDelayedWizards() {
     return Wizard.updateMany(

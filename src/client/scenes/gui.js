@@ -107,6 +107,15 @@ export default class Gui extends Phaser.Scene {
 
       wizardButton.setState("playing");
 
+      if (
+        wizardButton.currentChallengeState === "dead" ||
+        wizardButton.currentChallengeState === "completed"
+      ) {
+        WORLD_SCENE.SCENE.showPlayChallengeButton(false);
+      } else {
+        WORLD_SCENE.SCENE.showPlayChallengeButton(true);
+      }
+
       WORLD_SCENE.SCENE.me.setSelectedWizardId(wizardButton.id); // TODO : remove it, handle it with state change from back-end
       HUD_SCENE.SCENE.setWizardObjectsCounter(wizardButton.id); // TODO : remove it, handle it with state change from back-end
     });
@@ -221,7 +230,7 @@ export default class Gui extends Phaser.Scene {
     return wizardButton.challengeStateInfo;
   }
 
-  openSettings() {
+  openSettings(wizardId) {
     // TODO : refactor code, move settings to a new scene
     let settings = [];
     const bg = this.add
@@ -265,19 +274,23 @@ export default class Gui extends Phaser.Scene {
     )
       .setDisplaySize(100, 30)
       .onClick(() => {
-        // TODO: handle nickname changes errors etc.
-        const me = WORLD_SCENE.SCENE.me;
-
         CHANGE_NAME({
           name: newName,
           address: this.player.address,
-          wizardId: me.getSelectedWizardId(),
+          wizardId: wizardId,
+        }).then((res) => {
+          if (res.ok) {
+            WORLD_SCENE.SCENE.me.wizards[wizardId].setName(newName);
+            const action = {
+              type: "nameChanged",
+              wizardId: wizardId,
+            }
+            
+            this.server.handleActionSend(action)
+          }
+
+          settings.forEach((el) => el.destroy());
         });
-
-        settings.forEach((el) => el.destroy());
-        console.log(newName);
-
-        me.getSelectedWizard().setName(newName);
       })
       .addText("Confirm", { font: "20px Arial", color: "	#000000" });
 

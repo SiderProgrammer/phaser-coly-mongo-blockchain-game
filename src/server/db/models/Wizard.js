@@ -4,6 +4,7 @@ const wizardSchema = new mongoose.Schema({
   x: Number,
   y: Number,
   name: String,
+  hasCustomName: Boolean,
   isAlive: Boolean,
   dailyChallengeCompleted: Boolean,
   collectedObjectsCount: Number,

@@ -11,8 +11,10 @@ class Wizard extends schema.Schema {
     this.isSelected = false;
     this.isAlive = true;
     this.dailyChallengeCompleted = false;
-    this.collectedObjectsCount = 0;
-    this.reversePreMove = false;
+    this.collectedObjectsCount = new schema.MapSchema();
+    this.collectedObjectsCount.set("1", 0);
+    this.collectedObjectsCount.set("2", 0);
+    this.collectedObjectsCount.set("3", 0);
   }
 
   move(dirX, dirY, speed) {
@@ -33,8 +35,7 @@ schema.defineTypes(Wizard, {
   isSelected: "boolean",
   isAlive: "boolean",
   dailyChallengeCompleted: "boolean",
-  collectedObjectsCount: "number",
-  reversePreMove: "boolean",
+  collectedObjectsCount: { map: "number" },
 });
 
 exports.Wizard = Wizard;
