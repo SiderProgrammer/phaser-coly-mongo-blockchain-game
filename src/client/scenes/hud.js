@@ -26,12 +26,6 @@ export default class Hud extends Phaser.Scene {
     this.addSlogan();
     this.addWizardsLeft();
     this.addCollectedObjects();
-    this.wizardsCollectedObjects = {
-      1: 0,
-      2: 0,
-      3: 0,
-      4: 0,
-    };
   }
 
   handleUpdate(count, type) {
@@ -53,25 +47,34 @@ export default class Hud extends Phaser.Scene {
     this.day.setText(`DAY ${gameState.day}`);
   }
 
-  updateCollectedObjects(newValue, _wizardId) {
-    let wizardId = _wizardId;
-
-    if (!wizardId) {
-      wizardId = WORLD_SCENE.SCENE.me.getSelectedWizardId();
+  updateCollectedObjects(obj) {
+    const wizard = WORLD_SCENE.SCENE.me.getWizardById(obj.wizardId);
+    if (wizard.collectedObjects[obj.type] !== -1) {
+      console.log(wizard.collectedObjects, obj.type);
       SoundManager.play("ObjectCollect");
     }
+    wizard.collectedObjects[obj.type] = obj.value; // TODO : move it to world scene
 
-    this.wizardsCollectedObjects[wizardId] = newValue;
-
-    wizardId = WORLD_SCENE.SCENE.me.getSelectedWizardId();
-    this.collectedObjects.setText(
-      `Collected objects: ${this.wizardsCollectedObjects[wizardId]}`
-    );
+    const currentWizardID = WORLD_SCENE.SCENE.me.getSelectedWizardId();
+    this.updateCollectedObjectsText(currentWizardID);
   }
 
-  setWizardObjectsCounter(wizardId) {
-    const count = this.wizardsCollectedObjects[wizardId];
-    this.collectedObjects.setText(`Collected objects: ${count}`);
+  updateCollectedObjectsText(wizardId) {
+    const wizardCollectedObjects = WORLD_SCENE.SCENE.me.getWizardById(
+      wizardId.toString()
+    ).collectedObjects;
+
+    this.collectedObjects.setText(
+      `Collected objects: ${wizardCollectedObjects["1"]}`
+    );
+
+    this.collectedObjects2.setText(
+      `Collected objects 2: ${wizardCollectedObjects["2"]}`
+    );
+
+    this.collectedObjects3.setText(
+      `Collected objects 3: ${wizardCollectedObjects["3"]}`
+    );
   }
 
   addWizardsLeft() {
@@ -97,9 +100,21 @@ export default class Hud extends Phaser.Scene {
       .setOrigin(0.5, 1);
   }
   addCollectedObjects() {
+    this.collectedObjects2 = this.add
+      .text(this.width - 10, 10, "Collected objects 2: 0", {
+        font: "15px Arial",
+      })
+      .setOrigin(1, 0);
+
     this.collectedObjects = this.add
-      .text(this.width - 10, 10, "Collected objects: 0", {
-        font: "35px Arial",
+      .text(this.width - 10, 30, "Collected objects: 0", {
+        font: "15px Arial",
+      })
+      .setOrigin(1, 0);
+
+    this.collectedObjects3 = this.add
+      .text(this.width - 10, 50, "Collected objects 3: 0", {
+        font: "15px Arial",
       })
       .setOrigin(1, 0);
   }

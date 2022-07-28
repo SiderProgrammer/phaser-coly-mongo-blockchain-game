@@ -12,6 +12,12 @@ class Wizard extends Phaser.GameObjects.Sprite {
     this.moveTween = null;
     this.preMoveDir = {};
 
+    this.collectedObjects = {
+      1: -1,
+      2: -1,
+      3: -1,
+    };
+
     this.showName();
     this.on("animationcomplete", ({ key }) => {
       if (!key.includes("pre")) this.play("idle");

@@ -117,7 +117,7 @@ export default class Gui extends Phaser.Scene {
       }
 
       WORLD_SCENE.SCENE.me.setSelectedWizardId(wizardButton.id); // TODO : remove it, handle it with state change from back-end
-      HUD_SCENE.SCENE.setWizardObjectsCounter(wizardButton.id); // TODO : remove it, handle it with state change from back-end
+      HUD_SCENE.SCENE.updateCollectedObjectsText(wizardButton.id); // TODO : remove it, handle it with state change from back-end
     });
 
     return wizardButton.stateText;
@@ -284,9 +284,9 @@ export default class Gui extends Phaser.Scene {
             const action = {
               type: "nameChanged",
               wizardId: wizardId,
-            }
-            
-            this.server.handleActionSend(action)
+            };
+
+            this.server.handleActionSend(action);
           }
 
           settings.forEach((el) => el.destroy());

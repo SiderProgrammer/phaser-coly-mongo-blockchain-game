@@ -1,20 +1,52 @@
 const schema = require("@colyseus/schema");
+const { PLAYER_SIZE } = require("../../shared/config");
+
+class collectedObjectCounter extends schema.Schema {
+  constructor(type, value, wizardId) {
+    super();
+    this.type = type;
+    this.value = value;
+    this.wizardId = wizardId;
+  }
+
+  increaseCounter() {
+    this.value++;
+  }
+}
+
+schema.defineTypes(collectedObjectCounter, {
+  type: "string",
+  value: "number",
+  wizardId: "string",
+});
 
 class Wizard extends schema.Schema {
-  constructor(id, x, y, size, name) {
+  constructor(id, config) {
     super();
     this.id = id;
-    this.x = x;
-    this.y = y;
-    this.size = size;
-    this.name = name;
+    this.x = config.x;
+    this.y = config.y;
+    this.size = PLAYER_SIZE;
+    this.name = config.name;
     this.isSelected = false;
-    this.isAlive = true;
-    this.dailyChallengeCompleted = false;
+    this.isAlive = config.isAlive;
+    this.dailyChallengeCompleted = config.dailyChallengeCompleted;
+
     this.collectedObjectsCount = new schema.MapSchema();
-    this.collectedObjectsCount.set("1", 0);
-    this.collectedObjectsCount.set("2", 0);
-    this.collectedObjectsCount.set("3", 0);
+    for (const object in config.collectedObjectsCount) {
+      this.collectedObjectsCount.set(
+        object,
+        new collectedObjectCounter(
+          object,
+          config.collectedObjectsCount[object],
+          this.id
+        )
+      );
+    }
+  }
+
+  increaseCollectedObjects(type) {
+    this.collectedObjectsCount.get(type).increaseCounter();
   }
 
   move(dirX, dirY, speed) {
@@ -35,7 +67,7 @@ schema.defineTypes(Wizard, {
   isSelected: "boolean",
   isAlive: "boolean",
   dailyChallengeCompleted: "boolean",
-  collectedObjectsCount: { map: "number" },
+  collectedObjectsCount: { map: collectedObjectCounter },
 });
 
 exports.Wizard = Wizard;

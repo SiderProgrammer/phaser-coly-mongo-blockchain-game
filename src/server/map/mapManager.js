@@ -13,17 +13,22 @@ class MapManager {
     };
 
     this.setMapLayers();
-    this.mergeObjectLayers();
   }
 
-  mergeObjectLayers() {
-    this.mapLayers.objects = [
-      ...this.mapLayers.objects,
-      ...this.mapLayers.objects2,
-      ...this.mapLayers.objects3,
-    ];
-    delete this.mapLayers.objects2;
-    delete this.mapLayers.objects3;
+  removeCollectedObjects(collectedObjects) {
+    const objects = {
+      1: this.mapLayers.objects,
+      2: this.mapLayers.objects2,
+      3: this.mapLayers.objects3,
+    };
+
+    for (const object in objects) {
+      objects[object] = this.mapLayers.objects.filter((obj) => {
+        return !collectedObjects.some(
+          (collectedObj) => collectedObj.c === obj.c && collectedObj.r === obj.r
+        );
+      });
+    }
   }
 
   setMapLayers() {

@@ -43,12 +43,15 @@ class World extends Phaser.Scene {
     this.map = this.make.tilemap({ key: "worldMap" });
     const worldTileset = this.map.addTilesetImage("tiles32x32", "tiles32x32");
 
-    this.groundLayer = this.map.createLayer("ground", worldTileset);
-    this.obstaclesLayer = this.map.createLayer("obstacles", worldTileset);
-    this.objectsLayer = this.map.createLayer("objects", worldTileset);
-    this.objectsLayer = this.map.createLayer("objects2", worldTileset);
-    this.objectsLayer = this.map.createLayer("objects3", worldTileset);
-    this.obstaclesLayer.setCollisionByExclusion([-1]);
+    this.layers = {
+      groundLayer: this.map.createLayer("ground", worldTileset),
+      obstaclesLayer: this.map.createLayer("obstacles", worldTileset),
+      objectsLayer1: this.map.createLayer("objects", worldTileset),
+      objectsLayer2: this.map.createLayer("objects2", worldTileset),
+      objectsLayer3: this.map.createLayer("objects3", worldTileset),
+    };
+
+    this.layers.obstaclesLayer.setCollisionByExclusion([-1]);
 
     this.addSoundButton();
     this.addPlayChallengeButton();
@@ -75,9 +78,15 @@ class World extends Phaser.Scene {
     this.playerId = this.server.getPlayerId();
     this.walletAddress = this.server.getPlayerWalletAddress();
 
-    collectedObjects.forEach((obj) => this.map.removeTileAt(obj.c, obj.r));
+    collectedObjects.forEach((obj) =>
+      this.removeTileFromMap(obj.c, obj.r, obj.type)
+    );
 
     SoundManager.play("BackgroundMusic", { loop: true });
+  }
+
+  removeTileFromMap(c, r, type) {
+    this.map.removeTileAt(c, r, true, true, this.layers["objectsLayer" + type]);
   }
 
   playerMoved(dir) {
@@ -153,7 +162,7 @@ class World extends Phaser.Scene {
   }
 
   handleObjectRemoved(object) {
-    this.map.removeTileAt(object.c, object.r);
+    this.removeTileFromMap(object.c, object.r, object.type);
   }
 
   addPlayersFromSavedState() {

@@ -141,7 +141,7 @@ class DatabaseManager {
               name: sampleNames[i] + "_" + address, // + seed
               isAlive: true,
               dailyChallengeCompleted: false,
-              collectedObjectsCount: 0,
+              collectedObjectsCount: { 1: 0, 2: 0, 3: 0 },
               player: player.id,
             };
           }
@@ -193,8 +193,8 @@ class DatabaseManager {
       .select("-_id");
   }
 
-  setObjectCollected(r, c) {
-    CollectedObjects.create({ r, c });
+  setObjectCollected(r, c, type) {
+    CollectedObjects.create({ r, c, type });
   }
 
   getAllCollectedObjects(req, res) {
@@ -204,13 +204,13 @@ class DatabaseManager {
       .then((objects) => res.status(200).json(objects));
   }
 
-  increaseWizardObjectsCount(address, wizardId) {
+  increaseWizardObjectsCount(address, wizardId, type) {
     // TODO : Handle Errors  && Improve this Query (search for better solution)
 
     Players.findOne({ address }) // ? Maybe Wizards.updateOne({...})
       .populate("wizards")
       .then((state) => {
-        state.wizards[wizardId].collectedObjectsCount++;
+        state.wizards[wizardId].collectedObjectsCount[type]++;
         state.wizards[wizardId].save();
       });
   }

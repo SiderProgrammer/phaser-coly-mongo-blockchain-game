@@ -26,27 +26,21 @@ class State extends schema.Schema {
 
     this.mapManager = new MapManager(this);
     this.mapLayers = this.mapManager.getWorldMap();
-
-    this.mapLayers.objects =
-      this.getObjectsLayerCollectedRemoved(collectedObjects);
-
+    this.mapManager.removeCollectedObjects(collectedObjects);
     this.mapGridManager.addLayersToGrid(this.mapLayers);
 
     this.objects = new schema.ArraySchema(); // ? needed to handle objects state
 
     this.mapLayers.objects.forEach((obj) => {
-      this.objects.push(new CollectableObject(obj.r, obj.c)); // ? needed to handle objects state
+      this.objects.push(new CollectableObject(obj.r, obj.c, "1")); // ? needed to handle objects state
     });
-
+    this.mapLayers.objects2.forEach((obj) => {
+      this.objects.push(new CollectableObject(obj.r, obj.c, "2")); // ? needed to handle objects state
+    });
+    this.mapLayers.objects3.forEach((obj) => {
+      this.objects.push(new CollectableObject(obj.r, obj.c, "3")); // ? needed to handle objects state
+    });
     //this.mapManager.addMapBoundaryToGrid();
-  }
-
-  getObjectsLayerCollectedRemoved(collectedObjects) {
-    return this.mapLayers.objects.filter((obj) => {
-      return !collectedObjects.some(
-        (collectedObj) => collectedObj.c === obj.c && collectedObj.r === obj.r
-      );
-    });
   }
 
   getPlayersFromDB(playersFromDB) {
@@ -163,7 +157,7 @@ class State extends schema.Schema {
       this.subtractAlive(1);
       db.killWizard(player.address, player.getSelectedWizardId());
     } else if (tile.includes("obj")) {
-      const objectType = tile.at(-1); // 1 / 2 / 3
+      const objectType = tile[tile.length - 1]; // 1 / 2 / 3
 
       db.increaseWizardObjectsCount(
         player.address,
@@ -172,13 +166,7 @@ class State extends schema.Schema {
       );
       db.setObjectCollected(r, c, objectType);
 
-      const collectedObjectsMap =
-        player.getSelectedWizard().collectedObjectsCount;
-
-      collectedObjectsMap.set(
-        objectType,
-        collectedObjectsMap.get(objectType) + 1
-      );
+      player.getSelectedWizard().increaseCollectedObjects(objectType);
 
       const indexOfObject = this.objects.findIndex(
         (obj) => obj.c === c && obj.r === r
@@ -200,13 +188,13 @@ class State extends schema.Schema {
 
   killDelayedWizards() {
     let killedWizards = 0;
+
     this.players.forEach((player) => {
       player.wizards.forEach((wizard) => {
         if (!wizard.dailyChallengeCompleted) {
           wizard.isAlive = false;
-          killedWizards;
+          killedWizards++;
         }
-        // wizard.dailyChallengeCompleted = false;
       });
     });
 

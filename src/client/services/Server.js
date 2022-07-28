@@ -67,12 +67,15 @@ export default class Server {
     player.wizards.forEach((wizard) => {
       wizard.onChange = (changed) =>
         this.handleWorldWizardChanged(changed, player, wizard);
+
+      wizard.collectedObjectsCount.forEach(
+        (obj) =>
+          (obj.onChange = () => this.handleCollectedObjectsChanged(obj, player))
+      );
     });
   }
 
   handleWorldWizardChanged(changed, player, wizard) {
-    // TODO: handle it in a better way
-
     if (
       changed.find((change) => change.field === "isAlive") &&
       this.isMyID(player.id)
@@ -80,20 +83,13 @@ export default class Server {
       GUI_SCENE.SCENE.handleUpdate(player);
     }
 
-    if (
-      changed.find((change) => change.field === "collectedObjectsCount") &&
-      this.isMyID(player.id)
-    ) {
-      console.log(chamge);
-      HUD_SCENE.SCENE.updateCollectedObjects(
-        wizard.collectedObjectsCount,
-        changed.find((change) => change.field === "id")
-          ? changed.find((change) => change.field === "id").value
-          : null
-      );
-    }
-
     WORLD_SCENE.SCENE.handleWizardChanged(wizard, player.id);
+  }
+
+  handleCollectedObjectsChanged(obj, player) {
+    if (this.isMyID(player.id)) {
+      HUD_SCENE.SCENE.updateCollectedObjects(obj);
+    }
   }
 
   setChallengeListeners() {

@@ -36,7 +36,7 @@ class MapGridManager {
         this.scene.worldGrid[tile.r][tile.c] = sign;
       });
     }
-    console.log(this.scene.worldGrid);
+   
   }
 
   addWizardsToGrid(wizards) {
@@ -79,7 +79,7 @@ class MapGridManager {
   isTileObject(x, y) {
     const { r, c } = this.getRowColumnFromCoords(x, y);
 
-    return this.scene.worldGrid[r][c] === "obj";
+    return this.scene.worldGrid[r][c].includes("obj");
   }
   isTileWalkable(wizard, dirX, dirY, speed) {
     const speedX = speed * dirX;
@@ -95,7 +95,7 @@ class MapGridManager {
 
     const tile = this.scene.worldGrid[r][c];
 
-    return tile === "" || tile === "let" || tile === "obj";
+    return tile === "" || tile === "let" || tile.includes("obj");
   }
 
   isTileOutOfBounds(r, c) {

@@ -74,6 +74,10 @@ class Player {
     }
   }
 
+  getWizardById(id) {
+    return this.wizards.find((wizard) => wizard.id === id);
+  }
+
   getSelectedWizard() {
     return this.wizards.find(
       (wizard) => wizard.id === this.selectedWizardId.toString()

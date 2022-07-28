@@ -7,7 +7,11 @@ const wizardSchema = new mongoose.Schema({
   hasCustomName: Boolean,
   isAlive: Boolean,
   dailyChallengeCompleted: Boolean,
-  collectedObjectsCount: Number,
+  collectedObjectsCount: {
+    1: { type: "Number" },
+    2: { type: "Number" },
+    3: { type: "Number" },
+  },
   player: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Player",

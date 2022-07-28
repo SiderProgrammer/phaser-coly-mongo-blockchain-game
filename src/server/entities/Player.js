@@ -15,17 +15,7 @@ class Player extends Schema {
 
   addWizards(wizardsState) {
     wizardsState.forEach((_wizard, i) => {
-      const wizard = new Wizard(
-        i.toString(),
-        _wizard.x,
-        _wizard.y,
-        PLAYER_SIZE,
-        _wizard.name
-      );
-      wizard.isAlive = _wizard.isAlive;
-      wizard.dailyChallengeCompleted = _wizard.dailyChallengeCompleted;
-      wizard.collectedObjectsCount = _wizard.collectedObjectsCount;
-
+      const wizard = new Wizard(i.toString(), _wizard);
       this.wizards.push(wizard);
 
       if (wizard.isAlive) {

@@ -1,2 +1,1 @@
-- Introduce two new object types and display top right. So let’s add two layers to Tiled (so instead of just the one object layer we should have objects, objects2 and objects3) and instead of displaying just Objects: counter in the GUI, display Objects, objects2 and objects3 so that each object type is counted seperately.
 - Look over the “Wizards left” counter. It often displays wrong amount of alive wizards. Fetch the data from the database instead and it should be accurate.
