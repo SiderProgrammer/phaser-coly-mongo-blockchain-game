@@ -14,8 +14,7 @@ export default class Bootstrap extends Phaser.Scene {
 
   async create() {
     this.playerAccount = {};
-    const address = window.walletAddress; // (Math.random() * 100).toString();
-    // ? random generated wallet address for development purpose (later it will be real wallet address)
+    const address = window.walletAddress;
     // ! we'll need to generate JW token or something else so users can't change their address from client-side and cheat
 
     this.playerAccount = await GET_PLAYER({ address });
@@ -25,7 +24,9 @@ export default class Bootstrap extends Phaser.Scene {
     }
     this.playerAccount = await this.playerAccount.json();
 
-    this.gameState = await (await GET_GAME_STATE()).json(); // TODO : move to server-side
+    const timeDifference = Date.now();
+    this.gameState = await (await GET_GAME_STATE()).json();
+    this.gameState.timeDifference = timeDifference;
 
     this.server = new Server(this.playerAccount);
 

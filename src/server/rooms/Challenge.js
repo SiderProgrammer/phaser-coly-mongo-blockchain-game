@@ -38,6 +38,8 @@ exports.default = class ChallengeRoom extends Room {
           this.state.setWizardOwner(options.address);
         } else {
           // leave the cheater :D
+          console.log("leave");
+          this.disconnect();
         }
       }
     );

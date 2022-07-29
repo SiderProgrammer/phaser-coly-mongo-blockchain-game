@@ -13,12 +13,14 @@ export default class Server {
     this.client = new Client(WEBSOCKET_URL);
     this.events = new Phaser.Events.EventEmitter();
 
+    this.activeRoom = "";
     this.playerAccount = playerAccount;
     this.walletAddress = this.playerAccount.address;
   }
 
-  // TODO : change events names && break HUD, World, Challenge handlers into separate files
+  // TODO :  break HUD, GUI, World, Challenge handlers into separate files
   async handleWorldJoin() {
+    this.activeRoom = "world";
     //if (this.challengeRoom) await this.challengeRoom.leave(true);
     this.playersSavedState = await (await GET_ALL_PLAYERS()).json(); // ! maybe get players from back-end players state
     this.room = await this.client.joinOrCreate("game", {
@@ -31,7 +33,7 @@ export default class Server {
 
   async handleChallengeJoin(wizardId) {
     await this.room.leave(true);
-
+    this.activeRoom = "challenge";
     this.challengeRoom = await this.client.joinOrCreate("challenge", {
       address: this.playerAccount.address,
       wizardId: wizardId,
@@ -55,14 +57,17 @@ export default class Server {
     this.room.state.listen("wizardsCount", (count) =>
       HUD_SCENE.SCENE.handleUpdate(count, "all")
     );
+
+    this.room.state.listen("slogan", (newSlogan) =>
+      HUD_SCENE.SCENE.updateSlogan(newSlogan)
+    );
+    this.room.state.listen("day", (newDay) =>
+      HUD_SCENE.SCENE.updateDay(newDay)
+    );
   }
 
   handleWorldPlayerJoined(player) {
     WORLD_SCENE.SCENE.handlePlayerAdd(player);
-
-    if (this.isMyID(player.id)) {
-      GUI_SCENE.SCENE.handleUpdate(player);
-    }
 
     player.wizards.forEach((wizard) => {
       wizard.onChange = (changed) =>
@@ -80,7 +85,7 @@ export default class Server {
       changed.find((change) => change.field === "isAlive") &&
       this.isMyID(player.id)
     ) {
-      GUI_SCENE.SCENE.handleUpdate(player);
+      GUI_SCENE.SCENE.handleUpdate(wizard);
     }
 
     WORLD_SCENE.SCENE.handleWizardChanged(wizard, player.id);
@@ -114,10 +119,6 @@ export default class Server {
       return;
     }
     this.challengeRoom.send(action.type, action);
-  }
-
-  updateSlogan() {
-    HUD_SCENE.SCENE.updateSlogan();
   }
 
   isMyID(id) {

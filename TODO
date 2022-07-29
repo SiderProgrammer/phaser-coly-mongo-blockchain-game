@@ -1,1 +1,0 @@
-- Look over the “Wizards left” counter. It often displays wrong amount of alive wizards. Fetch the data from the database instead and it should be accurate.

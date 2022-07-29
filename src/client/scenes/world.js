@@ -118,13 +118,17 @@ class World extends Phaser.Scene {
 
     this.server.handleActionSend(action);
   }
-
+  showPlayChallengeButton(bool) {
+    this.playChallengeButton.setVisible(bool).setActive(bool);
+  }
   addPlayChallengeButton() {
     const button = new Button(this, 350, this.gh - 60, "challengeButton");
     button.setScrollFactor(0, 0).setDepth(1000);
+
     button.onClick(() => this.onPlayChallenge(this.me.getSelectedWizardId()));
 
     this.playChallengeButton = button;
+    this.showPlayChallengeButton(false);
   }
 
   addSoundButton() {
@@ -143,10 +147,6 @@ class World extends Phaser.Scene {
     });
 
     button.setScrollFactor(0, 0).setDepth(1000);
-  }
-
-  showPlayChallengeButton(bool) {
-    this.playChallengeButton.setVisible(bool).setActive(bool);
   }
 
   isPlayerIdMe(playerId) {

@@ -25,12 +25,13 @@ class State extends schema.Schema {
     );
 
     this.wizard = new Wizard(
-      "0", // not needed in this room
-      this.startPosition.x,
-      this.startPosition.y,
-      PLAYER_SIZE,
-      "" // not needed in this room
+      "0", // can be removed I suppose
+      {
+        x: this.startPosition.x,
+        y: this.startPosition.y,
+      }
     );
+
     this.challengeData = challengeData;
     this.presenceEmit = presenceEmit;
 

@@ -14,10 +14,12 @@ exports.default = class GameRoom extends Room {
 
     this.gameStateDB = await db.getGameStateQuery();
 
-    // await this.setDaysHandler();
+    await this.setDaysHandler();
     const collectedObjects = await db.getAllCollectedObjectsQuery();
     const playersFromDB = await db.getAllPlayersQuery();
-    this.setState(new GameState(playersFromDB, collectedObjects));
+    this.setState(
+      new GameState(playersFromDB, collectedObjects, this.gameStateDB)
+    );
 
     this.state.wizardsCount = await db.countWizards();
     this.state.wizardsAliveCount = await db.countWizards({ isAlive: true });
@@ -43,11 +45,6 @@ exports.default = class GameRoom extends Room {
   async setDaysHandler() {
     // ! implementation just for now
     // Maybe we can move part of this code to server node-cron
-    // const remainingTime =
-    //   Date.now() -
-    //   this.gameStateDB.gameStartTimestamp +
-    //   this.gameStateDB.dayDuration * this.gameStateDB.day;
-
     const dayCount =
       Math.floor(
         (Date.now() - this.gameStateDB.gameStartTimestamp) /
@@ -56,20 +53,19 @@ exports.default = class GameRoom extends Room {
 
     if (dayCount !== this.gameStateDB.day) {
       await db.refreshDay(dayCount - this.gameStateDB.day);
-      console.log("refreshing a day");
+      this.refreshDay(dayCount);
     }
+
+    function handleDayEnd() {
+      db.refreshDay().then(() => {
+        this.refreshDay(this.state.day + 1);
+      });
+    }
+
     const remainingTime =
       this.gameStateDB.gameStartTimestamp +
       dayCount * this.gameStateDB.dayDuration -
       Date.now();
-
-    function handleDayEnd() {
-      db.refreshDay();
-      this.state.killDelayedWizards();
-      this.state.refreshWizardsChallenges();
-
-      console.log("refreshing a day");
-    }
 
     setTimeout(() => {
       handleDayEnd.call(this);
@@ -78,6 +74,17 @@ exports.default = class GameRoom extends Room {
         handleDayEnd.call(this);
       }, this.gameStateDB.dayDuration);
     }, remainingTime);
+  }
+
+  refreshDay(day = 1) {
+    console.log("day refresh");
+
+    db.getDayQuery(day).then((dayData) => {
+      this.state.killDelayedWizards();
+      this.state.refreshWizardsChallenges();
+      this.state.day++;
+      this.state.slogan = dayData.slogan;
+    });
   }
 
   onJoin(client, options) {

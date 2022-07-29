@@ -110,8 +110,7 @@ class Challenge extends Phaser.Scene {
       ? updatedPosition.find((pos) => pos.field === "y").value
       : this.me.y;
 
-    this.me.walkTo(this.me.preMoveDir, updatedX, updatedY);
-    //this.me.setPosition(updatedX, updatedY);
+    this.me.walkTo(updatedX, updatedY);
   }
 }
 

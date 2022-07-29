@@ -41,7 +41,6 @@ class Wizard extends Phaser.GameObjects.Sprite {
   reversePreMove() {
     this.playPreWalkAnimation(this.preMoveDir, true);
     this.scene.tweens.add({
-      // TODO : we should keep walk animation on hold until server respawn
       targets: [this, this.name],
       x: `-=${this.lastPreMove.speedX}`,
       y: `-=${this.lastPreMove.speedY}`,
@@ -98,12 +97,11 @@ class Wizard extends Phaser.GameObjects.Sprite {
     this.playPreWalkAnimation(dir);
 
     this.scene.tweens.add({
-      // TODO : we should keep walk animation on hold until server respawn
       targets: [this, this.name],
       x: `+=${speedX}`,
       y: `+=${speedY}`,
       duration: 250,
-      onUpdate: () => (this.name.y = this.y - 50), // TODO : handle it better / ,
+      onUpdate: () => (this.name.y = this.y - 50), // TODO : handle it better
       onComplete: () => callback && callback(),
     });
   }

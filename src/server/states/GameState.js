@@ -9,9 +9,11 @@ const MapGridManager = require("../../shared/mapGridManager");
 const db = new DatabaseManager();
 
 class State extends schema.Schema {
-  constructor(playersFromDB, collectedObjects) {
+  constructor(playersFromDB, collectedObjects, gameState) {
     super();
-    // this.daySlogan = ""
+    this.day = gameState.day;
+    this.daySlogan = gameState.slogan;
+
     this.playersFromDB = this.getPlayersFromDB(playersFromDB); // ? needed to prevent players overlapping
     this.players = new schema.MapSchema();
     this.wizardsAliveCount = 0;
@@ -29,16 +31,16 @@ class State extends schema.Schema {
     this.mapManager.removeCollectedObjects(collectedObjects);
     this.mapGridManager.addLayersToGrid(this.mapLayers);
 
-    this.objects = new schema.ArraySchema(); // ? needed to handle objects state
+    this.objects = new schema.ArraySchema();
 
     this.mapLayers.objects.forEach((obj) => {
-      this.objects.push(new CollectableObject(obj.r, obj.c, "1")); // ? needed to handle objects state
+      this.objects.push(new CollectableObject(obj.r, obj.c, "1"));
     });
     this.mapLayers.objects2.forEach((obj) => {
-      this.objects.push(new CollectableObject(obj.r, obj.c, "2")); // ? needed to handle objects state
+      this.objects.push(new CollectableObject(obj.r, obj.c, "2"));
     });
     this.mapLayers.objects3.forEach((obj) => {
-      this.objects.push(new CollectableObject(obj.r, obj.c, "3")); // ? needed to handle objects state
+      this.objects.push(new CollectableObject(obj.r, obj.c, "3"));
     });
     //this.mapManager.addMapBoundaryToGrid();
   }
@@ -91,12 +93,8 @@ class State extends schema.Schema {
       player.addWizards(state.wizards);
       this.players.set(id, player);
 
-      // if (!this.playersFromDB.has(address)) {
-      //   this.playersFromDB.set(address, state);
-      // }
-
       this.mapGridManager.addWizardsToGrid(state.wizards);
-      // console.log(this.worldGrid);
+
       this.updateWizardsCounter(state.wizards); // TODO : fix it
     });
   }
@@ -104,12 +102,6 @@ class State extends schema.Schema {
   playerRemove(id) {
     const player = this.players.get(id);
     db.savePlayerWizards(player.address, player.wizards);
-
-    // if(!this.playersFromDB.get(player.address)) {
-    //   this.playersFromDB.set(player.address, state);
-    //   this.removeWizardsFromGrid(state.wizards)
-    // }
-
     this.players.delete(id);
   }
 
@@ -181,7 +173,7 @@ class State extends schema.Schema {
   playerSelectWizard(id, wizardId) {
     const player = this.players.get(id);
 
-    if (!player || !player.wizards[wizardId].isAlive) return; // TODO : test it
+    if (!player || !player.wizards[wizardId].isAlive) return;
 
     player.selectWizard(wizardId);
   }
@@ -191,7 +183,7 @@ class State extends schema.Schema {
 
     this.players.forEach((player) => {
       player.wizards.forEach((wizard) => {
-        if (!wizard.dailyChallengeCompleted) {
+        if (!wizard.dailyChallengeCompleted && wizard.isAlive) {
           wizard.isAlive = false;
           killedWizards++;
         }
@@ -210,6 +202,8 @@ class State extends schema.Schema {
   }
 }
 schema.defineTypes(State, {
+  day: "number",
+  slogan: "string",
   players: { map: Player },
   wizardsAliveCount: "number",
   wizardsCount: "number",

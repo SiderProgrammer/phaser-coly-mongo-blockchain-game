@@ -31,7 +31,7 @@ class DatabaseManager {
 
           GameState.create({
             day: 1,
-            dayDuration: 1000 * 60 * 10, // 10 minutes
+            dayDuration: 1000 * 60 * 1, // 10 minutes
             gameStartTimestamp: Date.now(),
           });
 
@@ -116,6 +116,8 @@ class DatabaseManager {
           });
       });
   }
+
+
 
   createPlayer(req, res) {
     const { address } = req.body;
@@ -291,6 +293,12 @@ class DatabaseManager {
 
   getAllCollectedObjectsQuery() {
     return CollectedObjects.find().lean().select("-_id");
+  }
+
+  getDayQuery(day) {
+    return Days.findOne({ day })
+    .lean()
+    .select("-_id") // __v
   }
 
   getPlayerQuery(address) {

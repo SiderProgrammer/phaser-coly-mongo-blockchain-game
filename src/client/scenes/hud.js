@@ -40,17 +40,18 @@ export default class Hud extends Phaser.Scene {
     );
   }
 
-  async updateSlogan() {
-    // TODO : fix it, handle it in a better way
-    const gameState = await (await GET_GAME_STATE()).json();
-    this.slogan.setText(gameState.slogan);
-    this.day.setText(`DAY ${gameState.day}`);
+  updateSlogan(newSlogan) {
+    this.slogan.setText(newSlogan)
   }
+
+  updateDay(newDay) {
+    this.day.setText(`DAY ${newDay}`);
+  }
+
 
   updateCollectedObjects(obj) {
     const wizard = WORLD_SCENE.SCENE.me.getWizardById(obj.wizardId);
     if (wizard.collectedObjects[obj.type] !== -1) {
-      console.log(wizard.collectedObjects, obj.type);
       SoundManager.play("ObjectCollect");
     }
     wizard.collectedObjects[obj.type] = obj.value; // TODO : move it to world scene
