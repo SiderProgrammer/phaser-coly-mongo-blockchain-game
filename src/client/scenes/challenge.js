@@ -4,11 +4,16 @@ import {
   CHALLENGE_PLAYER,
   PLAYER_SIZE,
   PRE_MOVE_DISTANCE,
+  TILE_SIZE,
 } from "../../shared/config";
+import MapManager from "../../shared/mapManager";
 import InputManager from "../components/InputManager";
 import Wizard from "../entities/Wizard";
 import { GET_CHALLENGE } from "../services/requests/requests";
 import { CHALLENGE_SCENE } from "./currentScenes";
+import worldMap from "../assets/tilemaps/sampleMapChallenge";
+import MapGridManager from "../../shared/mapGridManager";
+import SoundManager from "../components/SoundManager";
 
 class Challenge extends Phaser.Scene {
   constructor() {
@@ -27,17 +32,28 @@ class Challenge extends Phaser.Scene {
     this.gh = this.game.renderer.height;
 
     this.challengeData = await (await GET_CHALLENGE()).json();
-    this.add
-      .image(this.challengeData.meta.x, this.challengeData.meta.y, "white")
-      .setDisplaySize(CHALLENGE_META.size, CHALLENGE_META.size);
 
-    this.add
-      .image(
-        this.challengeData.lethals[0].x,
-        this.challengeData.lethals[0].y,
-        "red"
-      )
-      .setDisplaySize(CHALLENGE_OBSTACLES[0].size, CHALLENGE_OBSTACLES[0].size);
+    this.map = this.make.tilemap({ key: "challengeMap" });
+    const worldTileset = this.map.addTilesetImage("tiles32x32", "tiles32x32");
+
+    this.layers = {
+      groundLayer: this.map.createLayer("ground", worldTileset),
+      obstaclesLayer: this.map.createLayer("obstacles", worldTileset),
+      metaLayer: this.map.createLayer("meta", worldTileset),
+    };
+
+    //this.layers.obstaclesLayer.setCollisionByExclusion([-1]);
+
+    this.mapManager = new MapManager(this, worldMap);
+    this.mapLayers = this.mapManager.getWorldMap();
+
+    this.mapGridManager = new MapGridManager(this);
+    this.worldGrid = this.mapGridManager.createWorldGrid();
+
+    this.mapGridManager.addLayersToGrid({
+      obstacles: this.mapLayers.obstacles,
+      meta: this.mapLayers.meta,
+    });
 
     this.me = null;
 
@@ -49,8 +65,18 @@ class Challenge extends Phaser.Scene {
 
   playerMoved(dir) {
     if (!this.me || !this.me.canMove) return;
+
+    SoundManager.play("CharacterMove");
+
     this.me.canMove = false;
-    this.me.preMove(dir, PRE_MOVE_DISTANCE);
+
+    this.me.preMove(dir, PRE_MOVE_DISTANCE, () => {
+      if (
+        !this.mapGridManager.isTileWalkable(this.me, dir.x, dir.y, TILE_SIZE)
+      ) {
+        this.me.reversePreMove();
+      }
+    });
 
     const action = {
       type: "move",

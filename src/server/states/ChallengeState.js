@@ -8,6 +8,9 @@ const {
   PLAYER_SIZE,
   TILE_SIZE,
 } = require("../../shared/config");
+const MapManager = require("../../shared/mapManager");
+const worldMap = require("../maps/challenge/1/sampleMapChallenge");
+const MapGridManager = require("../../shared/mapGridManager");
 
 const db = new DatabaseManager();
 
@@ -15,22 +18,19 @@ class State extends schema.Schema {
   constructor(presenceEmit, challengeData) {
     super();
 
-    this.lethals = challengeData.lethals;
-    this.meta = challengeData.meta;
     this.startPosition = challengeData.startPosition;
 
-    this.meta.size = CHALLENGE_META.size;
-    this.lethals.forEach(
-      (lethal) => (lethal.size = CHALLENGE_OBSTACLES[0].size)
-    );
+    this.mapManager = new MapManager(this, worldMap);
+    this.mapLayers = this.mapManager.getWorldMap();
+    this.mapGridManager = new MapGridManager(this);
+    this.worldGrid = this.mapGridManager.createWorldGrid();
 
-    this.wizard = new Wizard(
-      "0", // can be removed I suppose
-      {
-        x: this.startPosition.x,
-        y: this.startPosition.y,
-      }
-    );
+    this.mapGridManager.addLayersToGrid(this.mapLayers);
+
+    this.wizard = new Wizard("0", {
+      x: this.startPosition.x,
+      y: this.startPosition.y,
+    });
 
     this.challengeData = challengeData;
     this.presenceEmit = presenceEmit;
@@ -51,43 +51,32 @@ class State extends schema.Schema {
   playerMove(dir) {
     if (!this.wizard) return;
 
+    if (
+      !this.mapGridManager.isTileWalkable(this.wizard, dir.x, dir.y, TILE_SIZE)
+    ) {
+      return;
+    }
+
     this.wizard.move(dir.x, dir.y, TILE_SIZE);
+
+    this.handleTile(this.wizard, this.wizard.x, this.wizard.y);
   }
 
-  update() {
-    if (!this.wizard || this.challengeState !== -1) return;
+  handleTile(player, x, y) {
+    const { r, c } = this.mapGridManager.getRowColumnFromCoords(x, y);
+    const tile = this.worldGrid[r][c];
 
-    this.checkObstaclesCollision();
-    this.checkMetaCollision();
-  }
-
-  checkObstaclesCollision() {
-    this.lethals.forEach((lethal) => {
-      if (this.isColliding(this.wizard, lethal)) {
-        this.challengeState = 0;
-        db.killWizard(this.owner, this.wizardId);
-        this.presenceEmit("wizardDied");
-        console.log("Lost a challenge");
-      }
-    });
-  }
-
-  checkMetaCollision() {
-    if (this.isColliding(this.wizard, this.meta)) {
+    if (tile === "let") {
+      this.challengeState = 0;
+      db.killWizard(this.owner, this.wizardId);
+      this.presenceEmit("wizardDied");
+      console.log("Lost a challenge");
+    } else if (tile === "met") {
       db.setCompletedDailyChallenge(this.owner, this.wizardId);
       this.challengeState = 1;
 
       console.log("Won a challenge");
     }
-  }
-
-  isColliding(bodyA, bodyB) {
-    return (
-      bodyA.x < bodyB.x + bodyB.size &&
-      bodyA.x + bodyA.size > bodyB.x &&
-      bodyA.y < bodyB.y + bodyB.size &&
-      bodyA.size + bodyA.y > bodyB.y
-    );
   }
 }
 schema.defineTypes(State, {

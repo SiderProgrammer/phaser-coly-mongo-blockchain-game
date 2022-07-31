@@ -44,7 +44,7 @@ exports.default = class GameRoom extends Room {
 
   async setDaysHandler() {
     // ! implementation just for now
-    // Maybe we can move part of this code to server node-cron
+    // Maybe we can move part of this code to server node-cron, we'll see later
     const dayCount =
       Math.floor(
         (Date.now() - this.gameStateDB.gameStartTimestamp) /

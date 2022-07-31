@@ -34,6 +34,10 @@ export default class Preload extends Phaser.Scene {
     });
 
     this.load.tilemapTiledJSON("worldMap", `tilemaps/sampleMap.json`);
+    this.load.tilemapTiledJSON(
+      "challengeMap",
+      `tilemaps/sampleMapChallenge.json`
+    );
     this.load.image("tiles32x32", `tilesets/tiles32x32.png`);
 
     this.audioData = SoundManager.getAudioData();

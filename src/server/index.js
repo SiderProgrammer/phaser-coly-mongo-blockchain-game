@@ -7,8 +7,8 @@ const Challenge = require("./rooms/Challenge").default;
 const DatabaseManager = require("./db/databaseManager");
 const { SERVER_PORT } = require("../shared/config");
 const path = require("path");
-const cron = require("node-cron");
-const MapManager = require("./map/mapManager");
+//const cron = require("node-cron");
+const MapManager = require("../shared/mapManager");
 
 const port = process.env.PORT || SERVER_PORT;
 const host = "0.0.0.0";
@@ -41,7 +41,7 @@ gameServer.define("game", Game);
 gameServer.define("challenge", Challenge);
 
 const databaseManager = new DatabaseManager();
-const mapManager = new MapManager();
+//const mapManager = new MapManager();
 
 // cron.schedule("*/2 * * * *", () => {  // ! it is handled in game room
 //   // ? every 10 minutes
@@ -62,7 +62,7 @@ app.get("/getAllPlayers", databaseManager.getAllPlayers);
 app.get("/getGameState", databaseManager.getGameState);
 app.get("/getChallenge", databaseManager.getChallenge);
 app.get("/getAllCollectedObjects", databaseManager.getAllCollectedObjects);
-app.get("/getObstacles", mapManager.fetchObstacles.bind(mapManager));
+//app.get("/getObstacles", mapManager.fetchObstacles.bind(mapManager));
 // app.use("/colyseus", monitor());
 
 gameServer.listen(port, host, undefined, () =>

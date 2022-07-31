@@ -7,6 +7,7 @@ import {
   WORLD_SIZE,
 } from "../../shared/config";
 import MapGridManager from "../../shared/mapGridManager";
+import MapManager from "../../shared/mapManager";
 import Button from "../components/Button";
 import InputManager from "../components/InputManager";
 import SoundManager from "../components/SoundManager";
@@ -16,6 +17,7 @@ import {
   GET_OBSTACLES,
 } from "../services/requests/requests";
 import { WORLD_SCENE } from "./currentScenes";
+import worldMap from "../assets/tilemaps/sampleMap";
 
 class World extends Phaser.Scene {
   constructor() {
@@ -28,7 +30,7 @@ class World extends Phaser.Scene {
     WORLD_SCENE.setScene(this);
     this.server = server;
     this.onPlayChallenge = onPlayChallenge;
-
+    this.isWorld = true; // just for now
     this.gw = this.game.renderer.width;
     this.gh = this.game.renderer.height;
 
@@ -36,7 +38,10 @@ class World extends Phaser.Scene {
     this.me = null;
 
     const collectedObjects = await (await GET_ALL_COLLECTED_OBJECTS()).json();
-    const obstacles = await (await GET_OBSTACLES()).json();
+    // const obstacles = await (await GET_OBSTACLES()).json();
+    this.mapManager = new MapManager(this, worldMap);
+    this.mapLayers = this.mapManager.getWorldMap();
+    this.mapManager.removeCollectedObjects(collectedObjects);
 
     this.inputManager = new InputManager(this);
 
@@ -70,7 +75,9 @@ class World extends Phaser.Scene {
 
     this.mapGridManager = new MapGridManager(this);
     this.worldGrid = this.mapGridManager.createWorldGrid();
-    this.mapGridManager.addLayersToGrid({ obstacles });
+    this.mapGridManager.addLayersToGrid({
+      obstacles: this.mapLayers.obstacles,
+    });
     this.playersSavedState.forEach((player) => {
       this.mapGridManager.addWizardsToGrid(player.wizards);
     });

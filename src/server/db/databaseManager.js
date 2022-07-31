@@ -31,7 +31,7 @@ class DatabaseManager {
 
           GameState.create({
             day: 1,
-            dayDuration: 1000 * 60 * 1, // 10 minutes
+            dayDuration: 1000 * 60 * 10, // 10 minutes
             gameStartTimestamp: Date.now(),
           });
 
@@ -51,11 +51,6 @@ class DatabaseManager {
               x: CHALLENGE_PLAYER.x,
               y: CHALLENGE_PLAYER.y,
             },
-            // TODO: remove data from public files
-            lethals: [
-              { x: CHALLENGE_OBSTACLES[0].x, y: CHALLENGE_OBSTACLES[0].y },
-            ],
-            meta: { x: CHALLENGE_META.x, y: CHALLENGE_META.y },
           };
 
           Challenge.insertMany([
@@ -116,8 +111,6 @@ class DatabaseManager {
           });
       });
   }
-
-
 
   createPlayer(req, res) {
     const { address } = req.body;
@@ -296,9 +289,7 @@ class DatabaseManager {
   }
 
   getDayQuery(day) {
-    return Days.findOne({ day })
-    .lean()
-    .select("-_id") // __v
+    return Days.findOne({ day }).lean().select("-_id"); // __v
   }
 
   getPlayerQuery(address) {

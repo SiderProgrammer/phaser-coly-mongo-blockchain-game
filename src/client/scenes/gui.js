@@ -38,14 +38,14 @@ export default class Gui extends Phaser.Scene {
 
     if (wizard.dailyChallengeCompleted) {
       wizardManager.setChallengeState("completed");
+    } else if (wizard.isAlive) {
+      wizardManager.setChallengeState("uncompleted");
     }
 
     const id = WORLD_SCENE.SCENE.me.getSelectedWizardId();
-    if (id === i) {
-      wizardManager.handlePlayChallengeButton();
-    }
 
     this.wizardsManagers[id].setState("playing");
+    this.wizardsManagers[id].handlePlayChallengeButton();
   }
 
   addPlayer(player) {

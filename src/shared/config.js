@@ -41,8 +41,8 @@ const CHALLENGE_OBSTACLES = [
 ];
 
 const CHALLENGE_PLAYER = {
-  x: HUD_WIDTH / 2 + VIEWPORT_SIZE.WIDTH / 2,
-  y: VIEWPORT_SIZE.HEIGHT - 100,
+  x: TILE_SIZE * 20 + PLAYER_SIZE / 2,
+  y: TILE_SIZE * 18 + PLAYER_SIZE / 2,
 };
 
 module.exports = {

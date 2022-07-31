@@ -15,8 +15,6 @@ exports.default = class ChallengeRoom extends Room {
       new ChallengeState(this.presenceEmit.bind(this), challengeData)
     );
 
-    this.setSimulationInterval(() => this.state.update());
-
     this.onMessage("*", (client, type, message) => {
       switch (type) {
         case "move":

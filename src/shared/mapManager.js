@@ -1,8 +1,7 @@
-const mapData = require("./sampleMap");
-
 class MapManager {
-  constructor(scene) {
+  constructor(scene, map) {
     this.scene = scene;
+    this.map = map;
 
     this.mapLayers = {
       obstacles: [],
@@ -10,8 +9,8 @@ class MapManager {
       objects: [],
       objects2: [],
       objects3: [],
+      meta: [],
     };
-
     this.setMapLayers();
   }
 
@@ -33,10 +32,10 @@ class MapManager {
 
   setMapLayers() {
     Object.keys(this.mapLayers).forEach((layer) => {
-      const layerToConvert = mapData.layers.find(
+      const layerToConvert = this.map.layers.find(
         (_layer) => _layer.name === layer
       );
-
+      if (!layerToConvert) return;
       this.mapLayers[layer] = this.convertMapLayerFromJS(layerToConvert);
     });
   }
@@ -67,9 +66,9 @@ class MapManager {
     return this.mapLayers;
   }
 
-  fetchObstacles(req, res) {
-    res.status(200).json(this.mapLayers.obstacles);
-  }
+  // fetchObstacles(req, res) {
+  //   res.status(200).json(this.mapLayers.obstacles);
+  // }
 }
 
 module.exports = MapManager;

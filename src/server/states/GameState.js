@@ -3,9 +3,9 @@ const { CollectableObject } = require("../entities/Object");
 const schema = require("@colyseus/schema");
 const DatabaseManager = require("../db/databaseManager");
 const { TILE_SIZE } = require("../../shared/config");
-const MapManager = require("../map/mapManager");
+const MapManager = require("../../shared/mapManager");
 const MapGridManager = require("../../shared/mapGridManager");
-
+const worldMap = require("../maps/world/sampleMap");
 const db = new DatabaseManager();
 
 class State extends schema.Schema {
@@ -26,7 +26,7 @@ class State extends schema.Schema {
       this.mapGridManager.addWizardsToGrid(player.wizards)
     );
 
-    this.mapManager = new MapManager(this);
+    this.mapManager = new MapManager(this, worldMap);
     this.mapLayers = this.mapManager.getWorldMap();
     this.mapManager.removeCollectedObjects(collectedObjects);
     this.mapGridManager.addLayersToGrid(this.mapLayers);

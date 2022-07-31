@@ -149,6 +149,7 @@ export default class WizardManager {
   }
 
   handlePlayChallengeButton() {
+    console.log(this.currentChallengeState);
     if (
       this.currentChallengeState === "dead" ||
       this.currentChallengeState === "completed"

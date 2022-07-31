@@ -36,7 +36,6 @@ class MapGridManager {
         this.scene.worldGrid[tile.r][tile.c] = sign;
       });
     }
-   
   }
 
   addWizardsToGrid(wizards) {
@@ -95,7 +94,9 @@ class MapGridManager {
 
     const tile = this.scene.worldGrid[r][c];
 
-    return tile === "" || tile === "let" || tile.includes("obj");
+    return (
+      tile === "" || tile === "let" || tile.includes("obj") || tile === "met"
+    );
   }
 
   isTileOutOfBounds(r, c) {
