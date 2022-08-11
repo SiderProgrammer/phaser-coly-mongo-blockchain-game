@@ -1,6 +1,6 @@
 class Wizard extends Phaser.GameObjects.Sprite {
   // TODO : change this class to a container
-  constructor(id, scene, x, y, sprite, name) {
+  constructor(id, scene, x, y, sprite, name, isMe) {
     super(scene, x, y, sprite);
     scene.add.existing(this);
     this.scene = scene;
@@ -12,6 +12,7 @@ class Wizard extends Phaser.GameObjects.Sprite {
     this.moveTween = null;
     this.preMoveDir = {};
 
+    this.movesLeft = 0;
     this.collectedObjects = {
       1: -1,
       2: -1,
@@ -20,7 +21,7 @@ class Wizard extends Phaser.GameObjects.Sprite {
 
     this.showName();
     this.on("animationcomplete", ({ key }) => {
-      if (!key.includes("pre")) this.play("idle");
+      if (!key.includes("pre") && !isMe) this.play("idle");
     });
   }
 

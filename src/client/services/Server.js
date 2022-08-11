@@ -88,6 +88,13 @@ export default class Server {
       GUI_SCENE.SCENE.handleUpdate(wizard);
     }
 
+    if (
+      changed.find((change) => change.field === "movesLeft") &&
+      this.isMyID(player.id)
+    ) {
+      HUD_SCENE.SCENE.updateMovesLeft(wizard);
+    }
+
     WORLD_SCENE.SCENE.handleWizardChanged(wizard, player.id);
   }
 

@@ -2,10 +2,15 @@ const { Player } = require("../entities/Player");
 const { CollectableObject } = require("../entities/Object");
 const schema = require("@colyseus/schema");
 const DatabaseManager = require("../db/databaseManager");
-const { TILE_SIZE } = require("../../shared/config");
+const {
+  TILE_SIZE,
+  WORLD_ROWS_COUNT,
+  WORLD_COLUMNS_COUNT,
+} = require("../../shared/config");
 const MapManager = require("../../shared/mapManager");
 const MapGridManager = require("../../shared/mapGridManager");
 const worldMap = require("../maps/world/sampleMap");
+const { randomInRange } = require("../../shared/utils");
 const db = new DatabaseManager();
 
 class State extends schema.Schema {
@@ -14,7 +19,7 @@ class State extends schema.Schema {
     this.day = gameState.day;
     this.daySlogan = gameState.slogan;
 
-    this.playersFromDB = this.getPlayersFromDB(playersFromDB); // ? needed to prevent players overlapping
+    this.playersFromDB = this.getPlayersFromDB(playersFromDB);
     this.players = new schema.MapSchema();
     this.wizardsAliveCount = 0;
     this.wizardsCount = 0;
@@ -91,12 +96,56 @@ class State extends schema.Schema {
 
       const player = new Player(id, address);
       player.addWizards(state.wizards);
+
+      if (state.wizards[0].x === 0) {
+        // ! NEW PLAYER
+
+        player.wizards.forEach((wizard, i) => {
+          const { x, y } = this.getNewSpawnPosition();
+
+          // I need it here to prevent problems with pos generation
+          this.mapGridManager.addWizardToGridAtXY(x, y);
+
+          wizard.x = x;
+          wizard.y = y;
+
+          state.wizards[i].x = x;
+          state.wizards[i].y = y;
+        });
+      }
       this.players.set(id, player);
 
       this.mapGridManager.addWizardsToGrid(state.wizards);
 
       this.updateWizardsCounter(state.wizards); // TODO : fix it
     });
+  }
+
+  generateRandomCenterPosition() {
+    const x = randomInRange(
+      WORLD_ROWS_COUNT / 4,
+      WORLD_ROWS_COUNT - WORLD_ROWS_COUNT / 4
+    );
+    const y = randomInRange(
+      WORLD_COLUMNS_COUNT / 4,
+      WORLD_COLUMNS_COUNT - WORLD_COLUMNS_COUNT / 4
+    );
+    return { x, y };
+  }
+  getNewSpawnPosition() {
+    let x,
+      y = 0;
+
+    do {
+      const newPos = this.generateRandomCenterPosition();
+      x = newPos.x;
+      y = newPos.y;
+    } while (this.worldGrid[x][y] !== "");
+
+    return {
+      x: TILE_SIZE / 2 + x * TILE_SIZE,
+      y: TILE_SIZE / 2 + y * TILE_SIZE,
+    };
   }
 
   playerRemove(id) {
@@ -152,6 +201,7 @@ class State extends schema.Schema {
       const objectType = tile[tile.length - 1]; // 1 / 2 / 3
 
       db.increaseWizardObjectsCount(
+        // TODO : move it to playerRemove method
         player.address,
         player.getSelectedWizardId(),
         objectType

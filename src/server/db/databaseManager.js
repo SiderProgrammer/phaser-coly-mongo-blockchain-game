@@ -131,13 +131,14 @@ class DatabaseManager {
 
           function getGeneratedWizard(i) {
             return {
-              x: tileSize / 2 + Math.floor(Math.random() * columns) * tileSize,
-              y: tileSize / 2 + Math.floor(Math.random() * rows) * tileSize,
+              x: 0, //tileSize / 2 + Math.floor(Math.random() * columns) * tileSize, // 0
+              y: 0, //tileSize / 2 + Math.floor(Math.random() * rows) * tileSize, // 0
               name: sampleNames[i] + "_" + address, // + seed
               isAlive: true,
               dailyChallengeCompleted: false,
               collectedObjectsCount: { 1: 0, 2: 0, 3: 0 },
               player: player.id,
+              movesLeft: 20,
             };
           }
 
@@ -219,6 +220,7 @@ class DatabaseManager {
         wizards.forEach((wizard, i) => {
           state.wizards[i].x = wizard.x;
           state.wizards[i].y = wizard.y;
+          state.wizards[i].movesLeft = wizard.movesLeft;
           state.wizards[i].save(); // ? improve saving code
         });
       })

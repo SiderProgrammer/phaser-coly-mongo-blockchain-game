@@ -25,6 +25,7 @@ export default class Hud extends Phaser.Scene {
     this.addDays();
     this.addSlogan();
     this.addWizardsLeft();
+    this.addMovesLeft();
     this.addCollectedObjects();
   }
 
@@ -41,23 +42,39 @@ export default class Hud extends Phaser.Scene {
   }
 
   updateSlogan(newSlogan) {
-    this.slogan.setText(newSlogan)
+    this.slogan.setText(newSlogan);
   }
 
   updateDay(newDay) {
     this.day.setText(`DAY ${newDay}`);
   }
 
-
   updateCollectedObjects(obj) {
     const wizard = WORLD_SCENE.SCENE.me.getWizardById(obj.wizardId);
     if (wizard.collectedObjects[obj.type] !== -1) {
+      // type = 1 / 2 / 3
       SoundManager.play("ObjectCollect");
     }
     wizard.collectedObjects[obj.type] = obj.value; // TODO : move it to world scene
 
     const currentWizardID = WORLD_SCENE.SCENE.me.getSelectedWizardId();
     this.updateCollectedObjectsText(currentWizardID);
+  }
+
+  updateMovesLeft(_wizard) {
+    const wizard = WORLD_SCENE.SCENE.me.getWizardById(_wizard.id);
+
+    wizard.movesLeft = _wizard.movesLeft; // TODO : move it to world scene
+
+    const currentWizardID = WORLD_SCENE.SCENE.me.getSelectedWizardId();
+    this.updateMovesLeftText(currentWizardID);
+  }
+
+  updateMovesLeftText(wizardId) {
+    const currentWizard = WORLD_SCENE.SCENE.me.getWizardById(
+      wizardId.toString()
+    );
+    this.movesLeft.setText(`Moves left: ${currentWizard.movesLeft}`);
   }
 
   updateCollectedObjectsText(wizardId) {
@@ -99,6 +116,13 @@ export default class Hud extends Phaser.Scene {
         font: "15px Arial",
       })
       .setOrigin(0.5, 1);
+  }
+  addMovesLeft() {
+    this.movesLeft = this.add
+      .text(this.width / 2 + 150, this.height / 2, "Moves left:", {
+        font: "25px Arial",
+      })
+      .setOrigin(0.5);
   }
   addCollectedObjects() {
     this.collectedObjects2 = this.add

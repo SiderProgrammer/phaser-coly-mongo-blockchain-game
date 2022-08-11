@@ -2,7 +2,7 @@ import { PLAYER_SIZE, PRE_MOVE_DISTANCE } from "../../shared/config";
 import Wizard from "./Wizard";
 
 class Player {
-  constructor(scene, sessionId, walletAddress, isMe) {
+  constructor(scene, sessionId, walletAddress, isMe = false) {
     this.scene = scene;
     this.sessionId = sessionId;
     this.walletAddress = walletAddress;
@@ -28,7 +28,8 @@ class Player {
         _wizard.x,
         _wizard.y,
         "player",
-        _wizard.name
+        _wizard.name,
+        this.isMe
       );
 
       wizard.setDisplaySize(PLAYER_SIZE, PLAYER_SIZE);

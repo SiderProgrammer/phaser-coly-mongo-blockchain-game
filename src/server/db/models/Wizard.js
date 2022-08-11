@@ -12,6 +12,7 @@ const wizardSchema = new mongoose.Schema({
     2: { type: "Number" },
     3: { type: "Number" },
   },
+  movesLeft: Number,
   player: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Player",

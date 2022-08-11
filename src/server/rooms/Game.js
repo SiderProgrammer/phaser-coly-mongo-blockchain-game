@@ -14,7 +14,7 @@ exports.default = class GameRoom extends Room {
 
     this.gameStateDB = await db.getGameStateQuery();
 
-    await this.setDaysHandler();
+    //await this.setDaysHandler();
     const collectedObjects = await db.getAllCollectedObjectsQuery();
     const playersFromDB = await db.getAllPlayersQuery();
     this.setState(

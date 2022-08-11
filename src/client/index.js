@@ -6,6 +6,7 @@ import Gui from "./scenes/gui";
 import { WORLD_SIZE } from "../shared/config";
 import Hud from "./scenes/hud";
 import Preload from "./scenes/preload";
+import { CREATE_PLAYER } from "./services/requests/requests";
 
 const config = {
   type: Phaser.AUTO,
@@ -25,6 +26,7 @@ const config = {
 // ? just for dev purposes
 const address = document.getElementById("wallet-address");
 const confirm = document.getElementById("confirm-address");
+const spawnWizards = document.getElementById("spawn-wizards");
 
 confirm.onclick = () => {
   window.walletAddress = address.value;
@@ -32,4 +34,8 @@ confirm.onclick = () => {
   confirm.style.display = "none";
 
   new Phaser.Game(config);
+};
+
+spawnWizards.onclick = () => {
+  CREATE_PLAYER({ address: Math.random() * 10000 });
 };

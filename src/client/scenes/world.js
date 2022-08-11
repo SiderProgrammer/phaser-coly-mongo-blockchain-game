@@ -92,13 +92,23 @@ class World extends Phaser.Scene {
     SoundManager.play("BackgroundMusic", { loop: true });
   }
 
+  update() {
+    if (!this.me) return;
+    this.inputManager && this.inputManager.update();
+
+    this.me.wizards.forEach((wizard) => {
+      // we can handle it better
+      if (wizard.canMove) wizard.play("idle", true);
+    });
+  }
+
   removeTileFromMap(c, r, type) {
     this.map.removeTileAt(c, r, true, true, this.layers["objectsLayer" + type]);
   }
 
-  playerMoved(dir) {
-    const wizardMoved = this.me.getSelectedWizard();
-    if (!wizardMoved.canMove) return;
+  playerMoved(dir, wizardMoved) {
+    // const wizardMoved = this.me.getSelectedWizard();
+    // if (!wizardMoved.canMove) return;
 
     SoundManager.play("CharacterMove");
 

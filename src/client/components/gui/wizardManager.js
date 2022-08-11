@@ -143,13 +143,13 @@ export default class WizardManager {
 
       WORLD_SCENE.SCENE.me.setSelectedWizardId(this.id); // TODO : remove it, handle it with state change from back-end
       HUD_SCENE.SCENE.updateCollectedObjectsText(this.id); // TODO : remove it, handle it with state change from back-end
+      HUD_SCENE.SCENE.updateMovesLeftText(this.id); // TODO : remove it, handle it with state change from back-end
     });
 
     return stateText;
   }
 
   handlePlayChallengeButton() {
-    console.log(this.currentChallengeState);
     if (
       this.currentChallengeState === "dead" ||
       this.currentChallengeState === "completed"

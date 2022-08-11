@@ -53,6 +53,11 @@ class MapGridManager {
     this.scene.worldGrid[r][c] = "";
   }
 
+  addWizardToGridAtXY(x, y) {
+    const { r, c } = this.getRowColumnFromCoords(x, y);
+    this.scene.worldGrid[r][c] = "wiz";
+  }
+
   addWizardToGrid(wizard) {
     const { r, c } = this.getRowColumnFromCoords(wizard.x, wizard.y);
     this.scene.worldGrid[r][c] = "wiz";

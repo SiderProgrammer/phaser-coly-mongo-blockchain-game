@@ -29,11 +29,12 @@ class Player extends Schema {
     //if (!wizard || !wizard.isAlive) return;
 
     wizard.move(vectorX, vectorY, speed);
+    wizard.movesLeft--;
   }
 
   canMove() {
     const wizard = this.getSelectedWizard();
-    if (!wizard || !wizard.isAlive) return false;
+    if (!wizard || !wizard.isAlive || wizard.movesLeft <= 0) return false;
     return true;
   }
 
