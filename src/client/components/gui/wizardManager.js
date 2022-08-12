@@ -126,6 +126,7 @@ export default class WizardManager {
       .setOrigin(1, 0.5);
 
     stateText.setInteractive().on("pointerup", () => {
+      if (this.scene.server.isRegistrationPhase) return;
       if (this.isInChallenge()) return;
       if (this.currentState === "dead") return;
 
@@ -232,6 +233,7 @@ export default class WizardManager {
     )
       .setOrigin(0.5, 0.5)
       .onClick(() => {
+        if (this.scene.server.isRegistrationPhase) return;
         if (this.isInChallenge()) return;
         this.openSettings();
       });

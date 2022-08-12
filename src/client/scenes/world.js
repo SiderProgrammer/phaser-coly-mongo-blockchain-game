@@ -90,10 +90,53 @@ class World extends Phaser.Scene {
     );
 
     SoundManager.play("BackgroundMusic", { loop: true });
+
+    if (this.server.isRegistrationPhase) {
+      this.registrationPhaseTimer = this.add
+        .text(this.gw / 2, 250, this.getRegistrationPhaseRemainingTime(), {
+          font: "50px Arial",
+        })
+        .setOrigin(0.5)
+        .setScrollFactor(0, 0)
+        .setDepth(1000);
+
+      this.registrationPhaserCountdown = this.time.addEvent({
+        callback: () => {
+          if (this.server.isRegistrationPhase) {
+            this.registrationPhaseTimer.setText(
+              this.getRegistrationPhaseRemainingTime()
+            );
+          }
+        },
+
+        delay: 1000,
+        repeat: -1,
+      });
+    }
+  }
+
+  getRegistrationPhaseRemainingTime() {
+    const newDateTime = new Date(this.server.registrationPhaseRemainingTime);
+    this.server.registrationPhaseRemainingTime -= 1000;
+    if (this.server.registrationPhaseRemainingTime <= 0) {
+      this.registrationPhaserCountdown.remove();
+      this.registrationPhaseTimer.destroy();
+      this.server.isRegistrationPhase = false;
+    }
+    return (
+      "Time to start: " +
+      (newDateTime.getHours() - 1) +
+      "h" +
+      newDateTime.getMinutes() +
+      "m" +
+      newDateTime.getSeconds() +
+      "s"
+    );
   }
 
   update() {
-    if (!this.me) return;
+    if (!this.me || this.server.isRegistrationPhase) return;
+
     this.inputManager && this.inputManager.update();
 
     this.me.wizards.forEach((wizard) => {
@@ -142,7 +185,10 @@ class World extends Phaser.Scene {
     const button = new Button(this, 350, this.gh - 60, "challengeButton");
     button.setScrollFactor(0, 0).setDepth(1000);
 
-    button.onClick(() => this.onPlayChallenge(this.me.getSelectedWizardId()));
+    button.onClick(() => {
+      if (this.server.isRegistrationPhase) return;
+      this.onPlayChallenge(this.me.getSelectedWizardId());
+    });
 
     this.playChallengeButton = button;
     this.showPlayChallengeButton(false);

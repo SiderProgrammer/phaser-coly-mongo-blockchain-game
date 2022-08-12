@@ -5,6 +5,7 @@ const gameStateSchema = new mongoose.Schema({
     type: Number,
     index: true,
   },
+  registrationPhaseDuration: Number,
   dayDuration: Number,
   gameStartTimestamp: Number,
 });

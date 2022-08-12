@@ -1,20 +1,10 @@
-Hi! Ok, so here’s some instruction for you to work on. Let me know any questions you might have and your thought on below consideration. Can you please also take some time and improve the way wizards are killed so that they actually are eliminated when they should and that it update states correctly to clients?
-
-SPAWN LOCATIONS
-
-Currently, how does spawn location work? We need to make sure that spawning does not happen on same tiles as lethals or obsacles, also , we would like spawns to be somewhat centered on the map.. What are your suggestion, how about we add a Tiled layer to the world map named spawn, where we can choose possible locations, and when a character spawn, it will randomly spawn at one free tile? This way we would be able to have full control over where character will spawn.
-
-TWO GAME PHASES:
+Can you please also take some time and improve the way wizards are killed so that they actually are eliminated when they should and that it update states correctly to clients?
 
 REGISTRATION PHASE
 
 Users are able to login and get the character(s) spawned to their locations, but not do anyting else until actual game begins. No challenge, no moving no nothing.
 
 During registration phase, display a message that has a count down to the game start time..
-
-GAME PHASE
-
-Actual game begins and first day begins. No new registrations are allowed. Already registered players will be able to login/logout freely and complete their daily challenge and so on.
 
 //
 MOVEMENT IS NOT CONTINOUS WHEN OTHER PLAYER LOOK AT YOU

@@ -14,23 +14,46 @@ const {
   CHALLENGE_META,
 } = require("../../shared/config");
 const Challenge = require("./models/Challenge");
+const worldMap = require("../maps/world/sampleMap");
+const { randomInRange } = require("../../shared/utils");
+const MapGridManager = require("../../shared/mapGridManager");
+const MapManager = require("../../shared/mapManager");
+const Spawner = require("./helpers/Spawner");
 
 const DATABASE_URL = `mongodb+srv://${srvConfig.USERNAME}:${srvConfig.PASSWORD}@${srvConfig.HOST}/?retryWrites=true&w=majority`;
 
 class DatabaseManager {
-  constructor() {}
+  constructor() {
+    this.spawner = new Spawner(this);
+  }
   connectDatabase() {
     mongoose
       .connect(DATABASE_URL, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
       })
-      .then(() => {
+      .then(async () => {
+        this.mapGridManager = new MapGridManager(this);
+        this.worldGrid = this.mapGridManager.createWorldGrid();
+
+        const playersFromDB = await this.getAllPlayersQuery();
+
+        playersFromDB.forEach((player) =>
+          this.mapGridManager.addWizardsToGrid(player.wizards)
+        );
+
+        this.mapManager = new MapManager(this, worldMap);
+        this.mapLayers = this.mapManager.getWorldMap();
+        this.mapGridManager.addLayersToGrid(this.mapLayers);
+
         GameState.exists({}).then((isExsisting) => {
           if (isExsisting) return;
 
+          const registrationPhaseDuration = 1000 * 60; // 1 minute
+
           GameState.create({
             day: 1,
+            registrationPhaseDuration: registrationPhaseDuration,
             dayDuration: 1000 * 60 * 10, // 10 minutes
             gameStartTimestamp: Date.now(),
           });
@@ -125,22 +148,23 @@ class DatabaseManager {
           // TODO : Handle Errors
 
           const sampleNames = ["Eric", "Patrick", "John", "Caroline"];
-          const tileSize = PLAYER_SIZE;
-          const columns = WORLD_SIZE.WIDTH / tileSize;
-          const rows = WORLD_SIZE.HEIGHT / tileSize;
 
-          function getGeneratedWizard(i) {
+          const getGeneratedWizard = (i) => {
+            const { x, y } = this.spawner.getNewSpawnPosition();
+
+            this.mapGridManager.addWizardToGridAtXY(x, y);
+
             return {
-              x: 0, //tileSize / 2 + Math.floor(Math.random() * columns) * tileSize, // 0
-              y: 0, //tileSize / 2 + Math.floor(Math.random() * rows) * tileSize, // 0
-              name: sampleNames[i] + "_" + address, // + seed
+              x,
+              y,
+              name: sampleNames[i] + "_" + address,
               isAlive: true,
               dailyChallengeCompleted: false,
               collectedObjectsCount: { 1: 0, 2: 0, 3: 0 },
               player: player.id,
-              movesLeft: 20,
+              movesLeft: 200,
             };
-          }
+          };
 
           //const generatedWizards = // loop 4x getGeneratedWizard(i)
 
@@ -268,8 +292,8 @@ class DatabaseManager {
 
   refreshDay(daysToAdd = 1) {
     return GameState.updateOne({}, { $inc: { day: daysToAdd } })
-      .then(this.killDelayedWizards)
-      .then(this.refreshWizardsChallenges);
+      .then(this.killDelayedWizards) //TODO:check if these work
+      .then(this.refreshWizardsChallenges); //TODO:check if these work
   }
 
   getGameStateQuery() {

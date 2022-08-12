@@ -28,7 +28,15 @@ export default class Bootstrap extends Phaser.Scene {
     this.gameState = await (await GET_GAME_STATE()).json();
     this.gameState.timeDifference = timeDifference;
 
-    this.server = new Server(this.playerAccount);
+    const registrationPhaseRemainingTime =
+      this.gameState.gameStartTimestamp +
+      this.gameState.registrationPhaseDuration -
+      Date.now();
+
+    this.server = new Server(
+      this.playerAccount,
+      registrationPhaseRemainingTime
+    );
 
     this.initAnimations();
     this.createNewGame();

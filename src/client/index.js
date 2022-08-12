@@ -37,5 +37,7 @@ confirm.onclick = () => {
 };
 
 spawnWizards.onclick = () => {
-  CREATE_PLAYER({ address: Math.random() * 10000 });
+  for (let i = 0; i < 3; i++) {
+    CREATE_PLAYER({ address: Math.floor(Math.random() * 10000) });
+  }
 };

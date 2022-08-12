@@ -14,7 +14,14 @@ exports.default = class GameRoom extends Room {
 
     this.gameStateDB = await db.getGameStateQuery();
 
-    //await this.setDaysHandler();
+    const registrationPhaseRemainingTime =
+      this.gameStateDB.gameStartTimestamp +
+      this.gameStateDB.registrationPhaseDuration -
+      Date.now();
+
+    const isRegistrationPhase = registrationPhaseRemainingTime > 0;
+
+    // await this.setDaysHandler();
     const collectedObjects = await db.getAllCollectedObjectsQuery();
     const playersFromDB = await db.getAllPlayersQuery();
     this.setState(
@@ -22,6 +29,17 @@ exports.default = class GameRoom extends Room {
     );
 
     this.state.wizardsCount = await db.countWizards();
+
+    if (isRegistrationPhase) {
+      setTimeout(async () => {
+        this.initGame();
+      }, registrationPhaseRemainingTime);
+    } else {
+      this.initGame();
+    }
+  }
+
+  async initGame() {
     this.state.wizardsAliveCount = await db.countWizards({ isAlive: true });
 
     this.presence.subscribe("wizardDied", () => this.state.subtractAlive(1));
