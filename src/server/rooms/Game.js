@@ -1,49 +1,49 @@
 const { Room } = require("colyseus");
+const {
+  calculateRegistrationPhaseRemainingTime,
+  calculateDayRemainingTime,
+} = require("../../shared/utils");
 const { GameState } = require("../states/GameState");
-const DatabaseManager = require("../db/databaseManager");
 
-const db = new DatabaseManager();
 exports.default = class GameRoom extends Room {
-  async onCreate() {
+  async onCreate({ db, gameStateDB }) {
+    this.db = db;
+    this.gameStateDB = gameStateDB;
     //   if (options.secret !== "MY-SECRET-VALUE") {
     //     throw new Error("unauthorized");
     // }
     console.log("World room created");
 
     this.autoDispose = false; // prevent from auto-closing the room when last client disconnected
-
-    this.gameStateDB = await db.getGameStateQuery();
-
     const registrationPhaseRemainingTime =
-      this.gameStateDB.gameStartTimestamp +
-      this.gameStateDB.registrationPhaseDuration -
-      Date.now();
-
+      calculateRegistrationPhaseRemainingTime(gameStateDB);
     const isRegistrationPhase = registrationPhaseRemainingTime > 0;
 
-    // await this.setDaysHandler();
-    const collectedObjects = await db.getAllCollectedObjectsQuery();
-    const playersFromDB = await db.getAllPlayersQuery();
+    await this.setDaysHandler();
+
+    const collectedObjects = await this.db.getAllCollectedObjectsQuery();
+    const playersFromDB = await this.db.getAllPlayersQuery();
     this.setState(
-      new GameState(playersFromDB, collectedObjects, this.gameStateDB)
+      new GameState(db, playersFromDB, collectedObjects, this.gameStateDB)
     );
 
-    this.state.wizardsCount = await db.countWizards();
-
-    if (isRegistrationPhase) {
-      setTimeout(async () => {
-        this.initGame();
-      }, registrationPhaseRemainingTime);
-    } else {
-      this.initGame();
-    }
-  }
-
-  async initGame() {
-    this.state.wizardsAliveCount = await db.countWizards({ isAlive: true });
+    this.state.wizardsCount = await this.db.countWizards();
+    this.state.wizardsAliveCount = await this.db.countWizards({
+      isAlive: true,
+    });
 
     this.presence.subscribe("wizardDied", () => this.state.subtractAlive(1));
 
+    if (isRegistrationPhase) {
+      setTimeout(async () => {
+        this.setActionHandler();
+      }, registrationPhaseRemainingTime);
+    } else {
+      this.setActionHandler();
+    }
+  }
+
+  setActionHandler() {
     this.onMessage("*", (client, type, message) => {
       const playerId = client.sessionId;
 
@@ -70,20 +70,18 @@ exports.default = class GameRoom extends Room {
       ) + 1;
 
     if (dayCount !== this.gameStateDB.day) {
-      await db.refreshDay(dayCount - this.gameStateDB.day);
+      await this.db.refreshDay(dayCount - this.gameStateDB.day);
+      this.gameStateDB.day = dayCount;
       this.refreshDay(dayCount);
     }
 
     function handleDayEnd() {
-      db.refreshDay().then(() => {
+      this.db.refreshDay().then(() => {
         this.refreshDay(this.state.day + 1);
       });
     }
 
-    const remainingTime =
-      this.gameStateDB.gameStartTimestamp +
-      dayCount * this.gameStateDB.dayDuration -
-      Date.now();
+    const remainingTime = calculateDayRemainingTime(this.gameStateDB);
 
     setTimeout(() => {
       handleDayEnd.call(this);
@@ -97,7 +95,7 @@ exports.default = class GameRoom extends Room {
   refreshDay(day = 1) {
     console.log("day refresh");
 
-    db.getDayQuery(day).then((dayData) => {
+    this.db.getDayQuery(day).then((dayData) => {
       this.state.killDelayedWizards();
       this.state.refreshWizardsChallenges();
       this.state.day++;
@@ -106,6 +104,7 @@ exports.default = class GameRoom extends Room {
   }
 
   onJoin(client, options) {
+    // TODO : prevent to join players who are not in database
     this.state.playerAdd(client.sessionId, options.address);
     console.log("New client joined to a world room");
   }

@@ -1,3 +1,5 @@
+import { calculateDayRemainingTime } from "../../../shared/utils";
+
 export default class Timer {
   constructor(scene, x, y, gameState, onDayRefresh) {
     this.scene = scene;
@@ -6,7 +8,7 @@ export default class Timer {
     this.gameState = gameState;
     this.onDayRefresh = onDayRefresh;
 
-    this.remainingTime = this.calculateRemainingTime();
+    this.remainingTime = calculateDayRemainingTime(gameState);
     this.time = this.addTime();
   }
 
@@ -15,25 +17,11 @@ export default class Timer {
   }
 
   start() {
-    this.countdown = this.scene.time.addEvent({
-      repeat: -1,
-      delay: 1000 * 1,
-      callback: () => this.update(),
-    });
+    this.countdown = setInterval(() => this.update(), 1000);
   }
 
   addTime() {
     return this.scene.add.text(this.x, this.y, "").setOrigin(0.5);
-  }
-
-  calculateRemainingTime() {
-    // TODO : handle it to not repeat the code in game room
-    return (
-      this.gameState.gameStartTimestamp +
-      this.gameState.day * this.gameState.dayDuration -
-      Date.now() -
-      (Date.now() - this.gameState.timeDifference)
-    );
   }
 
   getConvertedTime() {
@@ -42,10 +30,11 @@ export default class Timer {
   }
 
   update() {
-    this.remainingTime -= 1000 * 1;
+    this.remainingTime = calculateDayRemainingTime(this.gameState);
 
     if (this.remainingTime < 0) {
-      this.remainingTime = this.gameState.dayDuration;
+      this.gameState.dayCount++;
+
       this.onDayRefresh();
     }
 

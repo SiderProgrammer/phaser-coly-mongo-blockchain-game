@@ -1,3 +1,4 @@
+import { calculateRegistrationPhaseRemainingTime } from "../../shared/utils";
 import initPlayerAnims from "../anim/player";
 
 import {
@@ -22,21 +23,25 @@ export default class Bootstrap extends Phaser.Scene {
     if (!this.playerAccount.ok) {
       this.playerAccount = await CREATE_PLAYER({ address });
     }
+
     this.playerAccount = await this.playerAccount.json();
 
+    if (this.playerAccount.error) {
+      // Registration phase is finished
+      this.add
+        .text(500, 300, this.playerAccount.error, { font: "50px Arial" })
+        .setOrigin(0.5, 0.5);
+
+      return;
+    }
     const timeDifference = Date.now();
     this.gameState = await (await GET_GAME_STATE()).json();
-    this.gameState.timeDifference = timeDifference;
+    this.gameState.timeDifference = Date.now() - timeDifference;
 
-    const registrationPhaseRemainingTime =
-      this.gameState.gameStartTimestamp +
-      this.gameState.registrationPhaseDuration -
-      Date.now();
+    const isRegistrationPhase =
+      calculateRegistrationPhaseRemainingTime(this.gameState) > 0;
 
-    this.server = new Server(
-      this.playerAccount,
-      registrationPhaseRemainingTime
-    );
+    this.server = new Server(this.playerAccount, isRegistrationPhase);
 
     this.initAnimations();
     this.createNewGame();
@@ -47,16 +52,15 @@ export default class Bootstrap extends Phaser.Scene {
   createHUD() {
     this.scene.launch("hud", {
       server: this.server,
-      gameState: this.gameState,
+      gameState: this.gameState, // TODO : move to server class
     });
 
     this.scene.bringToTop("hud");
   }
-
   createGUI() {
     this.scene.launch("gui", {
       server: this.server,
-      gameState: this.gameState,
+      gameState: this.gameState, // TODO : move to server class
       player: this.playerAccount,
     });
 
@@ -67,6 +71,7 @@ export default class Bootstrap extends Phaser.Scene {
     this.scene.launch("world", {
       server: this.server,
       onPlayChallenge: this.onPlayChallenge.bind(this),
+      gameState: this.gameState, // TODO : move to server class
     });
 
     console.log("World created!");

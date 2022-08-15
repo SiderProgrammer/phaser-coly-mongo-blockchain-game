@@ -1,7 +1,7 @@
 const { Player } = require("../entities/Player");
 const { CollectableObject } = require("../entities/Object");
 const schema = require("@colyseus/schema");
-const DatabaseManager = require("../db/databaseManager");
+
 const {
   TILE_SIZE,
   WORLD_ROWS_COUNT,
@@ -11,11 +11,11 @@ const MapManager = require("../../shared/mapManager");
 const MapGridManager = require("../../shared/mapGridManager");
 const worldMap = require("../maps/world/sampleMap");
 const { randomInRange } = require("../../shared/utils");
-const db = new DatabaseManager();
 
 class State extends schema.Schema {
-  constructor(playersFromDB, collectedObjects, gameState) {
+  constructor(db, playersFromDB, collectedObjects, gameState) {
     super();
+    this.db = db;
     this.day = gameState.day;
     this.daySlogan = gameState.slogan;
 
@@ -64,7 +64,7 @@ class State extends schema.Schema {
   }
 
   updateWizardsCounter(wizards) {
-    const freshWizardsCount = db.countWizards();
+    const freshWizardsCount = this.db.countWizards();
 
     freshWizardsCount.then((count) => {
       const playerAliveWizardsCount = wizards.filter(
@@ -81,7 +81,7 @@ class State extends schema.Schema {
 
   wizardNameChanged(id, wizardId) {
     const player = this.players.get(id);
-    const newName = db.getPlayerWizardName(player.address, wizardId);
+    const newName = this.db.getPlayerWizardName(player.address, wizardId);
 
     newName.then((name) => {
       player.wizards[wizardId].name = name;
@@ -89,7 +89,7 @@ class State extends schema.Schema {
   }
 
   playerAdd(id, address) {
-    const playerSavedState = db.getPlayerQuery(address);
+    const playerSavedState = this.db.getPlayerQuery(address);
 
     playerSavedState.then((state) => {
       console.log("Player added to a world room");
@@ -150,7 +150,7 @@ class State extends schema.Schema {
 
   playerRemove(id) {
     const player = this.players.get(id);
-    db.savePlayerWizards(player.address, player.wizards);
+    this.db.savePlayerWizards(player.address, player.wizards);
     this.players.delete(id);
   }
 
@@ -196,17 +196,17 @@ class State extends schema.Schema {
     if (tile === "let") {
       player.killSelectedWizard();
       this.subtractAlive(1);
-      db.killWizard(player.address, player.getSelectedWizardId());
+      this.db.killWizard(player.address, player.getSelectedWizardId());
     } else if (tile.includes("obj")) {
       const objectType = tile[tile.length - 1]; // 1 / 2 / 3
 
-      db.increaseWizardObjectsCount(
+      this.db.increaseWizardObjectsCount(
         // TODO : move it to playerRemove method
         player.address,
         player.getSelectedWizardId(),
         objectType
       );
-      db.setObjectCollected(r, c, objectType);
+      this.db.setObjectCollected(r, c, objectType);
 
       player.getSelectedWizard().increaseCollectedObjects(objectType);
 

@@ -18,6 +18,8 @@ import {
 } from "../services/requests/requests";
 import { WORLD_SCENE } from "./currentScenes";
 import worldMap from "../assets/tilemaps/sampleMap";
+import AlignGrid from "./test";
+import { calculateRegistrationPhaseRemainingTime } from "../../shared/utils";
 
 class World extends Phaser.Scene {
   constructor() {
@@ -26,10 +28,12 @@ class World extends Phaser.Scene {
 
   preload() {}
 
-  async create({ server, onPlayChallenge }) {
+  async create({ server, onPlayChallenge, gameState }) {
     WORLD_SCENE.setScene(this);
     this.server = server;
     this.onPlayChallenge = onPlayChallenge;
+    this.gameState = gameState;
+
     this.isWorld = true; // just for now
     this.gw = this.game.renderer.width;
     this.gh = this.game.renderer.height;
@@ -100,29 +104,38 @@ class World extends Phaser.Scene {
         .setScrollFactor(0, 0)
         .setDepth(1000);
 
-      this.registrationPhaserCountdown = this.time.addEvent({
-        callback: () => {
-          if (this.server.isRegistrationPhase) {
-            this.registrationPhaseTimer.setText(
-              this.getRegistrationPhaseRemainingTime()
-            );
-          }
-        },
-
-        delay: 1000,
-        repeat: -1,
-      });
+      this.registrationPhaserCountdown = setInterval(() => {
+        if (this.registrationPhaseTimer.active) {
+          this.registrationPhaseTimer.setText(
+            this.getRegistrationPhaseRemainingTime()
+          );
+        }
+      }, 1000);
     }
+
+    // var gridConfig = {
+    //   scene: this,
+    //   cols: 5,
+    //   rows: 5,
+    //   width: this.gw,
+    //   height: this.gh,
+    // };
+    // this.aGrid = new AlignGrid(gridConfig);
+    // this.aGrid.showNumbers();
   }
 
   getRegistrationPhaseRemainingTime() {
-    const newDateTime = new Date(this.server.registrationPhaseRemainingTime);
-    this.server.registrationPhaseRemainingTime -= 1000;
-    if (this.server.registrationPhaseRemainingTime <= 0) {
-      this.registrationPhaserCountdown.remove();
+    this.registrationPhaseRemainingTime =
+      calculateRegistrationPhaseRemainingTime(this.gameState);
+    const newDateTime = new Date(this.registrationPhaseRemainingTime);
+
+    if (this.registrationPhaseRemainingTime <= 0) {
+      clearInterval(this.server.registrationPhaserCountdown);
+      this.registrationPhaseRemainingTime = 0;
       this.registrationPhaseTimer.destroy();
       this.server.isRegistrationPhase = false;
     }
+
     return (
       "Time to start: " +
       (newDateTime.getHours() - 1) +
@@ -141,6 +154,7 @@ class World extends Phaser.Scene {
 
     this.me.wizards.forEach((wizard) => {
       // we can handle it better
+      // maybe switch .canMove to = true when 90% of the movement is done, not 100%
       if (wizard.canMove) wizard.play("idle", true);
     });
   }
@@ -149,9 +163,9 @@ class World extends Phaser.Scene {
     this.map.removeTileAt(c, r, true, true, this.layers["objectsLayer" + type]);
   }
 
-  playerMoved(dir, wizardMoved) {
-    // const wizardMoved = this.me.getSelectedWizard();
-    // if (!wizardMoved.canMove) return;
+  playerMoved(dir) {
+    const wizardMoved = this.me.getSelectedWizard();
+    if (!wizardMoved.canMove || wizardMoved.movesLeft <= 0) return;
 
     SoundManager.play("CharacterMove");
 

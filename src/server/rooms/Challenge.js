@@ -4,7 +4,8 @@ const DatabaseManager = require("../db/databaseManager");
 
 const db = new DatabaseManager();
 exports.default = class ChallengeRoom extends Room {
-  async onCreate() {
+  async onCreate({ db }) {
+    this.db = db;
     //   if (options.secret !== "MY-SECRET-VALUE") {
     //     throw new Error("unauthorized");
     // }
@@ -12,7 +13,7 @@ exports.default = class ChallengeRoom extends Room {
 
     const challengeData = await db.getChallengeQuery();
     this.setState(
-      new ChallengeState(this.presenceEmit.bind(this), challengeData)
+      new ChallengeState(db, this.presenceEmit.bind(this), challengeData)
     );
 
     this.onMessage("*", (client, type, message) => {

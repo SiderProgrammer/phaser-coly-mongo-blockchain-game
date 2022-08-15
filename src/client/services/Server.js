@@ -9,7 +9,7 @@ import { WEBSOCKET_URL } from "./config";
 import { GET_ALL_PLAYERS } from "./requests/requests";
 
 export default class Server {
-  constructor(playerAccount, registrationPhaseRemainingTime) {
+  constructor(playerAccount, isRegistrationPhase) {
     this.client = new Client(WEBSOCKET_URL);
     this.events = new Phaser.Events.EventEmitter();
 
@@ -17,8 +17,8 @@ export default class Server {
     this.playerAccount = playerAccount;
     this.walletAddress = this.playerAccount.address;
 
-    this.isRegistrationPhase = registrationPhaseRemainingTime > 0;
-    this.registrationPhaseRemainingTime = registrationPhaseRemainingTime;
+    this.isRegistrationPhase = isRegistrationPhase
+ 
   }
 
   // TODO :  break HUD, GUI, World, Challenge handlers into separate files

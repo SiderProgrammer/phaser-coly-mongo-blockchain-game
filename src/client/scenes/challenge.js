@@ -63,9 +63,15 @@ class Challenge extends Phaser.Scene {
     await this.server.handleChallengeJoin(wizardId);
   }
 
-  playerMoved(dir) {
+  update() {
     if (!this.me || !this.me.canMove) return;
 
+    this.inputManager && this.inputManager.update();
+
+    if (this.me.canMove) this.me.play("idle", true);
+  }
+
+  playerMoved(dir) {
     SoundManager.play("CharacterMove");
 
     this.me.canMove = false;

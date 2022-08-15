@@ -58,14 +58,15 @@ export default class Preload extends Phaser.Scene {
   }
 
   createLoadingScreen() {
+    var width = this.cameras.main.width;
+    var height = this.cameras.main.height;
+
     var progressBar = this.add.graphics();
     var progressBox = this.add.graphics();
     progressBox.fillStyle(0x222222, 0.8);
     progressBox.fillRect(240, 270, 320, 50);
 
-    var width = this.cameras.main.width;
-    var height = this.cameras.main.height;
-
+    
     var loadingText = this.make.text({
       x: width / 2,
       y: height / 2 - 50,

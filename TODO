@@ -1,10 +1,1 @@
-Can you please also take some time and improve the way wizards are killed so that they actually are eliminated when they should and that it update states correctly to clients?
-
-REGISTRATION PHASE
-
-Users are able to login and get the character(s) spawned to their locations, but not do anyting else until actual game begins. No challenge, no moving no nothing.
-
-During registration phase, display a message that has a count down to the game start time..
-
-//
-MOVEMENT IS NOT CONTINOUS WHEN OTHER PLAYER LOOK AT YOU
+- CHECK WIZARDS LEFT COUNTER

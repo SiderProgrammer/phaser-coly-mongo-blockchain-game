@@ -1,6 +1,6 @@
 const schema = require("@colyseus/schema");
 const { Wizard } = require("../entities/Wizard");
-const DatabaseManager = require("../db/databaseManager");
+
 const {
   CHALLENGE_PLAYER,
   CHALLENGE_OBSTACLES,
@@ -12,11 +12,10 @@ const MapManager = require("../../shared/mapManager");
 const worldMap = require("../maps/challenge/1/sampleMapChallenge");
 const MapGridManager = require("../../shared/mapGridManager");
 
-const db = new DatabaseManager();
-
 class State extends schema.Schema {
-  constructor(presenceEmit, challengeData) {
+  constructor(db, presenceEmit, challengeData) {
     super();
+    this.db = db;
 
     this.startPosition = challengeData.startPosition;
 
@@ -68,11 +67,11 @@ class State extends schema.Schema {
 
     if (tile === "let") {
       this.challengeState = 0;
-      db.killWizard(this.owner, this.wizardId);
+      this.db.killWizard(this.owner, this.wizardId);
       this.presenceEmit("wizardDied");
       console.log("Lost a challenge");
     } else if (tile === "met") {
-      db.setCompletedDailyChallenge(this.owner, this.wizardId);
+      this.db.setCompletedDailyChallenge(this.owner, this.wizardId);
       this.challengeState = 1;
 
       console.log("Won a challenge");

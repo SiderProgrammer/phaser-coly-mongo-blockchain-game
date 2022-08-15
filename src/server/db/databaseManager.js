@@ -22,70 +22,70 @@ const Spawner = require("./helpers/Spawner");
 
 const DATABASE_URL = `mongodb+srv://${srvConfig.USERNAME}:${srvConfig.PASSWORD}@${srvConfig.HOST}/?retryWrites=true&w=majority`;
 
+//TODO : split these methods between files
 class DatabaseManager {
   constructor() {
-    this.spawner = new Spawner(this);
+    this.isRegistrationPhase = true;
   }
-  connectDatabase() {
-    mongoose
-      .connect(DATABASE_URL, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      })
-      .then(async () => {
-        this.mapGridManager = new MapGridManager(this);
-        this.worldGrid = this.mapGridManager.createWorldGrid();
+  async connectDatabase() {
+    await mongoose.connect(DATABASE_URL, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
 
-        const playersFromDB = await this.getAllPlayersQuery();
+    this.spawner = new Spawner(this);
 
-        playersFromDB.forEach((player) =>
-          this.mapGridManager.addWizardsToGrid(player.wizards)
-        );
+    this.mapGridManager = new MapGridManager(this);
+    this.worldGrid = this.mapGridManager.createWorldGrid();
 
-        this.mapManager = new MapManager(this, worldMap);
-        this.mapLayers = this.mapManager.getWorldMap();
-        this.mapGridManager.addLayersToGrid(this.mapLayers);
+    const playersFromDB = await this.getAllPlayersQuery();
 
-        GameState.exists({}).then((isExsisting) => {
-          if (isExsisting) return;
+    playersFromDB.forEach((player) =>
+      this.mapGridManager.addWizardsToGrid(player.wizards)
+    );
 
-          const registrationPhaseDuration = 1000 * 60; // 1 minute
+    this.mapManager = new MapManager(this, worldMap);
+    this.mapLayers = this.mapManager.getWorldMap();
+    this.mapGridManager.addLayersToGrid(this.mapLayers);
 
-          GameState.create({
-            day: 1,
-            registrationPhaseDuration: registrationPhaseDuration,
-            dayDuration: 1000 * 60 * 10, // 10 minutes
-            gameStartTimestamp: Date.now(),
-          });
+    const isExsisting = await GameState.exists({});
+    if (isExsisting) return;
 
-          Days.insertMany([
-            // for now
-            { day: 1, slogan: "First day slogan" },
-            { day: 2, slogan: "Second day slogan" },
-            { day: 3, slogan: "Third day slogan" },
-            { day: 4, slogan: "Fourth day slogan" },
-            { day: 5, slogan: "Fifth day slogan" },
-          ]);
+    const registrationPhaseDuration = 1000 * 60; // 1 minute
 
-          const challengeData = {
-            winMessage: "win",
-            loseMessage: "lose",
-            startPosition: {
-              x: CHALLENGE_PLAYER.x,
-              y: CHALLENGE_PLAYER.y,
-            },
-          };
+    await GameState.create({
+      day: 1,
+      registrationPhaseDuration: registrationPhaseDuration,
+      dayDuration: 1000 * 60 * 1, // 10 minutes
+      gameStartTimestamp: Date.now(),
+    });
 
-          Challenge.insertMany([
-            // for now
-            { ...challengeData, day: 1, dailyMessage: "first day" },
-            { ...challengeData, day: 2, dailyMessage: "second day" },
-            { ...challengeData, day: 3, dailyMessage: "third day" },
-            { ...challengeData, day: 4, dailyMessage: "fourth day" },
-            { ...challengeData, day: 5, dailyMessage: "fifth day" },
-          ]);
-        });
-      });
+    await Days.insertMany([
+      // for now
+      { day: 1, slogan: "First day slogan" },
+      { day: 2, slogan: "Second day slogan" },
+      { day: 3, slogan: "Third day slogan" },
+      { day: 4, slogan: "Fourth day slogan" },
+      { day: 5, slogan: "Fifth day slogan" },
+    ]);
+
+    const challengeData = {
+      winMessage: "win",
+      loseMessage: "lose",
+      startPosition: {
+        x: CHALLENGE_PLAYER.x,
+        y: CHALLENGE_PLAYER.y,
+      },
+    };
+
+    await Challenge.insertMany([
+      // for now
+      { ...challengeData, day: 1, dailyMessage: "first day" },
+      { ...challengeData, day: 2, dailyMessage: "second day" },
+      { ...challengeData, day: 3, dailyMessage: "third day" },
+      { ...challengeData, day: 4, dailyMessage: "fourth day" },
+      { ...challengeData, day: 5, dailyMessage: "fifth day" },
+    ]);
   }
 
   getChallenge(req, res) {
@@ -137,7 +137,10 @@ class DatabaseManager {
 
   createPlayer(req, res) {
     const { address } = req.body;
-
+    if (!this.isRegistrationPhase) {
+      res.status(401).json({ error: "Registration phase is finished" });
+      return;
+    }
     Players.exists({ address }).then((isExsisting) => {
       if (isExsisting) {
         res.sendStatus(403);
