@@ -51,7 +51,7 @@ class DatabaseManager {
     const isExsisting = await GameState.exists({});
     if (isExsisting) return;
 
-    const registrationPhaseDuration = 1000 * 60 * 5; // 1 minute
+    const registrationPhaseDuration = 1000 * 60 * 2; // 2 minutes
 
     await GameState.create({
       day: 1,
