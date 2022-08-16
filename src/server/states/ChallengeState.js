@@ -17,6 +17,8 @@ class State extends schema.Schema {
     super();
     this.db = db;
 
+    this.isChallengeStarted = false;
+
     this.startPosition = challengeData.startPosition;
 
     this.mapManager = new MapManager(this, worldMap);
@@ -81,6 +83,7 @@ class State extends schema.Schema {
 schema.defineTypes(State, {
   wizard: Wizard,
   challengeState: "number",
+  isChallengeStarted: "boolean",
 });
 
 exports.ChallengeState = State;

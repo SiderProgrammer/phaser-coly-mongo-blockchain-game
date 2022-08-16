@@ -36,6 +36,8 @@ confirm.onclick = () => {
   new Phaser.Game(config);
 };
 
+//spawnWizards.style.display = "none";
+
 spawnWizards.onclick = () => {
   for (let i = 0; i < 3; i++) {
     CREATE_PLAYER({ address: Math.floor(Math.random() * 10000) });

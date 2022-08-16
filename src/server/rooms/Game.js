@@ -12,6 +12,7 @@ exports.default = class GameRoom extends Room {
     //   if (options.secret !== "MY-SECRET-VALUE") {
     //     throw new Error("unauthorized");
     // }
+    // TODO : fix, sometimes 2 rooms are created instead of 1
     console.log("World room created");
 
     this.autoDispose = false; // prevent from auto-closing the room when last client disconnected
@@ -82,7 +83,8 @@ exports.default = class GameRoom extends Room {
     }
 
     const remainingTime = calculateDayRemainingTime(this.gameStateDB);
-
+    // this.clock.setTimeout, see colyseus server timing-events
+    // https://docs.colyseus.io/colyseus/server/timing-events/
     setTimeout(() => {
       handleDayEnd.call(this);
 
@@ -98,6 +100,15 @@ exports.default = class GameRoom extends Room {
     this.db.getDayQuery(day).then((dayData) => {
       this.state.killDelayedWizards();
       this.state.refreshWizardsChallenges();
+
+      this.db
+        .countWizards({
+          isAlive: true,
+        })
+        .then((count) => {
+          this.state.wizardsAliveCount = count;
+        });
+
       this.state.day++;
       this.state.slogan = dayData.slogan;
     });

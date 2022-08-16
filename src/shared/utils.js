@@ -14,9 +14,10 @@ function calculateRegistrationPhaseRemainingTime(gameStateDB) {
 function calculateDayRemainingTime(gameStateDB) {
   return (
     gameStateDB.gameStartTimestamp +
+    gameStateDB.registrationPhaseDuration +
     gameStateDB.day * gameStateDB.dayDuration -
     Date.now() -
-    (Date.now() - gameStateDB.timeDifference)
+    gameStateDB.timeDifference
   );
 }
 

@@ -1,7 +1,7 @@
 const http = require("http");
 const express = require("express");
 const cors = require("cors");
-const { Server, LocalPresence } = require("@colyseus/core");
+const { Server, LocalPresence, matchMaker } = require("@colyseus/core");
 const Game = require("./rooms/Game").default;
 const Challenge = require("./rooms/Challenge").default;
 const DatabaseManager = require("./db/databaseManager");
@@ -62,6 +62,8 @@ gameServer.listen(port, host, undefined, async () => {
   }
 
   gameServer.define("game", Game, { db: databaseManager, gameStateDB });
+  //matchMaker.createRoom("game", { db: databaseManager, gameStateDB });
+
   gameServer.define("challenge", Challenge, { db: databaseManager });
 
   app.post("/createPlayer", databaseManager.createPlayer.bind(databaseManager));

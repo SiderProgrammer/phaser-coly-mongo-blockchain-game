@@ -26,14 +26,22 @@ export default class Timer {
 
   getConvertedTime() {
     const newDateTime = new Date(this.remainingTime);
-    return newDateTime.getHours() - 1 + "h" + newDateTime.getMinutes() + "m";
+    return (
+      newDateTime.getHours() -
+      1 +
+      "h" +
+      newDateTime.getMinutes() +
+      "m" +
+      newDateTime.getSeconds() +
+      "s"
+    );
   }
 
   update() {
     this.remainingTime = calculateDayRemainingTime(this.gameState);
 
     if (this.remainingTime < 0) {
-      this.gameState.dayCount++;
+      this.gameState.day++;
 
       this.onDayRefresh();
     }

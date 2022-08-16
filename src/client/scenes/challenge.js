@@ -60,14 +60,14 @@ class Challenge extends Phaser.Scene {
     this.inputManager = new InputManager(this);
 
     this.add.text(this.gw / 2, 150, this.challengeData.dailyMessage);
+
     await this.server.handleChallengeJoin(wizardId);
   }
 
   update() {
-    if (!this.me || !this.me.canMove) return;
+    if (!this.me || !this.me.canMove || !this.me.active) return;
 
     this.inputManager && this.inputManager.update();
-
     if (this.me.canMove) this.me.play("idle", true);
   }
 
@@ -126,12 +126,16 @@ class Challenge extends Phaser.Scene {
       this,
       this.challengeData.startPosition.x,
       this.challengeData.startPosition.y,
-      "player" // ? not needed here
+      "player",
+      "wizard in challenge",
+      true
     ).setDisplaySize(PLAYER_SIZE, PLAYER_SIZE);
   }
 
   handlePlayerMoved(changedData) {
     // TODO : improve this function code
+    if (!this.me || !this.me.active) return;
+
     const updatedPosition = changedData.filter(
       (data) => data.field === "x" || data.field === "y"
     );

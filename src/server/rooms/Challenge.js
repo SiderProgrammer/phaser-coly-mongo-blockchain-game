@@ -1,8 +1,6 @@
 const { Room } = require("colyseus");
 const { ChallengeState } = require("../states/ChallengeState");
-const DatabaseManager = require("../db/databaseManager");
 
-const db = new DatabaseManager();
 exports.default = class ChallengeRoom extends Room {
   async onCreate({ db }) {
     this.db = db;
@@ -11,18 +9,10 @@ exports.default = class ChallengeRoom extends Room {
     // }
     console.log("Challenge room created");
 
-    const challengeData = await db.getChallengeQuery();
+    const challengeData = await this.db.getChallengeQuery();
     this.setState(
-      new ChallengeState(db, this.presenceEmit.bind(this), challengeData)
+      new ChallengeState(this.db, this.presenceEmit.bind(this), challengeData)
     );
-
-    this.onMessage("*", (client, type, message) => {
-      switch (type) {
-        case "move":
-          this.state.playerMove(message.dir);
-          break;
-      }
-    });
   }
 
   onJoin(client, options) {
@@ -30,18 +20,29 @@ exports.default = class ChallengeRoom extends Room {
 
     this.lock(); // ? Lock the room for only one player
 
-    db.canWizardPlayChallenge(options.address, options.wizardId).then(
-      (canPlay) => {
+    this.db
+      .canWizardPlayChallenge(options.address, options.wizardId)
+      .then((canPlay) => {
         if (canPlay) {
           this.state.setWizardId(options.wizardId);
           this.state.setWizardOwner(options.address);
+          this.setActionHandler();
+          this.state.isChallengeStarted = true;
         } else {
           // leave the cheater :D
-          console.log("leave");
+          console.log("leave the cheater");
           this.disconnect();
         }
+      });
+  }
+  setActionHandler() {
+    this.onMessage("*", (client, type, message) => {
+      switch (type) {
+        case "move":
+          this.state.playerMove(message.dir);
+          break;
       }
-    );
+    });
   }
 
   presenceEmit(type) {

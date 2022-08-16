@@ -14,6 +14,7 @@ import SoundManager from "../components/SoundManager";
 import Player from "../entities/Player";
 import {
   GET_ALL_COLLECTED_OBJECTS,
+  GET_ALL_PLAYERS,
   GET_OBSTACLES,
 } from "../services/requests/requests";
 import { WORLD_SCENE } from "./currentScenes";
@@ -240,6 +241,25 @@ class World extends Phaser.Scene {
 
   handleObjectRemoved(object) {
     this.removeTileFromMap(object.c, object.r, object.type);
+  }
+
+  // TODO : maybe search for a better solution
+  // maybe use map for players instead of array
+  async refreshOfflinePlayers() {
+    this.playersSavedState = await (await GET_ALL_PLAYERS()).json();
+    this.players.forEach((player) => {
+      // if (!player.isOnline) { // TODO : fix it
+
+      const playerFromDB = this.playersSavedState.find(
+        (p) => p.address === player.walletAddress
+      );
+      playerFromDB.wizards.forEach((wizard, i) => {
+        if (!wizard.isAlive) {
+          player.wizards[i].kill();
+        }
+      });
+      // }
+    });
   }
 
   addPlayersFromSavedState() {

@@ -97,22 +97,6 @@ class State extends schema.Schema {
       const player = new Player(id, address);
       player.addWizards(state.wizards);
 
-      // if (state.wizards[0].x === 0) {
-      //   // ! NEW PLAYER
-
-      //   player.wizards.forEach((wizard, i) => {
-      //     const { x, y } = this.getNewSpawnPosition();
-
-      //     // I need it here to prevent problems with pos generation
-      //     this.mapGridManager.addWizardToGridAtXY(x, y);
-
-      //     wizard.x = x;
-      //     wizard.y = y;
-
-      //     state.wizards[i].x = x;
-      //     state.wizards[i].y = y;
-      //   });
-      // }
       this.players.set(id, player);
 
       this.mapGridManager.addWizardsToGrid(state.wizards);
@@ -120,33 +104,6 @@ class State extends schema.Schema {
       this.updateWizardsCounter(state.wizards); // TODO : fix it
     });
   }
-
-  // generateRandomCenterPosition() {
-  //   const x = randomInRange(
-  //     WORLD_ROWS_COUNT / 4,
-  //     WORLD_ROWS_COUNT - WORLD_ROWS_COUNT / 4
-  //   );
-  //   const y = randomInRange(
-  //     WORLD_COLUMNS_COUNT / 4,
-  //     WORLD_COLUMNS_COUNT - WORLD_COLUMNS_COUNT / 4
-  //   );
-  //   return { x, y };
-  // }
-  // getNewSpawnPosition() {
-  //   let x,
-  //     y = 0;
-
-  //   do {
-  //     const newPos = this.generateRandomCenterPosition();
-  //     x = newPos.x;
-  //     y = newPos.y;
-  //   } while (this.worldGrid[x][y] !== "");
-
-  //   return {
-  //     x: TILE_SIZE / 2 + x * TILE_SIZE,
-  //     y: TILE_SIZE / 2 + y * TILE_SIZE,
-  //   };
-  // }
 
   playerRemove(id) {
     const player = this.players.get(id);
@@ -229,18 +186,18 @@ class State extends schema.Schema {
   }
 
   killDelayedWizards() {
-    let killedWizards = 0;
+    //let killedWizards = 0;
 
     this.players.forEach((player) => {
       player.wizards.forEach((wizard) => {
         if (!wizard.dailyChallengeCompleted && wizard.isAlive) {
           wizard.isAlive = false;
-          killedWizards++;
+          // killedWizards++;
         }
       });
     });
 
-    this.subtractAlive(killedWizards);
+    // this.subtractAlive(killedWizards);
   }
 
   refreshWizardsChallenges() {

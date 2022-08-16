@@ -51,7 +51,7 @@ class DatabaseManager {
     const isExsisting = await GameState.exists({});
     if (isExsisting) return;
 
-    const registrationPhaseDuration = 1000 * 60; // 1 minute
+    const registrationPhaseDuration = 1000 * 25; // 1 minute
 
     await GameState.create({
       day: 1,
@@ -165,7 +165,7 @@ class DatabaseManager {
               dailyChallengeCompleted: false,
               collectedObjectsCount: { 1: 0, 2: 0, 3: 0 },
               player: player.id,
-              movesLeft: 200,
+              movesLeft: 20,
             };
           };
 
@@ -207,7 +207,7 @@ class DatabaseManager {
 
   getAllPlayers(req, res) {
     // TODO : Handle Errors
-
+    // don't need all properties
     Players.find({}, (err, players) => {
       res.send(players);
     })

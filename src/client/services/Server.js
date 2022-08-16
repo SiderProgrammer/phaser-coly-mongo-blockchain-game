@@ -17,8 +17,7 @@ export default class Server {
     this.playerAccount = playerAccount;
     this.walletAddress = this.playerAccount.address;
 
-    this.isRegistrationPhase = isRegistrationPhase
- 
+    this.isRegistrationPhase = isRegistrationPhase;
   }
 
   // TODO :  break HUD, GUI, World, Challenge handlers into separate files
@@ -42,8 +41,6 @@ export default class Server {
       wizardId: wizardId,
     });
 
-    CHALLENGE_SCENE.SCENE.handlePlayerAdd();
-
     this.setChallengeListeners();
   }
 
@@ -64,9 +61,11 @@ export default class Server {
     this.room.state.listen("slogan", (newSlogan) =>
       HUD_SCENE.SCENE.updateSlogan(newSlogan)
     );
-    this.room.state.listen("day", (newDay) =>
-      HUD_SCENE.SCENE.updateDay(newDay)
-    );
+    this.room.state.listen("day", (newDay) => {
+      // if day is changed, it means that the day is refreshed so we can refresh offline wizards
+      WORLD_SCENE.SCENE.refreshOfflinePlayers();
+      HUD_SCENE.SCENE.updateDay(newDay);
+    });
   }
 
   handleWorldPlayerJoined(player) {
@@ -109,6 +108,15 @@ export default class Server {
 
   setChallengeListeners() {
     this.challengeRoom.state.onChange = (state) => {
+      if (
+        state.find(
+          (change) =>
+            change.field === "isChallengeStarted" && change.value === true
+        )
+      ) {
+        CHALLENGE_SCENE.SCENE.handlePlayerAdd();
+      }
+
       CHALLENGE_SCENE.SCENE.handleChangeState(state);
     };
 
