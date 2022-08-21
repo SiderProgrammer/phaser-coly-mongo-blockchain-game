@@ -29,68 +29,68 @@ class DatabaseManager {
     this.isRegistrationPhase = true;
   }
   async connectDatabase() {
-   mongoose.connect(DATABASE_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }).then(()=>{
-      this.spawner = new Spawner(this);
+    mongoose
+      .connect(DATABASE_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      })
+      .then(async () => {
+        this.spawner = new Spawner(this);
 
-      this.mapGridManager = new MapGridManager(this);
-      this.worldGrid = this.mapGridManager.createWorldGrid();
-  
-      const playersFromDB = await this.getAllPlayersQuery();
-  
-      playersFromDB.forEach((player) =>
-        this.mapGridManager.addWizardsToGrid(player.wizards)
-      );
-  
-      this.mapManager = new MapManager(this, worldMap);
-      this.mapLayers = this.mapManager.getWorldMap();
-      this.mapGridManager.addLayersToGrid(this.mapLayers);
-  
-      const isExsisting = await GameState.exists({});
-      if (isExsisting) return;
-  
-      const registrationPhaseDuration = 1000 * 60 * 2; // 2 minutes
-  
-      await GameState.create({
-        day: 1,
-        registrationPhaseDuration: registrationPhaseDuration,
-        dayDuration: 1000 * 60 * 10, // 10 minutes
-        gameStartTimestamp: Date.now(),
+        this.mapGridManager = new MapGridManager(this);
+        this.worldGrid = this.mapGridManager.createWorldGrid();
+
+        const playersFromDB = await this.getAllPlayersQuery();
+
+        playersFromDB.forEach((player) =>
+          this.mapGridManager.addWizardsToGrid(player.wizards)
+        );
+
+        this.mapManager = new MapManager(this, worldMap);
+        this.mapLayers = this.mapManager.getWorldMap();
+        this.mapGridManager.addLayersToGrid(this.mapLayers);
+
+        const isExsisting = await GameState.exists({});
+        if (isExsisting) return;
+
+        const registrationPhaseDuration = 1000 * 60 * 2; // 2 minutes
+
+        await GameState.create({
+          day: 1,
+          registrationPhaseDuration: registrationPhaseDuration,
+          dayDuration: 1000 * 60 * 10, // 10 minutes
+          gameStartTimestamp: Date.now(),
+        });
+
+        await Days.insertMany([
+          // for now
+          { day: 1, slogan: "First day slogan" },
+          { day: 2, slogan: "Second day slogan" },
+          { day: 3, slogan: "Third day slogan" },
+          { day: 4, slogan: "Fourth day slogan" },
+          { day: 5, slogan: "Fifth day slogan" },
+        ]);
+
+        const challengeData = {
+          winMessage: "win",
+          loseMessage: "lose",
+          startPosition: {
+            x: CHALLENGE_PLAYER.x,
+            y: CHALLENGE_PLAYER.y,
+          },
+        };
+
+        await Challenge.insertMany([
+          // for now
+          { ...challengeData, day: 1, dailyMessage: "first day" },
+          { ...challengeData, day: 2, dailyMessage: "second day" },
+          { ...challengeData, day: 3, dailyMessage: "third day" },
+          { ...challengeData, day: 4, dailyMessage: "fourth day" },
+          { ...challengeData, day: 5, dailyMessage: "fifth day" },
+        ]);
+
+        console.log("DB init");
       });
-  
-      await Days.insertMany([
-        // for now
-        { day: 1, slogan: "First day slogan" },
-        { day: 2, slogan: "Second day slogan" },
-        { day: 3, slogan: "Third day slogan" },
-        { day: 4, slogan: "Fourth day slogan" },
-        { day: 5, slogan: "Fifth day slogan" },
-      ]);
-  
-      const challengeData = {
-        winMessage: "win",
-        loseMessage: "lose",
-        startPosition: {
-          x: CHALLENGE_PLAYER.x,
-          y: CHALLENGE_PLAYER.y,
-        },
-      };
-  
-      await Challenge.insertMany([
-        // for now
-        { ...challengeData, day: 1, dailyMessage: "first day" },
-        { ...challengeData, day: 2, dailyMessage: "second day" },
-        { ...challengeData, day: 3, dailyMessage: "third day" },
-        { ...challengeData, day: 4, dailyMessage: "fourth day" },
-        { ...challengeData, day: 5, dailyMessage: "fifth day" },
-      ]);
-  
-      console.log("DB init");
-    });
-
-  
   }
 
   getChallenge(req, res) {
