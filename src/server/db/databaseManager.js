@@ -29,7 +29,7 @@ class DatabaseManager {
     this.isRegistrationPhase = true;
   }
   async connectDatabase() {
-    mongoose
+    await mongoose
       .connect(DATABASE_URL, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
