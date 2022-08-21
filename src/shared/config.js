@@ -19,6 +19,7 @@ const VIEWPORT_SIZE = {
 
 const HUD_WIDTH = 250; // TODO : change to GUT_WIDTH
 const HUD_HEIGHT = 70;
+const DAILY_MAX_MOVES = 20;
 
 const PLAYER_SIZE = 32;
 const TILE_SIZE = 32;
@@ -58,4 +59,5 @@ module.exports = {
   PRE_MOVE_DISTANCE,
   WORLD_COLUMNS_COUNT,
   WORLD_ROWS_COUNT,
+  DAILY_MAX_MOVES
 }; // TODO : change to imports & exports  (need to configure webpack for server)

@@ -71,27 +71,39 @@ export default class Hud extends Phaser.Scene {
   }
 
   updateMovesLeftText(wizardId) {
-    const currentWizard = WORLD_SCENE.SCENE.me.getWizardById(
-      wizardId.toString()
-    );
-    this.movesLeft.setText(`Moves left: ${currentWizard.movesLeft}`);
+    let movesLeft = 0;
+
+    if (wizardId > -1) {
+      movesLeft = WORLD_SCENE.SCENE.me.getWizardById(
+        wizardId.toString()
+      ).movesLeft;
+    }
+
+    this.movesLeft.setText(`Moves left: ${movesLeft}`);
   }
 
   updateCollectedObjectsText(wizardId) {
-    const wizardCollectedObjects = WORLD_SCENE.SCENE.me.getWizardById(
-      wizardId.toString()
-    ).collectedObjects;
+    let collectedObjects = {
+      1: 0,
+      2: 0,
+      3: 0,
+    };
 
+    if (wizardId > -1) {
+      collectedObjects = WORLD_SCENE.SCENE.me.getWizardById(
+        wizardId.toString()
+      ).collectedObjects;
+    }
     this.collectedObjects.setText(
-      `Collected objects: ${wizardCollectedObjects["1"]}`
+      `Collected objects: ${collectedObjects["1"]}`
     );
 
     this.collectedObjects2.setText(
-      `Collected objects 2: ${wizardCollectedObjects["2"]}`
+      `Collected objects 2: ${collectedObjects["2"]}`
     );
 
     this.collectedObjects3.setText(
-      `Collected objects 3: ${wizardCollectedObjects["3"]}`
+      `Collected objects 3: ${collectedObjects["3"]}`
     );
   }
 

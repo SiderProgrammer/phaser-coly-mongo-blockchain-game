@@ -12,6 +12,7 @@ const {
   CHALLENGE_PLAYER,
   CHALLENGE_OBSTACLES,
   CHALLENGE_META,
+  DAILY_MAX_MOVES,
 } = require("../../shared/config");
 const Challenge = require("./models/Challenge");
 const worldMap = require("../maps/world/sampleMap");
@@ -165,7 +166,7 @@ class DatabaseManager {
               dailyChallengeCompleted: false,
               collectedObjectsCount: { 1: 0, 2: 0, 3: 0 },
               player: player.id,
-              movesLeft: 20,
+              movesLeft: DAILY_MAX_MOVES,
             };
           };
 
@@ -286,17 +287,17 @@ class DatabaseManager {
     );
   }
 
-  refreshWizardsChallenges() {
+  refreshWizards() {
     return Wizard.updateMany(
       { dailyChallengeCompleted: true },
-      { $set: { dailyChallengeCompleted: false } }
+      { $set: { dailyChallengeCompleted: false, movesLeft: DAILY_MAX_MOVES } }
     );
   }
 
   refreshDay(daysToAdd = 1) {
     return GameState.updateOne({}, { $inc: { day: daysToAdd } })
       .then(this.killDelayedWizards) //TODO:check if these work
-      .then(this.refreshWizardsChallenges); //TODO:check if these work
+      .then(this.refreshWizards); //TODO:check if these work
   }
 
   getGameStateQuery() {

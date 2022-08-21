@@ -53,6 +53,7 @@ export default class WizardManager {
         this.state.setText("Dead");
         this.state.setAlpha(0.5);
         this.avatar.setAlpha(0.5);
+        this.settings.setVisible(false).setActive(false);
         break;
     }
   }

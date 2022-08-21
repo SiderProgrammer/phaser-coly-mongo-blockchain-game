@@ -166,32 +166,35 @@ class World extends Phaser.Scene {
 
   playerMoved(dir) {
     const wizardMoved = this.me.getSelectedWizard();
-    if (!wizardMoved.canMove || wizardMoved.movesLeft <= 0) return;
+    if (!wizardMoved || !wizardMoved.canMove || wizardMoved.movesLeft <= 0)
+      return;
 
     SoundManager.play("CharacterMove");
+
+    const isTileWalkable = this.mapGridManager.isTileWalkable(
+      wizardMoved,
+      dir.x,
+      dir.y,
+      TILE_SIZE
+    );
 
     wizardMoved.canMove = false;
 
     wizardMoved.preMove(dir, PRE_MOVE_DISTANCE, () => {
-      if (
-        !this.mapGridManager.isTileWalkable(
-          wizardMoved,
-          dir.x,
-          dir.y,
-          TILE_SIZE
-        )
-      ) {
+      if (!isTileWalkable) {
         wizardMoved.reversePreMove();
       }
     });
 
-    const action = {
-      type: "move",
-      playerId: this.playerId,
-      dir,
-    };
+    if (isTileWalkable) {
+      const action = {
+        type: "move",
+        playerId: this.playerId,
+        dir,
+      };
 
-    this.server.handleActionSend(action);
+      this.server.handleActionSend(action);
+    }
   }
   showPlayChallengeButton(bool) {
     this.playChallengeButton.setVisible(bool).setActive(bool);
@@ -288,12 +291,14 @@ class World extends Phaser.Scene {
       isMe
     );
 
+    this.mapGridManager.addWizardsToGrid(addedPlayer.wizards);
+
     if (isMe) {
       this.me = addedPlayer;
 
-      this.me.setSelectedWizardId(
-        _player.wizards.findIndex((wizard) => wizard.isSelected)
-      );
+      // this.me.setSelectedWizardId(
+      //   _player.wizards.findIndex((wizard) => wizard.isSelected)
+      // );
     }
   }
 
@@ -305,6 +310,7 @@ class World extends Phaser.Scene {
   }
 
   removePlayerFromPlayers(playerFromPlayers, playerFromServer) {
+    this.mapGridManager.removeWizardsFromGrid(playerFromPlayers.wizards);
     playerFromPlayers.destroy();
     const index = this.players.findIndex(
       (player) => player.walletAddress === playerFromServer.address

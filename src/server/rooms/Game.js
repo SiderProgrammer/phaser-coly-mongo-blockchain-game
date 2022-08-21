@@ -98,8 +98,7 @@ exports.default = class GameRoom extends Room {
     console.log("day refresh");
 
     this.db.getDayQuery(day).then((dayData) => {
-      this.state.killDelayedWizards();
-      this.state.refreshWizardsChallenges();
+      this.state.refreshDay();
 
       this.db
         .countWizards({

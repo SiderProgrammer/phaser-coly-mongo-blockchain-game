@@ -18,9 +18,9 @@ class Player extends Schema {
       const wizard = new Wizard(i.toString(), _wizard);
       this.wizards.push(wizard);
 
-      if (wizard.isAlive) {
-        this.wizards[i].isSelected = true;
-      }
+      // if (wizard.isAlive) {
+      //   this.wizards[i].isSelected = true;
+      // }
     });
   }
 

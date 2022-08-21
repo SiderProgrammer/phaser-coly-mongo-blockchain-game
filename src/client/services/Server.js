@@ -84,7 +84,11 @@ export default class Server {
 
   handleWorldWizardChanged(changed, player, wizard) {
     if (
-      changed.find((change) => change.field === "isAlive") &&
+      changed.find(
+        (change) =>
+          change.field === "isAlive" ||
+          change.field === "dailyChallengeCompleted"
+      ) &&
       this.isMyID(player.id)
     ) {
       GUI_SCENE.SCENE.handleUpdate(wizard);

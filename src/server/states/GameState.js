@@ -6,6 +6,7 @@ const {
   TILE_SIZE,
   WORLD_ROWS_COUNT,
   WORLD_COLUMNS_COUNT,
+  DAILY_MAX_MOVES,
 } = require("../../shared/config");
 const MapManager = require("../../shared/mapManager");
 const MapGridManager = require("../../shared/mapGridManager");
@@ -107,6 +108,7 @@ class State extends schema.Schema {
 
   playerRemove(id) {
     const player = this.players.get(id);
+    this.mapGridManager.removeWizardsFromGrid(player.wizards)
     this.db.savePlayerWizards(player.address, player.wizards);
     this.players.delete(id);
   }
@@ -185,25 +187,15 @@ class State extends schema.Schema {
     player.selectWizard(wizardId);
   }
 
-  killDelayedWizards() {
-    //let killedWizards = 0;
-
+  refreshDay() {
     this.players.forEach((player) => {
       player.wizards.forEach((wizard) => {
         if (!wizard.dailyChallengeCompleted && wizard.isAlive) {
           wizard.isAlive = false;
-          // killedWizards++;
         }
-      });
-    });
 
-    // this.subtractAlive(killedWizards);
-  }
-
-  refreshWizardsChallenges() {
-    this.players.forEach((player) => {
-      player.wizards.forEach((wizard) => {
         wizard.dailyChallengeCompleted = false;
+        wizard.movesLeft = DAILY_MAX_MOVES;
       });
     });
   }

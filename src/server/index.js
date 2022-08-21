@@ -62,7 +62,7 @@ gameServer.listen(port, host, undefined, async () => {
   }
 
   gameServer.define("game", Game, { db: databaseManager, gameStateDB });
-  //matchMaker.createRoom("game", { db: databaseManager, gameStateDB });
+  matchMaker.createRoom("game", { db: databaseManager, gameStateDB });
 
   gameServer.define("challenge", Challenge, { db: databaseManager });
 

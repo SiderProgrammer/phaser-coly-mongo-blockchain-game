@@ -40,12 +40,19 @@ export default class Gui extends Phaser.Scene {
       wizardManager.setChallengeState("completed");
     } else if (wizard.isAlive) {
       wizardManager.setChallengeState("uncompleted");
+    } else if (!wizard.isAlive) {
+      wizardManager.setChallengeState("dead");
+    }
+
+    if (wizard.isAlive) {
+      wizardManager.setState("alive");
     }
 
     const id = WORLD_SCENE.SCENE.me.getSelectedWizardId();
-
-    this.wizardsManagers[id].setState("playing");
-    this.wizardsManagers[id].handlePlayChallengeButton();
+    if (id > -1) {
+      this.wizardsManagers[id].setState("playing");
+      this.wizardsManagers[id].handlePlayChallengeButton();
+    }
   }
 
   addPlayer(player) {

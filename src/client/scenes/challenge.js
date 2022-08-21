@@ -74,23 +74,29 @@ class Challenge extends Phaser.Scene {
   playerMoved(dir) {
     SoundManager.play("CharacterMove");
 
+    const isTileWalkable = this.mapGridManager.isTileWalkable(
+      this.me,
+      dir.x,
+      dir.y,
+      TILE_SIZE
+    );
     this.me.canMove = false;
 
     this.me.preMove(dir, PRE_MOVE_DISTANCE, () => {
-      if (
-        !this.mapGridManager.isTileWalkable(this.me, dir.x, dir.y, TILE_SIZE)
-      ) {
+      if (!isTileWalkable) {
         this.me.reversePreMove();
       }
     });
 
-    const action = {
-      type: "move",
-      playerId: this.playerId,
-      dir,
-    };
+    if (isTileWalkable) {
+      const action = {
+        type: "move",
+        playerId: this.playerId,
+        dir,
+      };
 
-    this.server.handleActionSendInChallenge(action);
+      this.server.handleActionSendInChallenge(action);
+    }
   }
 
   handleChangeState(changedData) {

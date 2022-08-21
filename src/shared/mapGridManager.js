@@ -38,13 +38,15 @@ class MapGridManager {
     }
   }
 
-  addWizardsToGrid(wizards) {
-    const wizardsGridPos = wizards.map((wizard) =>
-      this.getRowColumnFromCoords(wizard.x, wizard.y)
-    );
+  removeWizardsFromGrid(wizards) {
+    wizards.forEach((w) => {
+      this.setTileEmpty(w.x, w.y);
+    });
+  }
 
-    wizardsGridPos.forEach((pos) => {
-      this.scene.worldGrid[pos.r][pos.c] = "wiz";
+  addWizardsToGrid(wizards) {
+    wizards.forEach((w) => {
+      this.addWizardToGridAtXY(w.x, w.y);
     });
   }
 

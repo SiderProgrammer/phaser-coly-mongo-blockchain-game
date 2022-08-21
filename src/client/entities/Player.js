@@ -9,9 +9,9 @@ class Player {
     this.isMe = isMe;
     this.wizards = [];
     this.state = "alive";
-    this.isOnline = sessionId !== ""
+    this.isOnline = sessionId !== "";
 
-    this.selectedWizardId = 0;
+    this.selectedWizardId = -1;
   }
 
   destroy() {
