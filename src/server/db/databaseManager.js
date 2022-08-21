@@ -87,6 +87,8 @@ class DatabaseManager {
       { ...challengeData, day: 4, dailyMessage: "fourth day" },
       { ...challengeData, day: 5, dailyMessage: "fifth day" },
     ]);
+
+    console.log("DB init");
   }
 
   getChallenge(req, res) {
