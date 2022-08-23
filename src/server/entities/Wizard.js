@@ -1,5 +1,5 @@
 const schema = require("@colyseus/schema");
-const { PLAYER_SIZE } = require("../../shared/config");
+const { PLAYER_SIZE, TILE_SIZE } = require("../../shared/config");
 
 class collectedObjectCounter extends schema.Schema {
   constructor(type, value, wizardId) {
@@ -24,8 +24,8 @@ class Wizard extends schema.Schema {
   constructor(id, config) {
     super();
     this.id = id;
-    this.x = config.x;
-    this.y = config.y;
+    this.r = config.r;
+    this.c = config.c;
     this.size = PLAYER_SIZE;
     this.name = config.name;
     this.isSelected = false;
@@ -50,19 +50,16 @@ class Wizard extends schema.Schema {
     this.collectedObjectsCount.get(type).increaseCounter();
   }
 
-  move(dirX, dirY, speed) {
-    const speedX = speed * dirX;
-    const speedY = speed * dirY;
-
-    this.x += speedX;
-    this.y += speedY;
+  move(dirX, dirY) {
+    this.r += dirY;
+    this.c += dirX;
   }
 }
 
 schema.defineTypes(Wizard, {
   id: "string",
-  x: "number",
-  y: "number",
+  r: "number",
+  c: "number",
   size: "number",
   name: "string",
   isSelected: "boolean",

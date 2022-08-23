@@ -58,7 +58,7 @@ class DatabaseManager {
         await GameState.create({
           day: 1,
           registrationPhaseDuration: registrationPhaseDuration,
-          dayDuration: 1000 * 60 * 1, // 10 minutes
+          dayDuration: 1000 * 60 * 0.2, // 10 minutes
           gameStartTimestamp: Date.now(),
         });
 
@@ -158,13 +158,13 @@ class DatabaseManager {
           const sampleNames = ["Eric", "Patrick", "John", "Caroline"];
 
           const getGeneratedWizard = (i) => {
-            const { x, y } = this.spawner.getNewSpawnPosition();
+            const { r, c } = this.spawner.getNewSpawnPosition();
 
-            this.mapGridManager.addWizardToGridAtXY(x, y);
+            this.mapGridManager.addWizardToGrid({ r, c });
 
             return {
-              x,
-              y,
+              r,
+              c,
               name: sampleNames[i] + "_" + address,
               isAlive: true,
               dailyChallengeCompleted: false,
@@ -250,8 +250,8 @@ class DatabaseManager {
       .populate("wizards")
       .then((state) => {
         wizards.forEach((wizard, i) => {
-          state.wizards[i].x = wizard.x;
-          state.wizards[i].y = wizard.y;
+          state.wizards[i].r = wizard.r;
+          state.wizards[i].c = wizard.c;
           state.wizards[i].movesLeft = wizard.movesLeft;
           state.wizards[i].save(); // ? improve saving code
         });

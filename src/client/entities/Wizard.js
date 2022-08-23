@@ -1,11 +1,22 @@
+import { TILE_SIZE } from "../../shared/config";
+
 class Wizard extends Phaser.GameObjects.Sprite {
   // TODO : change this class to a container
-  constructor(id, scene, x, y, sprite, name, isMe) {
-    super(scene, x, y, sprite);
+  constructor(id, scene, r, c, sprite, name, isMe) {
+    super(
+      scene,
+      c * TILE_SIZE + TILE_SIZE / 2,
+      r * TILE_SIZE + TILE_SIZE / 2,
+      sprite
+    );
+
     scene.add.existing(this);
+
     this.scene = scene;
     this.name = name;
     this.id = id;
+    this.r = r;
+    this.c = c;
     this.isAlive = true;
     this.canMove = true;
     this.lastPreMove = {};
@@ -20,6 +31,7 @@ class Wizard extends Phaser.GameObjects.Sprite {
     };
 
     this.showName();
+
     this.on("animationcomplete", ({ key }) => {
       if (!key.includes("pre") && !isMe) this.play("idle");
     });
@@ -121,40 +133,44 @@ class Wizard extends Phaser.GameObjects.Sprite {
       this.play("walk-down");
     }
   }
-  getMoveDirByTargetPos(targetX, targetY) {
+  getMoveDirByTargetPos(targetR, targetC) {
     const dir = {
       x: 0,
       y: 0,
     };
 
-    if (targetX > this.x) dir.x = 1;
-    if (targetX < this.x) dir.x = -1;
-    if (targetY > this.y) dir.y = 1;
-    if (targetY < this.y) dir.y = -1;
+    if (targetC > this.c) dir.x = 1;
+    if (targetC < this.c) dir.x = -1;
+    if (targetR > this.r) dir.y = 1;
+    if (targetR < this.r) dir.y = -1;
 
     return dir;
   }
-  walkTo(x, y) {
-    const dir = this.getMoveDirByTargetPos(x, y);
+  walkTo(r, c) {
+    const dir = this.getMoveDirByTargetPos(r, c);
+
     this.playWalkAnimation(dir);
+    this.r = r;
+    this.c = c;
 
     this.scene.tweens.add({
       targets: [this, this.name],
-      x: x,
-      y: y,
+      x: c * TILE_SIZE + TILE_SIZE / 2,
+      y: r * TILE_SIZE + TILE_SIZE / 2,
       duration: 500,
       onUpdate: () => (this.name.y = this.y - 50), // TODO : handle it better / create container
       onComplete: () => {
         this.canMove = true;
-        this.scene.isWorld && // TODO: move it in a scene file
-          this.scene.mapGridManager.addWizardToGrid(this);
+        // this.scene.isWorld && // TODO: move it in a scene file
+        //   this.scene.mapGridManager.addWizardToGrid(this);
       },
     });
   }
-  update(x, y) {
-    this.setPosition(x, y);
-    this.name.setPosition(x, y - 50);
-  }
+
+  // update(x, y) {
+  //   this.setPosition(x, y);
+  //   this.name.setPosition(x, y - 50);
+  // }
 }
 
 export default Wizard;

@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 
 const wizardSchema = new mongoose.Schema({
-  x: Number,
-  y: Number,
+  r: Number,
+  c: Number,
   name: String,
   hasCustomName: Boolean,
   isAlive: Boolean,

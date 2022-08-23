@@ -24,11 +24,11 @@ class Player extends Schema {
     });
   }
 
-  move(vectorX, vectorY, speed) {
+  move(vectorX, vectorY) {
     const wizard = this.getSelectedWizard();
     //if (!wizard || !wizard.isAlive) return;
 
-    wizard.move(vectorX, vectorY, speed);
+    wizard.move(vectorX, vectorY);
     wizard.movesLeft--;
   }
 

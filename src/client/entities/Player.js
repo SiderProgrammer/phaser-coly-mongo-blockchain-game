@@ -26,14 +26,14 @@ class Player {
       const wizard = new Wizard(
         id.toString(),
         this.scene,
-        _wizard.x,
-        _wizard.y,
+        _wizard.r,
+        _wizard.c,
         "player",
         _wizard.name,
         this.isMe
       );
 
-      wizard.setDisplaySize(PLAYER_SIZE, PLAYER_SIZE);
+      wizard.setDisplaySize(PLAYER_SIZE, PLAYER_SIZE); // remove it later
 
       if (!_wizard.isAlive) wizard.kill();
 
@@ -55,13 +55,15 @@ class Player {
       wizardToUpdate.setName(_wizard.name);
     }
 
-    if (_wizard.x != wizardToUpdate.x || _wizard.y != wizardToUpdate.y) {
-      wizardToUpdate.walkTo(_wizard.x, _wizard.y);
-
+    if (_wizard.c != wizardToUpdate.c || _wizard.r != wizardToUpdate.r) {
       this.scene.mapGridManager.setTileEmpty(
-        wizardToUpdate.x,
-        wizardToUpdate.y
+        wizardToUpdate.r,
+        wizardToUpdate.c
       );
+
+      this.scene.mapGridManager.addWizardToGrid(_wizard);
+
+      wizardToUpdate.walkTo(_wizard.r, _wizard.c);
 
       // ? lag simulator
       // setTimeout(

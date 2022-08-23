@@ -46,6 +46,7 @@ export default class Server {
 
   setWorldListeners() {
     this.room.state.players.onAdd = this.handleWorldPlayerJoined.bind(this);
+    this.room.state.players.onRemove = this.handleWorldPlayerRemoved.bind(this);
 
     this.room.state.objects.onRemove = (removedObject) => {
       WORLD_SCENE.SCENE.handleObjectRemoved(removedObject);
@@ -81,7 +82,9 @@ export default class Server {
       );
     });
   }
-
+  handleWorldPlayerRemoved(player) {
+    WORLD_SCENE.SCENE.handlePlayerRemove(player);
+  }
   handleWorldWizardChanged(changed, player, wizard) {
     if (
       changed.find(

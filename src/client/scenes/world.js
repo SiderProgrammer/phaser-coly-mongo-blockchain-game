@@ -174,8 +174,7 @@ class World extends Phaser.Scene {
     const isTileWalkable = this.mapGridManager.isTileWalkable(
       wizardMoved,
       dir.x,
-      dir.y,
-      TILE_SIZE
+      dir.y
     );
 
     wizardMoved.canMove = false;
@@ -249,19 +248,20 @@ class World extends Phaser.Scene {
   // TODO : maybe search for a better solution
   // maybe use map for players instead of array
   async refreshOfflinePlayers() {
-    this.playersSavedState = await (await GET_ALL_PLAYERS()).json();
+    this.playersSavedState = await (await GET_ALL_PLAYERS()).json(); // maybe filter query from online players
     this.players.forEach((player) => {
-      // if (!player.isOnline) { // TODO : fix it
+      if (!player.isOnline) {
+        // TODO : fix it
 
-      const playerFromDB = this.playersSavedState.find(
-        (p) => p.address === player.walletAddress
-      );
-      playerFromDB.wizards.forEach((wizard, i) => {
-        if (!wizard.isAlive) {
-          player.wizards[i].kill();
-        }
-      });
-      // }
+        const playerFromDB = this.playersSavedState.find(
+          (p) => p.address === player.walletAddress
+        );
+        playerFromDB.wizards.forEach((wizard, i) => {
+          if (!wizard.isAlive) {
+            player.wizards[i].kill();
+          }
+        });
+      }
     });
   }
 
@@ -300,6 +300,11 @@ class World extends Phaser.Scene {
       //   _player.wizards.findIndex((wizard) => wizard.isSelected)
       // );
     }
+  }
+  handlePlayerRemove(_player) {
+    this.players.find(
+      (player) => player.walletAddress === _player.address
+    ).isOnline = false;
   }
 
   getPlayerFromPlayers(_player) {

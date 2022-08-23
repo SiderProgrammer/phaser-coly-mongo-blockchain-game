@@ -31,8 +31,8 @@ class Spawner {
     } while (this.scene.worldGrid[r][c] !== "");
 
     return {
-      x: TILE_SIZE / 2 + c * TILE_SIZE,
-      y: TILE_SIZE / 2 + r * TILE_SIZE,
+      r,
+      c,
     };
   }
 }

@@ -40,29 +40,22 @@ class MapGridManager {
 
   removeWizardsFromGrid(wizards) {
     wizards.forEach((w) => {
-      this.setTileEmpty(w.x, w.y);
+      this.setTileEmpty(w.r, w.c);
     });
   }
 
   addWizardsToGrid(wizards) {
     wizards.forEach((w) => {
-      this.addWizardToGridAtXY(w.x, w.y);
+      this.addWizardToGrid(w);
     });
   }
 
-  setTileEmpty(x, y) {
-    const { r, c } = this.getRowColumnFromCoords(x, y);
+  setTileEmpty(r, c) {
     this.scene.worldGrid[r][c] = "";
   }
 
-  addWizardToGridAtXY(x, y) {
-    const { r, c } = this.getRowColumnFromCoords(x, y);
-    this.scene.worldGrid[r][c] = "wiz";
-  }
-
   addWizardToGrid(wizard) {
-    const { r, c } = this.getRowColumnFromCoords(wizard.x, wizard.y);
-    this.scene.worldGrid[r][c] = "wiz";
+    this.scene.worldGrid[wizard.r][wizard.c] = "wiz";
   }
 
   getRowColumnFromCoords(x, y) {
@@ -72,29 +65,18 @@ class MapGridManager {
     };
   }
 
-  isWizardOnTile(x, y) {
-    const { r, c } = this.getRowColumnFromCoords(x, y);
-
+  isWizardOnTile(r, c) {
     return this.scene.worldGrid[r][c] === "wiz";
   }
-  isTileFree(x, y) {
-    const { r, c } = this.getRowColumnFromCoords(x, y);
-
+  isTileFree(r, c) {
     return this.scene.worldGrid[r][c] === "";
   }
-  isTileObject(x, y) {
-    const { r, c } = this.getRowColumnFromCoords(x, y);
-
+  isTileObject(r, c) {
     return this.scene.worldGrid[r][c].includes("obj");
   }
-  isTileWalkable(wizard, dirX, dirY, speed) {
-    const speedX = speed * dirX;
-    const speedY = speed * dirY;
-
-    const { r, c } = this.getRowColumnFromCoords(
-      wizard.x + speedX,
-      wizard.y + speedY
-    );
+  isTileWalkable(wizard, dirX, dirY) {
+    const r = wizard.r + dirY;
+    const c = wizard.c + dirX;
 
     const isTileOutOfBounds = this.isTileOutOfBounds(r, c);
     if (isTileOutOfBounds) return false;

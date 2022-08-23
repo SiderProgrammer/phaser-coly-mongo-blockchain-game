@@ -64,20 +64,15 @@ class State extends schema.Schema {
     this.wizardsAliveCount -= count;
   }
 
-  updateWizardsCounter(wizards) {
-    const freshWizardsCount = this.db.countWizards();
-
-    freshWizardsCount.then((count) => {
+  updateWizardsCounter(address, wizards) {
+    if (!this.playersFromDB.has(address)) {
       const playerAliveWizardsCount = wizards.filter(
         (wizard) => wizard.isAlive
       ).length;
 
-      // new player joined
-      if (count > this.wizardsCount) {
-        this.wizardsCount = count;
-        this.wizardsAliveCount += playerAliveWizardsCount;
-      }
-    });
+      this.wizardsCount += wizards.length;
+      this.wizardsAliveCount += playerAliveWizardsCount;
+    }
   }
 
   wizardNameChanged(id, wizardId) {
@@ -97,18 +92,18 @@ class State extends schema.Schema {
 
       const player = new Player(id, address);
       player.addWizards(state.wizards);
-
       this.players.set(id, player);
 
       this.mapGridManager.addWizardsToGrid(state.wizards);
 
-      this.updateWizardsCounter(state.wizards); // TODO : fix it
+      this.updateWizardsCounter(address, state.wizards); //the order matters
+      this.playersFromDB.set(address, state); //the order matters
     });
   }
 
   playerRemove(id) {
     const player = this.players.get(id);
-    this.mapGridManager.removeWizardsFromGrid(player.wizards)
+    this.mapGridManager.removeWizardsFromGrid(player.wizards);
     this.db.savePlayerWizards(player.address, player.wizards);
     this.players.delete(id);
   }
@@ -116,42 +111,35 @@ class State extends schema.Schema {
   playerMove(id, dir) {
     const player = this.players.get(id);
 
-    if (!player || !player.canMove(dir.x, dir.y, TILE_SIZE)) return;
+    if (!player || !player.canMove()) return;
     const selectedWizard = player.getSelectedWizard();
 
-    if (
-      !this.mapGridManager.isTileWalkable(
-        selectedWizard,
-        dir.x,
-        dir.y,
-        TILE_SIZE
-      )
-    ) {
+    if (!this.mapGridManager.isTileWalkable(selectedWizard, dir.x, dir.y)) {
       return;
     }
 
     if (
-      this.mapGridManager.isWizardOnTile(selectedWizard.x, selectedWizard.y)
+      this.mapGridManager.isWizardOnTile(selectedWizard.r, selectedWizard.c)
     ) {
-      this.mapGridManager.setTileEmpty(selectedWizard.x, selectedWizard.y);
+      this.mapGridManager.setTileEmpty(selectedWizard.r, selectedWizard.c);
     }
 
-    player.move(dir.x, dir.y, TILE_SIZE);
+    player.move(dir.x, dir.y);
 
-    if (this.mapGridManager.isTileFree(selectedWizard.x, selectedWizard.y)) {
+    if (this.mapGridManager.isTileFree(selectedWizard.r, selectedWizard.c)) {
       this.mapGridManager.addWizardToGrid(selectedWizard);
     }
 
-    this.handleTile(player, selectedWizard.x, selectedWizard.y);
+    this.handleTile(player, selectedWizard.r, selectedWizard.c);
 
-    if (this.mapGridManager.isTileObject(selectedWizard.x, selectedWizard.y)) {
+    if (this.mapGridManager.isTileObject(selectedWizard.r, selectedWizard.c)) {
       this.mapGridManager.addWizardToGrid(selectedWizard);
     }
   }
 
-  handleTile(player, x, y) {
-    const { r, c } = this.mapGridManager.getRowColumnFromCoords(x, y);
+  handleTile(player, r, c) {
     const tile = this.worldGrid[r][c];
+
     if (tile === "let") {
       player.killSelectedWizard();
       this.subtractAlive(1);
