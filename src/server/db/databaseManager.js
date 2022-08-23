@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const srvConfig = require("./config/auth");
+const srvConfig = require("./config/credentials");
 const Wizard = require("./models/Wizard");
 const Players = require("./models/Player");
 const GameState = require("./models/GameState");
@@ -53,12 +53,12 @@ class DatabaseManager {
         const isExsisting = await GameState.exists({});
         if (isExsisting) return;
 
-        const registrationPhaseDuration = 1000 * 60 * 2; // 2 minutes
+        const registrationPhaseDuration = 1000 * 60 * 0.2; // 2 minutes
 
         await GameState.create({
           day: 1,
           registrationPhaseDuration: registrationPhaseDuration,
-          dayDuration: 1000 * 60 * 10, // 10 minutes
+          dayDuration: 1000 * 60 * 1, // 10 minutes
           gameStartTimestamp: Date.now(),
         });
 
