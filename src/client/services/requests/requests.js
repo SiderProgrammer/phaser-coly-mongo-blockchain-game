@@ -21,10 +21,6 @@ export const GET_ALL_PLAYERS = () => {
 export const GET_ALL_COLLECTED_OBJECTS = () => {
   return requestGet("getAllCollectedObjects");
 };
-export const GET_OBSTACLES = () => {
-  return requestGet("getObstacles");
-};
-
 
 export const GET_GAME_STATE = () => {
   return requestGet("getGameState");

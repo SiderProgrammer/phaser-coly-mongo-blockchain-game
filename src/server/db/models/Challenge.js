@@ -6,11 +6,11 @@ const ChallengeSchema = new mongoose.Schema({
   loseMessage: String,
   dailyMessage: String,
   startPosition: {
-    x: Number,
-    y: Number,
+    r: Number,
+    c: Number,
   },
-  lethals:[{x:Number, y:Number}],
-  meta:{x:Number, y:Number}
+  lethals: [{ x: Number, y: Number }],
+  meta: { x: Number, y: Number },
 });
 
 module.exports = mongoose.model("Challenge", ChallengeSchema);

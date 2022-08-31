@@ -44,7 +44,7 @@ gameServer.listen(port, host, undefined, async () => {
   await databaseManager.connectDatabase();
 
   const timeDifference = Date.now();
-  const gameStateDB = await databaseManager.getGameStateQuery();
+  const gameStateDB = await databaseManager.backendHandler.getGameStateQuery();
   gameStateDB.timeDifference = Date.now() - timeDifference;
 
   const registrationPhaseRemainingTime =
@@ -61,18 +61,61 @@ gameServer.listen(port, host, undefined, async () => {
     databaseManager.isRegistrationPhase = false;
   }
 
-  gameServer.define("game", Game, { db: databaseManager, gameStateDB });
-  matchMaker.createRoom("game", { db: databaseManager, gameStateDB });
+  gameServer.define("game", Game, {
+    db: databaseManager.backendHandler,
+    gameStateDB,
+  });
+  matchMaker.createRoom("game", {
+    db: databaseManager.backendHandler,
+    gameStateDB,
+  });
 
-  gameServer.define("challenge", Challenge, { db: databaseManager });
+  gameServer.define("challenge", Challenge, {
+    db: databaseManager.backendHandler,
+  });
 
-  app.post("/createPlayer", databaseManager.createPlayer.bind(databaseManager));
-  app.post("/changeName", databaseManager.changeName);
-  app.post("/getPlayer", databaseManager.getPlayer);
-  app.get("/getAllPlayers", databaseManager.getAllPlayers);
-  app.get("/getGameState", databaseManager.getGameState);
-  app.get("/getChallenge", databaseManager.getChallenge);
-  app.get("/getAllCollectedObjects", databaseManager.getAllCollectedObjects);
+  app.post(
+    "/createPlayer",
+    databaseManager.frontendHandler.createPlayerAPI.bind(
+      databaseManager.frontendHandler
+    )
+  );
+  app.post(
+    "/changeName",
+    databaseManager.frontendHandler.changeNameAPI.bind(
+      databaseManager.frontendHandler
+    )
+  );
+  app.post(
+    "/getPlayer",
+    databaseManager.frontendHandler.getPlayerAPI.bind(
+      databaseManager.frontendHandler
+    )
+  );
+  app.get(
+    "/getAllPlayers",
+    databaseManager.frontendHandler.getAllPlayersAPI.bind(
+      databaseManager.frontendHandler
+    )
+  );
+  app.get(
+    "/getGameState",
+    databaseManager.frontendHandler.getGameStateAPI.bind(
+      databaseManager.frontendHandler
+    )
+  );
+  app.get(
+    "/getChallenge",
+    databaseManager.frontendHandler.getChallengeAPI.bind(
+      databaseManager.frontendHandler
+    )
+  );
+  app.get(
+    "/getAllCollectedObjects",
+    databaseManager.frontendHandler.getAllCollectedObjectsAPI.bind(
+      databaseManager.frontendHandler
+    )
+  );
 });
 
 console.log(`Server is listening on localhost:${port}`);

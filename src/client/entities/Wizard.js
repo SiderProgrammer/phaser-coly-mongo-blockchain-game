@@ -161,8 +161,6 @@ class Wizard extends Phaser.GameObjects.Sprite {
       onUpdate: () => (this.name.y = this.y - 50), // TODO : handle it better / create container
       onComplete: () => {
         this.canMove = true;
-        // this.scene.isWorld && // TODO: move it in a scene file
-        //   this.scene.mapGridManager.addWizardToGrid(this);
       },
     });
   }

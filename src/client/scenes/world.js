@@ -19,7 +19,7 @@ import {
 } from "../services/requests/requests";
 import { WORLD_SCENE } from "./currentScenes";
 import worldMap from "../assets/tilemaps/sampleMap";
-import AlignGrid from "./test";
+
 import { calculateRegistrationPhaseRemainingTime } from "../../shared/utils";
 
 class World extends Phaser.Scene {
@@ -43,7 +43,7 @@ class World extends Phaser.Scene {
     this.me = null;
 
     const collectedObjects = await (await GET_ALL_COLLECTED_OBJECTS()).json();
-    // const obstacles = await (await GET_OBSTACLES()).json();
+
     this.mapManager = new MapManager(this, worldMap);
     this.mapLayers = this.mapManager.getWorldMap();
     this.mapManager.removeCollectedObjects(collectedObjects);
@@ -113,16 +113,6 @@ class World extends Phaser.Scene {
         }
       }, 1000);
     }
-
-    // var gridConfig = {
-    //   scene: this,
-    //   cols: 5,
-    //   rows: 5,
-    //   width: this.gw,
-    //   height: this.gh,
-    // };
-    // this.aGrid = new AlignGrid(gridConfig);
-    // this.aGrid.showNumbers();
   }
 
   getRegistrationPhaseRemainingTime() {

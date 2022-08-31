@@ -29,8 +29,8 @@ class State extends schema.Schema {
     this.mapGridManager.addLayersToGrid(this.mapLayers);
 
     this.wizard = new Wizard("0", {
-      x: this.startPosition.x,
-      y: this.startPosition.y,
+      r: this.startPosition.r,
+      c: this.startPosition.c,
     });
 
     this.challengeData = challengeData;
@@ -52,21 +52,18 @@ class State extends schema.Schema {
   playerMove(dir) {
     if (!this.wizard) return;
 
-    if (
-      !this.mapGridManager.isTileWalkable(this.wizard, dir.x, dir.y, TILE_SIZE)
-    ) {
+    if (!this.mapGridManager.isTileWalkable(this.wizard, dir.x, dir.y)) {
       return;
     }
 
-    this.wizard.move(dir.x, dir.y, TILE_SIZE);
+    this.wizard.move(dir.x, dir.y);
 
-    this.handleTile(this.wizard, this.wizard.x, this.wizard.y);
+    this.handleTile(this.wizard, this.wizard.r, this.wizard.c);
   }
 
-  handleTile(player, x, y) {
-    const { r, c } = this.mapGridManager.getRowColumnFromCoords(x, y);
+  handleTile(player, r, c) {
     const tile = this.worldGrid[r][c];
-
+    if (this.challengeState === 0 || this.challengeState === 1) return;
     if (tile === "let") {
       this.challengeState = 0;
       this.db.killWizard(this.owner, this.wizardId);

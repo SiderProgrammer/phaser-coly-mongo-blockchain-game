@@ -42,8 +42,8 @@ const CHALLENGE_OBSTACLES = [
 ];
 
 const CHALLENGE_PLAYER = {
-  x: TILE_SIZE * 20 + PLAYER_SIZE / 2,
-  y: TILE_SIZE * 18 + PLAYER_SIZE / 2,
+  c: 18,
+  r: 20,
 };
 
 module.exports = {
@@ -59,5 +59,5 @@ module.exports = {
   PRE_MOVE_DISTANCE,
   WORLD_COLUMNS_COUNT,
   WORLD_ROWS_COUNT,
-  DAILY_MAX_MOVES
+  DAILY_MAX_MOVES,
 }; // TODO : change to imports & exports  (need to configure webpack for server)

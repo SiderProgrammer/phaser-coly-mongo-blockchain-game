@@ -52,3 +52,13 @@ export default class AlignGrid {
     this.placeAt(xx, yy, obj);
   }
 }
+
+// var gridConfig = {
+//   scene: this,
+//   cols: 64,
+//   rows: 64,
+//   width: this.map.widthInPixels,
+//   height: this.map.heightInPixels,
+// };
+// this.aGrid = new AlignGrid(gridConfig);
+// this.aGrid.showNumbers();

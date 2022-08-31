@@ -77,8 +77,7 @@ class Challenge extends Phaser.Scene {
     const isTileWalkable = this.mapGridManager.isTileWalkable(
       this.me,
       dir.x,
-      dir.y,
-      TILE_SIZE
+      dir.y
     );
     this.me.canMove = false;
 
@@ -130,29 +129,18 @@ class Challenge extends Phaser.Scene {
     this.me = new Wizard(
       "0", // ? not needed here
       this,
-      this.challengeData.startPosition.x,
-      this.challengeData.startPosition.y,
+      this.challengeData.startPosition.r,
+      this.challengeData.startPosition.c,
       "player",
       "wizard in challenge",
       true
     ).setDisplaySize(PLAYER_SIZE, PLAYER_SIZE);
   }
 
-  handlePlayerMoved(changedData) {
-    // TODO : improve this function code
+  handlePlayerMoved(updatedWizard) {
     if (!this.me || !this.me.active) return;
 
-    const updatedPosition = changedData.filter(
-      (data) => data.field === "x" || data.field === "y"
-    );
-    const updatedX = updatedPosition.find((pos) => pos.field === "x")
-      ? updatedPosition.find((pos) => pos.field === "x").value
-      : this.me.x;
-    const updatedY = updatedPosition.find((pos) => pos.field === "y")
-      ? updatedPosition.find((pos) => pos.field === "y").value
-      : this.me.y;
-
-    this.me.walkTo(updatedX, updatedY);
+    this.me.walkTo(updatedWizard.r, updatedWizard.c);
   }
 }
 

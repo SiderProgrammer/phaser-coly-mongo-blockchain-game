@@ -14,6 +14,8 @@ export default class Server {
     this.events = new Phaser.Events.EventEmitter();
 
     this.activeRoom = "";
+    this.playerId = ""; // session id in world
+
     this.playerAccount = playerAccount;
     this.walletAddress = this.playerAccount.address;
 
@@ -31,17 +33,6 @@ export default class Server {
 
     this.playerId = this.room ? this.room.sessionId : ""; // ? session id
     this.setWorldListeners();
-  }
-
-  async handleChallengeJoin(wizardId) {
-    await this.room.leave(true);
-    this.activeRoom = "challenge";
-    this.challengeRoom = await this.client.joinOrCreate("challenge", {
-      address: this.playerAccount.address,
-      wizardId: wizardId,
-    });
-
-    this.setChallengeListeners();
   }
 
   setWorldListeners() {
@@ -113,6 +104,17 @@ export default class Server {
     }
   }
 
+  async handleChallengeJoin(wizardId) {
+    await this.room.leave(true);
+    this.activeRoom = "challenge";
+    this.challengeRoom = await this.client.joinOrCreate("challenge", {
+      address: this.playerAccount.address,
+      wizardId: wizardId,
+    });
+
+    this.setChallengeListeners();
+  }
+
   setChallengeListeners() {
     this.challengeRoom.state.onChange = (state) => {
       if (
@@ -127,8 +129,8 @@ export default class Server {
       CHALLENGE_SCENE.SCENE.handleChangeState(state);
     };
 
-    this.challengeRoom.state.wizard.onChange = (changedData) => {
-      CHALLENGE_SCENE.SCENE.handlePlayerMoved(changedData);
+    this.challengeRoom.state.wizard.onChange = () => {
+      CHALLENGE_SCENE.SCENE.handlePlayerMoved(this.challengeRoom.state.wizard);
     };
   }
 
