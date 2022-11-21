@@ -22,6 +22,7 @@ class Player {
   }
 
   addWizards(wizards) {
+
     wizards.forEach((_wizard, id) => {
       const wizard = new Wizard(
         id.toString(),

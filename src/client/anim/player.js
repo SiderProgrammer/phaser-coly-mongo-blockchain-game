@@ -1,6 +1,7 @@
 const frameRate = 4;
 
 export default function initPlayerAnims(scene) {
+  // TODO : use online anim generator
   const anims = [
     {
       key: "idle",
