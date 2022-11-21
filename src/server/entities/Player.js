@@ -1,5 +1,5 @@
 const schema = require("@colyseus/schema");
-const { PLAYER_SIZE } = require("../../shared/config");
+const { PLAYER_SIZE, WORLD_SIZE } = require("../../shared/config");
 const Schema = schema.Schema;
 const ArraySchema = schema.ArraySchema;
 
@@ -15,28 +15,31 @@ class Player extends Schema {
 
   addWizards(wizardsState) {
     wizardsState.forEach((_wizard, i) => {
-      const wizard = new Wizard(
-        i.toString(),
-        _wizard.x,
-        _wizard.y,
-        PLAYER_SIZE,
-        _wizard.name
-      );
-      wizard.isAlive = _wizard.isAlive;
-
+      const wizard = new Wizard(i.toString(), _wizard);
       this.wizards.push(wizard);
 
-      if (wizard.isAlive) {
-        this.wizards[i].isSelected = true;
-      }
+      // if (wizard.isAlive) {
+      //   this.wizards[i].isSelected = true;
+      // }
     });
   }
 
-  move(vectorX, vectorY, speed) {
+  move(vectorX, vectorY) {
     const wizard = this.getSelectedWizard();
-    if (!wizard.isAlive) return;
+    //if (!wizard || !wizard.isAlive) return;
 
-    wizard.move(vectorX, vectorY, speed);
+    wizard.move(vectorX, vectorY);
+    wizard.movesLeft--;
+  }
+
+  canMove() {
+    const wizard = this.getSelectedWizard();
+    if (!wizard || !wizard.isAlive || wizard.movesLeft <= 0) return false;
+    return true;
+  }
+
+  killSelectedWizard() {
+    this.getSelectedWizard().isAlive = false;
   }
 
   selectWizard(wizardId) {
@@ -46,6 +49,9 @@ class Player extends Schema {
 
   getSelectedWizard() {
     return this.wizards.find((wizard) => wizard.isSelected);
+  }
+  getSelectedWizardId() {
+    return this.wizards.find((wizard) => wizard.isSelected).id;
   }
 }
 

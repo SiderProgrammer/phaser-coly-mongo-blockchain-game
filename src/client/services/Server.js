@@ -1,68 +1,137 @@
 import { Client } from "colyseus.js";
+import {
+  CHALLENGE_SCENE,
+  GUI_SCENE,
+  HUD_SCENE,
+  WORLD_SCENE,
+} from "../scenes/currentScenes";
 import { WEBSOCKET_URL } from "./config";
+import { GET_ALL_PLAYERS } from "./requests/requests";
 
 export default class Server {
-  constructor(playerAccount) {
+  constructor(playerAccount, isRegistrationPhase) {
     this.client = new Client(WEBSOCKET_URL);
     this.events = new Phaser.Events.EventEmitter();
 
+    this.activeRoom = "";
+    this.playerId = ""; // session id in world
+
     this.playerAccount = playerAccount;
-    this.isHUDadded = false;
     this.walletAddress = this.playerAccount.address;
+
+    this.isRegistrationPhase = isRegistrationPhase;
   }
 
-  // TODO : change events names && break HUD, World, Challenge handlers into separate files
+  // TODO :  break HUD, GUI, World, Challenge handlers into separate files
   async handleWorldJoin() {
+    this.activeRoom = "world";
     //if (this.challengeRoom) await this.challengeRoom.leave(true);
-
+    this.playersSavedState = await (await GET_ALL_PLAYERS()).json(); // ! maybe get players from back-end players state
     this.room = await this.client.joinOrCreate("game", {
       address: this.playerAccount.address,
     });
 
     this.playerId = this.room ? this.room.sessionId : ""; // ? session id
+    this.setWorldListeners();
+  }
 
-    this.room.state.players.onAdd = (player, playerId) => {
-      this.events.emit("player-joined", player);
+  setWorldListeners() {
+    this.room.state.players.onAdd = this.handleWorldPlayerJoined.bind(this);
+    this.room.state.players.onRemove = this.handleWorldPlayerRemoved.bind(this);
 
-      if (playerId === this.playerId) {
-        this.handleAddHUD(player);
-      }
-
-      player.wizards.forEach((wizard) => {
-        wizard.onChange = () => {
-          this.events.emit("wizard-changed", wizard, player.id);
-        };
-      });
+    this.room.state.objects.onRemove = (removedObject) => {
+      WORLD_SCENE.SCENE.handleObjectRemoved(removedObject);
     };
+
+    this.room.state.listen("wizardsAliveCount", (count) =>
+      HUD_SCENE.SCENE.handleUpdate(count, "alive")
+    );
+    this.room.state.listen("wizardsCount", (count) =>
+      HUD_SCENE.SCENE.handleUpdate(count, "all")
+    );
+
+    this.room.state.listen("slogan", (newSlogan) =>
+      HUD_SCENE.SCENE.updateSlogan(newSlogan)
+    );
+    this.room.state.listen("day", (newDay) => {
+      // if day is changed, it means that the day is refreshed so we can refresh offline wizards
+      WORLD_SCENE.SCENE.refreshOfflinePlayers();
+      HUD_SCENE.SCENE.updateDay(newDay);
+    });
+  }
+
+  handleWorldPlayerJoined(player) {
+    WORLD_SCENE.SCENE.handlePlayerAdd(player);
+
+    player.wizards.forEach((wizard) => {
+      wizard.onChange = (changed) =>
+        this.handleWorldWizardChanged(changed, player, wizard);
+
+      wizard.collectedObjectsCount.forEach(
+        (obj) =>
+          (obj.onChange = () => this.handleCollectedObjectsChanged(obj, player))
+      );
+    });
+  }
+  handleWorldPlayerRemoved(player) {
+    WORLD_SCENE.SCENE.handlePlayerRemove(player);
+  }
+  handleWorldWizardChanged(changed, player, wizard) {
+    if (
+      changed.find(
+        (change) =>
+          change.field === "isAlive" ||
+          change.field === "dailyChallengeCompleted"
+      ) &&
+      this.isMyID(player.id)
+    ) {
+      GUI_SCENE.SCENE.handleUpdate(wizard);
+    }
+
+    if (
+      changed.find((change) => change.field === "movesLeft") &&
+      this.isMyID(player.id)
+    ) {
+      HUD_SCENE.SCENE.updateMovesLeft(wizard);
+    }
+
+    WORLD_SCENE.SCENE.handleWizardChanged(wizard, player.id);
+  }
+
+  handleCollectedObjectsChanged(obj, player) {
+    if (this.isMyID(player.id)) {
+      HUD_SCENE.SCENE.updateCollectedObjects(obj);
+    }
   }
 
   async handleChallengeJoin(wizardId) {
     await this.room.leave(true);
-
+    this.activeRoom = "challenge";
     this.challengeRoom = await this.client.joinOrCreate("challenge", {
       address: this.playerAccount.address,
       wizardId: wizardId,
     });
 
-    this.events.emit("player-joined-challenge");
-
-    this.challengeRoom.state.onChange = (state) => {
-      this.events.emit("challenge-state-changed", state); // TODO : change to state.listen("stateChanged")
-    };
-
-    this.challengeRoom.state.wizard.onChange = (changedData) => {
-      this.events.emit("player-move-challenge", changedData);
-    };
+    this.setChallengeListeners();
   }
 
-  handleAddHUD(player) {
-    if (!this.isHUDadded) {
-      // TODO : make it in a better way
-      this.events.emit("player-joined-ui", player, player.id); // ? callback in HUD scene
-      this.isHUDadded = true;
-    } else {
-      this.events.emit("player-update-ui", player, player.id); // ? callback in HUD scene
-    }
+  setChallengeListeners() {
+    this.challengeRoom.state.onChange = (state) => {
+      if (
+        state.find(
+          (change) =>
+            change.field === "isChallengeStarted" && change.value === true
+        )
+      ) {
+        CHALLENGE_SCENE.SCENE.handlePlayerAdd();
+      }
+
+      CHALLENGE_SCENE.SCENE.handleChangeState(state);
+    };
+
+    this.challengeRoom.state.wizard.onChange = () => {
+      CHALLENGE_SCENE.SCENE.handlePlayerMoved(this.challengeRoom.state.wizard);
+    };
   }
 
   handleActionSend(action) {
@@ -72,15 +141,6 @@ export default class Server {
 
     this.room.send(action.type, action);
   }
-
-  getPlayerWalletAddress() {
-    return this.walletAddress;
-  }
-
-  getPlayerId() {
-    return this.playerId;
-  }
-
   handleActionSendInChallenge(action) {
     if (!this.challengeRoom) {
       return;
@@ -88,46 +148,15 @@ export default class Server {
     this.challengeRoom.send(action.type, action);
   }
 
-  eventExists(event) {
-    return this.events.eventNames().some((name) => name === event);
+  isMyID(id) {
+    return this.playerId === id;
   }
 
-  // ! WORLD EVENTS
-  onPlayerJoined(cb, context) {
-    if (this.eventExists("player-joined")) return;
-    this.events.on("player-joined", cb, context);
+  getPlayerWalletAddress() {
+    return this.walletAddress;
   }
 
-  onWizardChanged(cb, context) {
-    if (this.eventExists("wizard-changed")) return;
-    this.events.on("wizard-changed", cb, context);
-  }
-
-  // ! CHALLENGE EVENTS
-  onPlayerMovedInChallenge(cb, context) {
-    if (this.eventExists("player-move-challenge")) return;
-    this.events.on("player-move-challenge", cb, context);
-  }
-
-  onChallengeStateChanged(cb, context) {
-    if (this.eventExists("challenge-state-changed")) return;
-    this.events.on("challenge-state-changed", cb, context);
-  }
-
-  onPlayerJoinedChallenge(cb, context) {
-    if (this.eventExists("player-joined-challenge")) return;
-    this.events.on("player-joined-challenge", cb, context);
-  }
-
-  // ! UI EVENTS
-
-  onPlayerJoinedUI(cb, context) {
-    //  if (this.eventExists("player-joined-ui")) return;
-    this.events.on("player-joined-ui", cb, context);
-  }
-
-  onPlayerUpdateUI(cb, context) {
-    //  if (this.eventExists("player-joined-ui")) return;
-    this.events.on("player-update-ui", cb, context);
+  getPlayerId() {
+    return this.playerId;
   }
 }

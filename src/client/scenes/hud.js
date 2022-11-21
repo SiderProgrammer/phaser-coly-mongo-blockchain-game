@@ -1,106 +1,158 @@
-import { HUD_WIDTH } from "../../shared/config";
+import { HUD_HEIGHT } from "../../shared/config";
+import SoundManager from "../components/SoundManager";
+import { GET_GAME_STATE } from "../services/requests/requests";
+import { HUD_SCENE, WORLD_SCENE } from "./currentScenes";
 
 export default class Hud extends Phaser.Scene {
   constructor() {
     super("hud");
   }
 
-  create({ server, onPlayChallenge }) {
+  create({ server, gameState }) {
+    HUD_SCENE.setScene(this);
     this.server = server;
-    this.onPlayChallenge = onPlayChallenge;
+    this.gameState = gameState;
+    this.width = this.game.renderer.width;
+    this.height = HUD_HEIGHT;
+    this.wizardsAliveCount = 0;
+    this.wizardsCount = 0;
 
-    this.HUDwidth = HUD_WIDTH;
+    this.topBar = this.add
+      .image(0, 0, "red")
+      .setOrigin(0)
+      .setDisplaySize(this.width, this.height);
 
-    this.buttons = [];
-
-    this.add
-      .image(0, 0, "green")
-      .setDisplaySize(this.HUDwidth, this.game.renderer.height * 2); // ? HUD background
-
-    this.server.onPlayerJoinedUI(this.handlePlayerJoinedUI, this);
-    this.server.onPlayerUpdateUI(this.updateWizardsStates, this);
+    this.addDays();
+    this.addSlogan();
+    this.addWizardsLeft();
+    this.addMovesLeft();
+    this.addCollectedObjects();
   }
 
-  handlePlayerJoinedUI(player) {
-    this.add.text(this.HUDwidth / 4, 30, "Your wizards").setOrigin(0.5);
-    this.setWizards(player);
+  handleUpdate(count, type) {
+    if (type === "alive") {
+      this.wizardsAliveCount = count;
+    } else {
+      this.wizardsCount = count;
+    }
+
+    this.wizardsLeft.setText(
+      `Wizards left: ${this.wizardsAliveCount}/${this.wizardsCount}`
+    );
   }
 
-  updateWizardsStates(player) {
-    player.wizards.forEach((wizard, i) => {
-      if (!wizard.isAlive) {
-        this.buttons[i].setState("dead");
-      }
-    });
+  updateSlogan(newSlogan) {
+    this.slogan.setText(newSlogan);
   }
 
-  addWizardButton(wizard, i) {
-    const wizardButton = this.add.image(50, 90 + i * 70, "wizard");
-    wizardButton.id = wizard.id;
+  updateDay(newDay) {
+    this.day.setText(`DAY ${newDay}`);
+  }
 
-    this.buttons[i] = wizardButton;
+  updateCollectedObjects(obj) {
+    const wizard = WORLD_SCENE.SCENE.me.getWizardById(obj.wizardId);
+    if (wizard.collectedObjects[obj.type] !== -1) {
+      // type = 1 / 2 / 3
+      SoundManager.play("ObjectCollect");
+    }
+    wizard.collectedObjects[obj.type] = obj.value; // TODO : move it to world scene
 
-    wizardButton.setState = (state) => {
-      switch (state) {
-        case "playing":
-          const wizard = this.buttons.find(
-            (button) => button.currentState === "playing"
-          );
+    const currentWizardID = WORLD_SCENE.SCENE.me.getSelectedWizardId();
+    this.updateCollectedObjectsText(currentWizardID);
+  }
 
-          wizard && wizard.setState("alive");
-          wizardButton.currentState = "playing";
-          wizardButton.stateText.setText("Playing...");
-          break;
-        case "alive":
-          wizardButton.currentState = "alive";
-          wizardButton.stateText.setText("Play");
-          break;
-        case "dead":
-          wizardButton.currentState = "dead";
-          wizardButton.stateText.setText("Dead");
-          break;
-      }
+  updateMovesLeft(_wizard) {
+    const wizard = WORLD_SCENE.SCENE.me.getWizardById(_wizard.id);
+
+    wizard.movesLeft = _wizard.movesLeft; // TODO : move it to world scene
+
+    const currentWizardID = WORLD_SCENE.SCENE.me.getSelectedWizardId();
+    this.updateMovesLeftText(currentWizardID);
+  }
+
+  updateMovesLeftText(wizardId) {
+    let movesLeft = 0;
+
+    if (wizardId > -1) {
+      movesLeft = WORLD_SCENE.SCENE.me.getWizardById(
+        wizardId.toString()
+      ).movesLeft;
+    }
+
+    this.movesLeft.setText(`Moves left: ${movesLeft}`);
+  }
+
+  updateCollectedObjectsText(wizardId) {
+    let collectedObjects = {
+      1: 0,
+      2: 0,
+      3: 0,
     };
+
+    if (wizardId > -1) {
+      collectedObjects = WORLD_SCENE.SCENE.me.getWizardById(
+        wizardId.toString()
+      ).collectedObjects;
+    }
+    this.collectedObjects.setText(
+      `Collected objects: ${collectedObjects["1"]}`
+    );
+
+    this.collectedObjects2.setText(
+      `Collected objects 2: ${collectedObjects["2"]}`
+    );
+
+    this.collectedObjects3.setText(
+      `Collected objects 3: ${collectedObjects["3"]}`
+    );
   }
 
-  addWizardButtonStateText(worldScene, wizardButton, i, playerId) {
-    wizardButton.stateText = this.add
-      .text(wizardButton.x + 180, wizardButton.y, "Play")
-      .setOrigin(1, 0.5);
-
-    wizardButton.stateText.setInteractive().on("pointerup", () => {
-      // TODO : return if clicked wizard is selected || player is during challenge
-      //this.player.getSelectedWizardId()
-      if (wizardButton.currentState === "dead") return;
-
-      const action = {
-        type: "select",
-        playerId: playerId,
-        wizardId: wizardButton.id,
-      };
-
-      this.server.handleActionSend(action);
-
-      wizardButton.setState("playing");
-      worldScene.me.setSelectedWizardId(wizardButton.id);
-    });
+  addWizardsLeft() {
+    this.wizardsLeft = this.add
+      .text(10, 10, "", {
+        font: "35px Arial",
+      })
+      .setOrigin(0, 0);
+  }
+  addDays() {
+    this.day = this.add
+      .text(this.width / 2, 10, `DAY ${this.gameState.day}`, {
+        font: "35px Arial",
+      })
+      .setOrigin(0.5, 0);
   }
 
-  setWizards(player) {
-    const playerId = player.id;
-    const wizards = player.wizards;
-    const worldScene = this.scene.get("world"); //  TODO : some middleware
+  addSlogan() {
+    this.slogan = this.add
+      .text(this.width / 2, this.height - 10, this.gameState.slogan, {
+        font: "15px Arial",
+      })
+      .setOrigin(0.5, 1);
+  }
+  addMovesLeft() {
+    this.movesLeft = this.add
+      .text(this.width / 2 + 150, this.height / 2, "Moves left:", {
+        font: "25px Arial",
+      })
+      .setOrigin(0.5);
+  }
+  addCollectedObjects() {
+    this.collectedObjects2 = this.add
+      .text(this.width - 10, 10, "Collected objects 2: 0", {
+        font: "15px Arial",
+      })
+      .setOrigin(1, 0);
 
-    wizards.forEach((wizard, i) => {
-      this.addWizardButton(wizard, i);
-      this.addWizardButtonStateText(worldScene, this.buttons[i], i, playerId);
+    this.collectedObjects = this.add
+      .text(this.width - 10, 30, "Collected objects: 0", {
+        font: "15px Arial",
+      })
+      .setOrigin(1, 0);
 
-      if (!wizard.isAlive) {
-        this.buttons[i].setState("dead");
-      }
-    });
-
-    const id = worldScene.me.getSelectedWizardId();
-    this.buttons[id].setState("playing");
+    this.collectedObjects3 = this.add
+      .text(this.width - 10, 50, "Collected objects 3: 0", {
+        font: "15px Arial",
+      })
+      .setOrigin(1, 0);
   }
 }

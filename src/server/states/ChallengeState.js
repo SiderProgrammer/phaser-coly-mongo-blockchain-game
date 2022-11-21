@@ -1,29 +1,40 @@
 const schema = require("@colyseus/schema");
 const { Wizard } = require("../entities/Wizard");
-const DatabaseManager = require("../db/databaseManager");
+
 const {
   CHALLENGE_PLAYER,
   CHALLENGE_OBSTACLES,
   CHALLENGE_META,
   PLAYER_SIZE,
+  TILE_SIZE,
 } = require("../../shared/config");
-
-const obstacles = CHALLENGE_OBSTACLES;
-const meta = CHALLENGE_META;
-
-const db = new DatabaseManager();
+const MapManager = require("../../shared/mapManager");
+const worldMap = require("../maps/challenge/1/sampleMapChallenge");
+const MapGridManager = require("../../shared/mapGridManager");
 
 class State extends schema.Schema {
-  constructor() {
+  constructor(db, presenceEmit, challengeData) {
     super();
+    this.db = db;
 
-    this.wizard = new Wizard(
-      "0", // not needed in this room
-      CHALLENGE_PLAYER.x,
-      CHALLENGE_PLAYER.y,
-      PLAYER_SIZE,
-      "" // not needed in this room
-    );
+    this.isChallengeStarted = false;
+
+    this.startPosition = challengeData.startPosition;
+
+    this.mapManager = new MapManager(this, worldMap);
+    this.mapLayers = this.mapManager.getWorldMap();
+    this.mapGridManager = new MapGridManager(this);
+    this.worldGrid = this.mapGridManager.createWorldGrid();
+
+    this.mapGridManager.addLayersToGrid(this.mapLayers);
+
+    this.wizard = new Wizard("0", {
+      r: this.startPosition.r,
+      c: this.startPosition.c,
+    });
+
+    this.challengeData = challengeData;
+    this.presenceEmit = presenceEmit;
 
     this.challengeState = -1;
     this.owner = "";
@@ -41,47 +52,35 @@ class State extends schema.Schema {
   playerMove(dir) {
     if (!this.wizard) return;
 
-    this.wizard.move(dir.x, dir.y, 5);
+    if (!this.mapGridManager.isTileWalkable(this.wizard, dir.x, dir.y)) {
+      return;
+    }
+
+    this.wizard.move(dir.x, dir.y);
+
+    this.handleTile(this.wizard, this.wizard.r, this.wizard.c);
   }
 
-  update() {
-    if (!this.wizard || this.challengeState !== -1) return;
-
-    this.checkObstaclesCollision();
-    this.checkMetaCollision();
-  }
-
-  checkObstaclesCollision() {
-    obstacles.forEach((obstacle) => {
-      if (this.isColliding(this.wizard, obstacle)) {
-        this.challengeState = 0;
-        db.killWizard(this.owner, this.wizardId);
-
-        console.log("Lost a challenge");
-      }
-    });
-  }
-
-  checkMetaCollision() {
-    if (this.isColliding(this.wizard, meta)) {
+  handleTile(player, r, c) {
+    const tile = this.worldGrid[r][c];
+    if (this.challengeState === 0 || this.challengeState === 1) return;
+    if (tile === "let") {
+      this.challengeState = 0;
+      this.db.killWizard(this.owner, this.wizardId);
+      this.presenceEmit("wizardDied");
+      console.log("Lost a challenge");
+    } else if (tile === "met") {
+      this.db.setCompletedDailyChallenge(this.owner, this.wizardId);
       this.challengeState = 1;
 
       console.log("Won a challenge");
     }
   }
-
-  isColliding(bodyA, bodyB) {
-    return (
-      bodyA.x < bodyB.x + bodyB.size &&
-      bodyA.x + bodyA.size > bodyB.x &&
-      bodyA.y < bodyB.y + bodyB.size &&
-      bodyA.size + bodyA.y > bodyB.y
-    );
-  }
 }
 schema.defineTypes(State, {
   wizard: Wizard,
   challengeState: "number",
+  isChallengeStarted: "boolean",
 });
 
 exports.ChallengeState = State;

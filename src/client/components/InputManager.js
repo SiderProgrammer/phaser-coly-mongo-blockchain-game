@@ -1,42 +1,39 @@
 export default class InputManager {
   constructor(scene) {
     this.scene = scene;
-    this.cursors = scene.input.keyboard.createCursorKeys();
+
+    this.keys = scene.input.keyboard.addKeys(
+      "W, A, S, D, LEFT, RIGHT, UP, DOWN"
+    );
   }
 
   update() {
-    if (!this.cursors) return;
-
     const dir = {
       x: 0,
       y: 0,
     };
 
-    if (
-      this.cursors.up.isDown ||
-      this.cursors.down.isDown ||
-      this.cursors.left.isDown ||
-      this.cursors.right.isDown
-    ) {
-      if (this.cursors.up.isDown) {
+    if (this.keys.A.isDown || this.keys.LEFT.isDown) {
+      dir.x -= 1;
+    }
+
+    if (this.keys.D.isDown || this.keys.RIGHT.isDown) {
+      dir.x += 1;
+    }
+
+    if (dir.x === 0) {
+      // prevent diagonally movement
+      if (this.keys.W.isDown || this.keys.UP.isDown) {
         dir.y -= 1;
       }
 
-      if (this.cursors.down.isDown) {
+      if (this.keys.S.isDown || this.keys.DOWN.isDown) {
         dir.y += 1;
       }
-
-      if (this.cursors.left.isDown) {
-        dir.x -= 1;
-      }
-
-      if (this.cursors.right.isDown) {
-        dir.x += 1;
-      }
-
-      if (dir.x != 0 || dir.y != 0) {
-        this.scene.playerMoved(dir);
-      }
     }
+
+    if (dir.x === 0 && dir.y === 0) return;
+
+    this.scene.playerMoved(dir);
   }
 }

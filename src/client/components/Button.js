@@ -9,9 +9,18 @@ export default class Button extends Phaser.GameObjects.Image {
 
   onClick(callback) {
     this.on("pointerdown", () => callback());
+    return this;
   }
 
-  addText(text) {
-    this.scene.add.text(this.x, this.y, text);
+  addText(text, config = {}) {
+    this.text = this.scene.add
+      .text(this.x, this.y, text, config)
+      .setOrigin(0.5);
+    return this;
+  }
+
+  destroy() {
+    this.text && this.text.destroy();
+    super.destroy();
   }
 }

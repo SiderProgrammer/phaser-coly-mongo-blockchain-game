@@ -1,128 +1,90 @@
 const mongoose = require("mongoose");
 
-const srvConfig = require("./config/auth");
-const Wizard = require("./models/Wizard");
-const Players = require("./models/Player");
+const FrontendHandler = require("./handlers/FrontendHandler");
+const BackendHandler = require("./handlers/BackendHandler");
+const { DB_URL } = require("./config/credentials");
 
-const DATABASE_URL = `mongodb+srv://${srvConfig.USERNAME}:${srvConfig.PASSWORD}@${srvConfig.HOST}/?retryWrites=true&w=majority`;
+const GameState = require("./models/GameState");
+
+const Days = require("./models/Days");
+const { CHALLENGE_PLAYER } = require("../../shared/config");
+const Challenge = require("./models/Challenge");
+const worldMap = require("../maps/world/sampleMap");
+const MapGridManager = require("../../shared/mapGridManager");
+const MapManager = require("../../shared/mapManager");
+const Spawner = require("./helpers/Spawner");
+
+// TODO : maybe change this class to static class
 
 class DatabaseManager {
-  constructor() {}
-  connectDatabase() {
-    mongoose.connect(DATABASE_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+  constructor() {
+    this.isRegistrationPhase = true;
+    this.frontendHandler = new FrontendHandler(this); // sends responses to client
+    this.backendHandler = new BackendHandler(this); // return queries
   }
 
-  createPlayer(req, res) {
-    const { address } = req.body;
-
-    Players.exists({ address }).then((isExsisting) => {
-      if (isExsisting) {
-        res.sendStatus(403);
-      } else {
-        Players.create({
-          address,
-        }).then((player) => {
-          // TODO : Handle Errors && Create 4 wizards in one batch Query
-
-          const wizardsQueries = [];
-          const sampleNames = ["Eric", "Patrick", "John", "Caroline"];
-          // const seed = Math.floor(Math.random() * 1000);
-
-          for (let i = 0; i < 4; ++i) {
-            const wizard = Wizard.create({
-              x: Math.floor(Math.random() * 600),
-              y: Math.floor(Math.random() * 600),
-              name: sampleNames[i] + "_" + address, // + seed
-              isAlive: true,
-              player: player.id,
-            }).then((_wizard) => {
-              player.wizards.push(_wizard);
-            });
-
-            wizardsQueries.push(wizard);
-          }
-
-          Promise.all(wizardsQueries).then(() => {
-            player.save();
-            res.status(200).json(player);
-          });
-        });
-      }
-    });
-  }
-
-  getPlayer(req, res) {
-    const { address } = req.body;
-
-    // TODO : Handle Errors
-
-    Players.findOne({ address }, (err, player) => {
-      if (!player) {
-        res.sendStatus(403);
-        return;
-      }
-      res.status(200).json(player);
-    })
-      .lean()
-      .populate("wizards")
-      .select("-_id");
-  }
-
-  getAllPlayers(req, res) {
-    // TODO : Handle Errors
-
-    Players.find({}, (err, players) => {
-      res.send(players);
-    })
-      .lean()
-      .populate("wizards")
-      .select("-_id");
-  }
-
-  // ? Methods used from backend
-
-  getPlayerQuery(address) {
-    // TODO : Handle Errors
-
-    return Players.findOne({ address })
-      .lean()
-      .populate("wizards")
-      .select("-_id");
-  }
-
-  killWizard(address, wizardId) {
-    // TODO : Handle Errors  && Improve this Query (search for better solution)
-
-    return Players.findOne({ address })
-      .populate("wizards")
-      .then((state) => {
-        state.wizards[wizardId].isAlive = false;
-        state.wizards[wizardId].save();
-      });
-  }
-
-  savePlayerWizards(address, wizards) {
-    // TODO : Handle Errors  && Improve this Query (search for better solution)
-
-    Players.findOne({ address })
-      .populate("wizards")
-      .then((state) => {
-        wizards.forEach((wizard, i) => {
-          state.wizards[i].x = wizard.x;
-          state.wizards[i].y = wizard.y;
-          state.wizards[i].save(); // ? improve saving code
-        });
+  async connectDatabase() {
+    await mongoose
+      .connect(DB_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
       })
-      .catch((err) => {
-        console.log(
-          "Error while saving player wizards, player wallet address:",
-          address,
-          "error:",
-          err
+      .then(async () => {
+        this.spawner = new Spawner(this);
+
+        this.mapGridManager = new MapGridManager(this);
+        this.worldGrid = this.mapGridManager.createWorldGrid();
+
+        const playersFromDB = await this.backendHandler.getAllPlayersQuery();
+
+        playersFromDB.forEach((player) =>
+          this.mapGridManager.addWizardsToGrid(player.wizards)
         );
+
+        this.mapManager = new MapManager(this, worldMap);
+        this.mapLayers = this.mapManager.getWorldMap();
+        this.mapGridManager.addLayersToGrid(this.mapLayers);
+
+        const isExsisting = await GameState.exists({});
+        if (isExsisting) return;
+
+        const registrationPhaseDuration = 1000 * 60 * 0.2; // 2 minutes
+
+        await GameState.create({
+          day: 1,
+          registrationPhaseDuration: registrationPhaseDuration,
+          dayDuration: 1000 * 60 * 10, // 10 minutes
+          gameStartTimestamp: Date.now(),
+        });
+
+        await Days.insertMany([
+          // for now
+          { day: 1, slogan: "First day slogan" },
+          { day: 2, slogan: "Second day slogan" },
+          { day: 3, slogan: "Third day slogan" },
+          { day: 4, slogan: "Fourth day slogan" },
+          { day: 5, slogan: "Fifth day slogan" },
+        ]);
+
+        const challengeData = {
+          winMessage: "win",
+          loseMessage: "lose",
+          startPosition: {
+            r: CHALLENGE_PLAYER.r,
+            c: CHALLENGE_PLAYER.c,
+          },
+        };
+
+        await Challenge.insertMany([
+          // for now
+          { ...challengeData, day: 1, dailyMessage: "first day" },
+          { ...challengeData, day: 2, dailyMessage: "second day" },
+          { ...challengeData, day: 3, dailyMessage: "third day" },
+          { ...challengeData, day: 4, dailyMessage: "fourth day" },
+          { ...challengeData, day: 5, dailyMessage: "fifth day" },
+        ]);
+
+        console.log("DB init");
       });
   }
 }

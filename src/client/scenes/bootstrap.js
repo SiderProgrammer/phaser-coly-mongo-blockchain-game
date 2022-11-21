@@ -1,4 +1,11 @@
-import { CREATE_PLAYER, GET_PLAYER } from "../services/requests/requests";
+import { calculateRegistrationPhaseRemainingTime } from "../../shared/utils";
+import initPlayerAnims from "../anim/player";
+
+import {
+  CREATE_PLAYER,
+  GET_GAME_STATE,
+  GET_PLAYER,
+} from "../services/requests/requests";
 import Server from "../services/Server";
 
 export default class Bootstrap extends Phaser.Scene {
@@ -6,22 +13,9 @@ export default class Bootstrap extends Phaser.Scene {
     super("bootstrap");
   }
 
-  preload() {
-    this.load.image("logo", "src/client/assets/logo.png");
-    this.load.image("green", "src/client/assets/green.png");
-    this.load.image("red", "src/client/assets/red.png");
-    this.load.image("white", "src/client/assets/white.png");
-    this.load.image("wizard", "src/client/assets/wizard.png");
-    this.load.image(
-      "challengeButton",
-      "./src/client/assets/challengeButton.png"
-    );
-  }
-
   async create() {
     this.playerAccount = {};
-    const address = window.walletAddress; // (Math.random() * 100).toString();
-    // ? random generated wallet address for development purpose (later it will be real wallet address)
+    const address = window.walletAddress;
     // ! we'll need to generate JW token or something else so users can't change their address from client-side and cheat
 
     this.playerAccount = await GET_PLAYER({ address });
@@ -29,26 +23,55 @@ export default class Bootstrap extends Phaser.Scene {
     if (!this.playerAccount.ok) {
       this.playerAccount = await CREATE_PLAYER({ address });
     }
+
     this.playerAccount = await this.playerAccount.json();
 
-    this.server = new Server(this.playerAccount);
+    if (this.playerAccount.error) {
+      // Registration phase is finished
+      this.add
+        .text(500, 300, this.playerAccount.error, { font: "50px Arial" })
+        .setOrigin(0.5, 0.5);
 
+      return;
+    }
+    const timeDifference = Date.now();
+    this.gameState = await (await GET_GAME_STATE()).json();
+    this.gameState.timeDifference = Date.now() - timeDifference;
+
+    const isRegistrationPhase =
+      calculateRegistrationPhaseRemainingTime(this.gameState) > 0;
+
+    this.server = new Server(this.playerAccount, isRegistrationPhase);
+
+    this.initAnimations();
     this.createNewGame();
-    this.createWizardsHUD();
+    this.createGUI();
+    this.createHUD();
   }
 
-  createWizardsHUD() {
+  createHUD() {
     this.scene.launch("hud", {
       server: this.server,
+      gameState: this.gameState, // TODO : move to server class
     });
 
     this.scene.bringToTop("hud");
+  }
+  createGUI() {
+    this.scene.launch("gui", {
+      server: this.server,
+      gameState: this.gameState, // TODO : move to server class
+      player: this.playerAccount,
+    });
+
+    this.scene.bringToTop("gui");
   }
 
   async createNewGame() {
     this.scene.launch("world", {
       server: this.server,
       onPlayChallenge: this.onPlayChallenge.bind(this),
+      gameState: this.gameState, // TODO : move to server class
     });
 
     console.log("World created!");
@@ -78,5 +101,9 @@ export default class Bootstrap extends Phaser.Scene {
     this.createNewGame();
 
     console.log("Challenge won");
+  }
+
+  initAnimations() {
+    initPlayerAnims(this);
   }
 }

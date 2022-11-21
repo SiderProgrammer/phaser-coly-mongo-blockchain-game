@@ -6,6 +6,10 @@ git push heroku dev:main
 
 // update
 
+npm run build
 git add -A
 git commit -m "update"
 git push -f heroku dev:main
+
+// restart
+ heroku restart -a <app-name>
